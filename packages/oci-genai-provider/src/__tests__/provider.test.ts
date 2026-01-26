@@ -43,7 +43,9 @@ describe('createOCI Provider Factory', () => {
 
   describe('Model Creation', () => {
     it('should create language model instance', () => {
-      const modelFactory = (id: string) => ({
+      const modelFactory = (
+        id: string
+      ): { provider: string; modelId: string; specificationVersion: string } => ({
         provider: 'oci-genai',
         modelId: id,
         specificationVersion: 'v1',
@@ -112,7 +114,7 @@ describe('createOCI Provider Factory', () => {
     it('should work with generateText pattern', () => {
       const oci = {
         provider: 'oci-genai',
-        model: (id: string) => ({ modelId: id }),
+        model: (id: string): { modelId: string } => ({ modelId: id }),
       };
 
       const model = oci.model('cohere.command-r-plus');
@@ -122,7 +124,7 @@ describe('createOCI Provider Factory', () => {
     it('should work with streamText pattern', () => {
       const oci = {
         provider: 'oci-genai',
-        model: (id: string) => ({ modelId: id }),
+        model: (id: string): { modelId: string } => ({ modelId: id }),
       };
 
       const model = oci.model('xai.grok-4-maverick');

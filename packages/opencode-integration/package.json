@@ -1,0 +1,49 @@
+{
+  "name": "@acedergren/opencode-oci-genai",
+  "version": "0.1.0",
+  "description": "OpenCode integration for OCI Generative AI provider",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "opencode",
+    "oci",
+    "oracle-cloud",
+    "generative-ai",
+    "ai"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "jest --passWithNoTests",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@acedergren/oci-genai-provider": "workspace:*"
+  },
+  "peerDependencies": {
+    "opencode": "^1.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/acedergren/opencode-oci-genai.git",
+    "directory": "packages/opencode-integration"
+  },
+  "author": "Alexander Cedergren <alexander.cedergren@oracle.com>",
+  "license": "MIT"
+}
