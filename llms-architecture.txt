@@ -1,0 +1,459 @@
+# OCI GenAI Provider - Architecture & Security
+
+> Architecture design, security best practices, and project conventions
+
+This file contains architectural decisions, security guidelines, and development conventions.
+
+## Info
+
+- **Focus**: Architecture, security, and code quality
+- **Audience**: Contributors and maintainers
+- **Standards**: TypeScript, ESM modules, Vercel AI SDK v3
+
+## Architecture Overview
+
+**Main Documentation**: /docs/architecture/README.md
+
+**Project Structure**:
+```
+opencode-oci-genai/
+├── src/
+│   ├── index.ts              # Main exports
+│   ├── provider.ts           # LanguageModelV3 implementation
+│   ├── models/               # Model definitions
+│   ├── auth/                 # Authentication
+│   ├── streaming/            # SSE handling
+│   └── utils/                # Utilities
+├── docs/                     # Documentation (27 files)
+├── tests/                    # Test suite
+└── examples/                 # Usage examples
+```
+
+## Design Decisions
+
+**File**: /docs/architecture/design-decisions.md
+
+**Key Architectural Choices**:
+
+### 1. Provider Pattern
+- Factory function `createOCI()` returns provider
+- Supports multiple configurations
+- Lazy model instantiation
+- Thread-safe singleton pattern
+
+```typescript
+export function createOCI(config?: OCIConfig): OCIProvider {
+  return {
+    provider: 'oci-genai',
+    model: (modelId: string) => new OCILanguageModel(modelId, config),
+  };
+}
+```
+
+### 2. Authentication Cascade
+- Environment variables override constructor
+- Constructor overrides config file
+- Config file overrides defaults
+- Supports all OCI auth methods
+
+**Priority Order**:
+```
+1. Environment (OCI_REGION, OCI_CONFIG_PROFILE)
+2. Constructor options (region, profile)
+3. Config file (~/.oci/config)
+4. Defaults (eu-frankfurt-1, DEFAULT)
+```
+
+### 3. Streaming Architecture
+- EventSource parser for SSE
+- Async iterator interface
+- Backpressure handling
+- Graceful disconnection
+
+```typescript
+async *generateStream(options: StreamOptions): AsyncIterator<string> {
+  const parser = createParser(/* ... */);
+
+  for await (const chunk of response.body) {
+    parser.feed(chunk);
+    // Yield text deltas
+  }
+}
+```
+
+### 4. Tool Calling Integration
+- Zod schema acceptance
+- JSON Schema conversion
+- OCI GenAI format transformation
+- Type-safe execution
+
+**Conversion Flow**:
+```
+User Zod Schema → AI SDK JSON Schema → OCI Parameters
+```
+
+### 5. Error Handling Strategy
+- Typed error classes
+- Retry logic with exponential backoff
+- Rate limit handling (429)
+- Detailed error messages
+
+```typescript
+class OCIGenAIError extends Error {
+  constructor(
+    message: string,
+    public statusCode?: number,
+    public retryable?: boolean,
+  ) {
+    super(message);
+  }
+}
+```
+
+## Technology Stack
+
+**File**: /docs/architecture/technology-stack.md
+
+**Core Dependencies**:
+- `@ai-sdk/provider` - Provider interface
+- `oci-sdk` - OCI TypeScript SDK
+- `eventsource-parser` - SSE parsing
+- `zod` - Schema validation
+
+**Development**:
+- TypeScript 5.x
+- ESLint + Prettier
+- Vitest (testing)
+- Husky (pre-commit hooks)
+
+**CI/CD**:
+- GitHub Actions
+- npm publish automation
+- Semantic versioning
+
+## Code Conventions
+
+**File**: /docs/architecture/code-conventions.md
+
+**TypeScript Standards**:
+- Strict mode enabled
+- ESM modules (`.js` extensions in imports)
+- Explicit return types
+- No `any` types (use `unknown`)
+
+**Naming Conventions**:
+- Classes: PascalCase (`OCILanguageModel`)
+- Functions: camelCase (`generateText`)
+- Constants: UPPER_SNAKE_CASE (`DEFAULT_REGION`)
+- Files: kebab-case (`oci-language-model.ts`)
+
+**Code Organization**:
+```typescript
+// 1. Imports (external first, then internal)
+import { LanguageModelV3 } from '@ai-sdk/provider';
+import { createAuth } from './auth/index.js';
+
+// 2. Types and interfaces
+interface OCIConfig {
+  region?: string;
+  profile?: string;
+}
+
+// 3. Implementation
+export class OCILanguageModel implements LanguageModelV3 {
+  // ...
+}
+
+// 4. Exports
+export { createOCI } from './provider.js';
+```
+
+**Error Handling Pattern**:
+```typescript
+try {
+  const result = await operation();
+  return result;
+} catch (error) {
+  if (error instanceof OCIGenAIError) {
+    // Handle OCI-specific errors
+  }
+  throw new OCIGenAIError(`Operation failed: ${error.message}`);
+}
+```
+
+## Security Best Practices
+
+**File**: /docs/security/README.md
+
+### Authentication Security
+
+**Credential Storage**:
+- API keys in `~/.oci/config` (chmod 600)
+- Environment variables for CI/CD
+- Secrets management (OCI Vault)
+- Never commit credentials
+
+**Key Rotation**:
+- Regular rotation schedule (90 days)
+- Automated rotation for production
+- Multiple keys for zero-downtime rotation
+
+**Least Privilege**:
+```
+Allow group Developers to use generative-ai-family in compartment AI-Dev
+# Do NOT grant manage or delete permissions
+```
+
+### Network Security
+
+**HTTPS Only**:
+- All API calls use TLS 1.2+
+- Certificate validation enabled
+- No plaintext communication
+
+**Private Endpoints** (production):
+- VCN integration
+- Private subnet deployment
+- No public internet access
+
+### Input Validation
+
+**Prompt Sanitization**:
+```typescript
+function sanitizePrompt(prompt: string): string {
+  // Remove control characters
+  return prompt.replace(/[\x00-\x1F\x7F]/g, '');
+}
+```
+
+**Parameter Validation**:
+```typescript
+function validateConfig(config: OCIConfig): void {
+  if (config.region && !VALID_REGIONS.includes(config.region)) {
+    throw new Error(`Invalid region: ${config.region}`);
+  }
+}
+```
+
+### Command Execution Safety
+
+**Use execFile with separate arguments** to prevent command injection:
+
+```typescript
+import { execFile } from 'child_process';
+import { promisify } from 'util';
+
+const execFileAsync = promisify(execFile);
+
+// Safe - command and arguments are separate
+await execFileAsync('git', ['status', '--porcelain']);
+await execFileAsync('npm', ['install', packageName]);
+```
+
+**Use execFileNoThrow utility** from codebase:
+```typescript
+import { execFileNoThrow } from '../utils/execFileNoThrow.js';
+
+const result = await execFileNoThrow('git', ['status', '--porcelain']);
+if (result.exitCode === 0) {
+  console.log(result.stdout);
+}
+```
+
+**Key Security Principles**:
+- Always use execFile, never use exec or shell: true
+- Pass command arguments as array elements
+- Never interpolate user input into command strings
+- Validate and sanitize all inputs
+- Use the project's execFileNoThrow utility for consistency
+
+### Dependency Security
+
+**Audit Dependencies**:
+```bash
+npm audit
+npm audit fix
+```
+
+**Lock File**:
+- Commit `package-lock.json`
+- Review dependency updates
+- Use Dependabot for alerts
+
+**Secure Libraries** (from security guidance):
+- Helmet.js (HTTP headers)
+- DOMPurify (XSS prevention)
+- Google Tink (cryptography)
+
+### Rate Limiting
+
+**Client-Side**:
+```typescript
+class RateLimiter {
+  private tokens: number;
+  private lastRefill: number;
+
+  async acquire(): Promise<void> {
+    while (this.tokens < 1) {
+      await this.refill();
+    }
+    this.tokens--;
+  }
+}
+```
+
+**Error Handling**:
+```typescript
+if (error.statusCode === 429) {
+  const retryAfter = error.headers['retry-after'];
+  await sleep(retryAfter * 1000);
+  return retry();
+}
+```
+
+### Logging and Monitoring
+
+**Security Events**:
+- Authentication failures
+- Rate limit hits
+- Invalid requests
+- Unusual patterns
+
+**Log Sanitization**:
+```typescript
+function sanitizeLog(data: any): any {
+  const sanitized = { ...data };
+  delete sanitized.apiKey;
+  delete sanitized.token;
+  delete sanitized.password;
+  return sanitized;
+}
+```
+
+**Audit Trail**:
+- OCI Audit service integration
+- Request/response logging
+- User action tracking
+- Compliance reporting
+
+## Testing Strategy
+
+**Unit Tests**:
+- All public methods
+- Error conditions
+- Edge cases
+- Mock OCI API responses
+
+**Integration Tests**:
+- Real OCI API calls (dev environment)
+- Authentication flows
+- Streaming functionality
+- Tool calling
+
+**Test Coverage Target**: 80%+
+
+**Example Test**:
+```typescript
+import { describe, it, expect } from 'vitest';
+import { createOCI } from '../src/index.js';
+
+describe('OCIProvider', () => {
+  it('should create provider with default config', () => {
+    const oci = createOCI();
+    expect(oci.provider).toBe('oci-genai');
+  });
+
+  it('should override region from constructor', () => {
+    const oci = createOCI({ region: 'eu-frankfurt-1' });
+    const model = oci('cohere.command-r-plus');
+    expect(model.region).toBe('eu-frankfurt-1');
+  });
+});
+```
+
+## Performance Optimization
+
+**Connection Pooling**:
+- Reuse HTTP connections
+- Connection pool size: 10
+- Keep-alive enabled
+
+**Caching**:
+- Model metadata (1 hour TTL)
+- Authentication tokens (until expiry)
+- Regional endpoints
+
+**Streaming Optimization**:
+- Chunk buffering (1KB)
+- Backpressure handling
+- Memory-efficient parsing
+
+## Monitoring
+
+**Metrics**:
+- Request latency (P50, P95, P99)
+- Token usage
+- Error rates
+- Model selection frequency
+
+**Alerting**:
+- Error rate > 5%
+- Latency > 2s (P95)
+- Authentication failures
+- Rate limits
+
+**Dashboard**:
+- Real-time metrics
+- Cost tracking
+- Regional distribution
+- Model usage patterns
+
+## Contributing Guidelines
+
+**Pull Request Process**:
+1. Fork repository
+2. Create feature branch
+3. Write tests
+4. Run linter and type checker
+5. Submit PR with description
+
+**Commit Messages**:
+```
+type(scope): description
+
+feat(streaming): add backpressure handling
+fix(auth): resolve token refresh issue
+docs(api): update OCI SDK reference
+```
+
+**Code Review Checklist**:
+- [ ] Tests pass
+- [ ] Types are correct
+- [ ] No security vulnerabilities
+- [ ] Documentation updated
+- [ ] Follows conventions
+
+## Related Documentation
+
+- API Reference: llms-api-reference.txt
+- Implementation Guides: llms-guides.txt
+- Model Catalog: llms-models.txt
+- Tutorials: llms-use-cases.txt
+
+## Archive Documentation
+
+**Requirements Specification**:
+- Original spec: /docs/archive/requirements-spec.md (1,420 lines)
+- Comprehensive feature requirements
+- Use case definitions
+- Technical specifications
+
+**Configuration**:
+- OpenCode integration: /docs/guides/opencode-integration/configuration.md
+- Environment setup
+- Profile management
+
+**IAM Policies**:
+- Required policies: /docs/guides/iam-policies/required-policies.md
+- Copy-paste templates
+- Troubleshooting guide

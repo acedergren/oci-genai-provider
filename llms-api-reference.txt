@@ -1,0 +1,128 @@
+# OCI GenAI Provider - API Reference
+
+> Complete API documentation for OCI SDK and Vercel AI SDK v3 interfaces
+
+This file contains comprehensive API reference documentation needed to implement the provider.
+
+## Info
+
+- **Focus**: API interfaces, schemas, and implementation contracts
+- **Key Interfaces**: LanguageModelV3, GenerativeAiInferenceClient
+- **Related**: Zod schemas, tool definitions, streaming protocols
+
+## OCI SDK API Reference
+
+Complete TypeScript SDK documentation for OCI Generative AI:
+
+- Main Guide: /docs/api-reference/oci-sdk/README.md
+
+**Key Sections**:
+- Authentication (ConfigFileAuthenticationDetailsProvider, InstancePrincipalsAuthenticationDetailsProvider)
+- GenerativeAiInferenceClient class
+- Chat API (ChatRequest, ChatResponse)
+- Streaming protocol (Server-Sent Events format)
+- Tool calling format (OCI GenAI Agents schema)
+- Error handling and retry configuration
+
+## Vercel AI SDK v3 Provider Interface
+
+Complete provider implementation specification:
+
+- Main Guide: /docs/api-reference/vercel-ai-sdk/README.md
+
+**Key Sections**:
+- LanguageModelV3 interface specification
+- doGenerate() method signature and return type
+- doStream() method signature and async iterator pattern
+- Tool definition schemas (LanguageModelV3FunctionTool)
+- Stream part types (text-delta, finish, error)
+- Provider factory pattern
+
+## Critical Implementation Details
+
+**LanguageModelV3 Interface Requirements**:
+```typescript
+interface LanguageModelV3 {
+  readonly specificationVersion: 'V3';
+  readonly provider: string;
+  readonly modelId: string;
+  readonly defaultObjectGenerationMode?: 'json' | 'tool';
+
+  doGenerate(options: LanguageModelV3CallOptions): Promise<LanguageModelV3GenerateResult>;
+  doStream(options: LanguageModelV3CallOptions): Promise<LanguageModelV3StreamResult>;
+}
+```
+
+**OCI Chat API Request Format**:
+```typescript
+interface ChatRequest {
+  compartmentId: string;
+  servingMode: ServingMode;
+  chatRequest: {
+    messages: Array<{
+      role: 'USER' | 'ASSISTANT' | 'SYSTEM';
+      content: Array<{ type: 'TEXT'; text: string }>;
+    }>;
+    inferenceConfig?: {
+      maxTokens?: number;
+      temperature?: number;
+      topP?: number;
+      topK?: number;
+      frequencyPenalty?: number;
+      presencePenalty?: number;
+      stopSequences?: string[];
+    };
+    tools?: Array<{
+      name: string;
+      description: string;
+      parameters: object; // JSON Schema
+    }>;
+  };
+}
+```
+
+**Server-Sent Events Stream Format**:
+```
+event: message
+data: {"chatResponse":{"choices":[{"message":{"role":"ASSISTANT","content":[{"type":"TEXT","text":"Hello"}]}}]}}
+
+event: message
+data: {"chatResponse":{"choices":[{"message":{"role":"ASSISTANT","content":[{"type":"TEXT","text":" world"}]}}]}}
+
+event: done
+data: [DONE]
+```
+
+## Zod Schema Patterns
+
+**Tool Definition with Zod** (AI SDK v5):
+```typescript
+import { tool } from 'ai';
+import { z } from 'zod';
+
+const weatherTool = tool({
+  description: 'Get the weather for a city',
+  inputSchema: z.object({
+    city: z.string().describe('City name'),
+    units: z.enum(['celsius', 'fahrenheit']).optional(),
+  }),
+  execute: async ({ city, units }) => {
+    return { temperature: 22, units: units ?? 'celsius' };
+  },
+});
+```
+
+**Schema Conversion Flow**:
+- Zod schema → AI SDK JSON Schema → OCI GenAI parameters format
+
+## Provider Implementation Examples
+
+- Basic provider structure: /docs/api-reference/vercel-ai-sdk/README.md#provider-implementation
+- Authentication setup: /docs/api-reference/oci-sdk/README.md#authentication
+- Error handling patterns: /docs/api-reference/oci-sdk/README.md#error-handling
+
+## Related Documentation
+
+- Streaming implementation: /docs/guides/streaming/README.md
+- Tool calling integration: /docs/guides/tool-calling/README.md
+- Authentication cascade: /docs/guides/authentication/README.md

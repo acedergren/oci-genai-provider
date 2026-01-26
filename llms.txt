@@ -1,0 +1,80 @@
+# OCI GenAI Provider
+
+> Vercel AI SDK v3 provider for Oracle Cloud Infrastructure Generative AI
+
+This project implements a custom language model provider for the Vercel AI SDK, enabling developers to use OCI Generative AI models (Grok, Llama, Cohere, Gemini) through the standard AI SDK interface.
+
+## Info
+
+- **Region**: eu-frankfurt-1 (primary)
+- **Version**: docs-v1.0.0
+- **Package**: @acedergren/oci-genai-provider
+- **License**: To be determined
+- **Status**: Documentation phase complete, implementation pending
+
+## Quick Reference
+
+- Getting Started: /docs/getting-started/README.md
+- Authentication: /docs/guides/authentication/README.md
+- IAM Policies: /docs/guides/iam-policies/README.md
+- Model Catalog: /docs/reference/oci-genai-models/README.md
+
+## Topic Files
+
+For focused documentation, see these topic-specific llms.txt files:
+
+- API Reference: llms-api-reference.txt
+- Implementation Guides: llms-guides.txt
+- Model Selection: llms-models.txt
+- Use Cases & Tutorials: llms-use-cases.txt
+- Architecture & Security: llms-architecture.txt
+
+## Core Concepts
+
+**Authentication Methods**:
+- API Key (config file)
+- Instance Principal (OCI Compute)
+- Resource Principal (OCI Functions)
+
+**Supported Model Families**:
+- xAI Grok (4-maverick, 4-scout, 3, 3-mini)
+- Meta Llama (3.3-70b, 3.2-vision, 3.1-405b)
+- Cohere Command (R+, A, A-reasoning, A-vision)
+- Google Gemini (2.5-pro, 2.5-flash, 2.5-flash-lite)
+- OpenAI gpt-oss
+
+**Key Features**:
+- Streaming responses (SSE)
+- Tool/function calling
+- Vision capabilities (select models)
+- Fine-tuning support
+- Regional deployment (11 regions)
+
+## Example Usage
+
+```typescript
+import { createOCI } from '@acedergren/oci-genai-provider';
+import { generateText } from 'ai';
+
+const oci = createOCI({
+  region: 'eu-frankfurt-1',
+  profile: 'DEFAULT',
+});
+
+const { text } = await generateText({
+  model: oci('cohere.command-r-plus'),
+  prompt: 'Explain OCI Generative AI',
+});
+```
+
+## Architecture Files
+
+- Design Decisions: /docs/architecture/design-decisions.md
+- Technology Stack: /docs/architecture/technology-stack.md
+- Code Conventions: /docs/architecture/code-conventions.md
+
+## Requirements
+
+- Original Spec: /docs/archive/requirements-spec.md (1,420 lines)
+- Configuration: /docs/guides/opencode-integration/configuration.md
+- Security: /docs/security/README.md

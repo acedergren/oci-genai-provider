@@ -1,0 +1,261 @@
+# OCI GenAI Provider - Model Catalog & Selection
+
+> Complete model catalog with capabilities, regional availability, and selection guidance
+
+This file contains comprehensive model documentation and dynamic selection strategies.
+
+## Info
+
+- **Focus**: Model capabilities, selection criteria, and deployment options
+- **Primary Region**: eu-frankfurt-1 (Frankfurt)
+- **Total Models**: 20+ models across 5 families
+
+## Model Catalog
+
+Complete model documentation:
+
+- Main Guide: /docs/reference/oci-genai-models/README.md
+
+## Model Families
+
+### xAI Grok Models
+
+**Grok 4 Maverick** (`xai.grok-4-maverick`)
+- **Best for**: Code generation, technical content, fast inference
+- **Context**: 128K tokens
+- **Capabilities**: Streaming ✓, Tools ✓, Vision ✗
+- **Speed**: Very fast
+- **Use case**: Primary code generation model
+
+**Grok 4 Scout** (`xai.grok-4-scout`)
+- **Best for**: Research, analysis, comprehensive responses
+- **Context**: 128K tokens
+- **Capabilities**: Streaming ✓, Tools ✓, Vision ✗
+- **Speed**: Fast
+- **Use case**: Complex reasoning tasks
+
+**Grok 3** (`xai.grok-3`)
+- **Best for**: General purpose, balanced performance
+- **Context**: 128K tokens
+- **Capabilities**: Streaming ✓, Tools ✓, Vision ✗
+- **Speed**: Fast
+
+**Grok 3 Mini** (`xai.grok-3-mini`)
+- **Best for**: Cost optimization, simple tasks
+- **Context**: 128K tokens
+- **Capabilities**: Streaming ✓, Tools ✓, Vision ✗
+- **Speed**: Very fast
+
+### Meta Llama Models
+
+**Llama 3.3 70B Instruct** (`meta.llama-3.3-70b-instruct`)
+- **Best for**: Cost-effective general purpose
+- **Context**: 128K tokens
+- **Capabilities**: Streaming ✓, Tools ✓, Vision ✗
+- **Fine-tuning**: Available ✓
+- **Use case**: Budget-conscious production workloads
+
+**Llama 3.2 Vision 90B** (`meta.llama-3.2-vision-90b-instruct`)
+- **Best for**: Image analysis, multimodal tasks
+- **Context**: 128K tokens
+- **Capabilities**: Streaming ✓, Tools ✓, Vision ✓
+- **Use case**: Document processing, image understanding
+
+**Llama 3.1 405B Instruct** (`meta.llama-3.1-405b-instruct`)
+- **Best for**: Complex reasoning, highest quality
+- **Context**: 128K tokens
+- **Capabilities**: Streaming ✓, Tools ✓, Vision ✗
+- **Fine-tuning**: Available ✓
+- **Use case**: Critical production workloads
+
+### Cohere Command Models
+
+**Command R+** (`cohere.command-r-plus`)
+- **Best for**: RAG workflows, retrieval-augmented generation
+- **Context**: 128K tokens
+- **Capabilities**: Streaming ✓, Tools ✓, Vision ✗
+- **Fine-tuning**: Available ✓
+- **Use case**: Document search, QA systems
+
+**Command A** (`cohere.command-a`)
+- **Best for**: Agent workflows, autonomous tasks
+- **Context**: 128K tokens
+- **Capabilities**: Streaming ✓, Tools ✓, Vision ✗
+- **Use case**: Multi-step agent orchestration
+
+**Command A Reasoning** (`cohere.command-a-reasoning`)
+- **Best for**: Chain-of-thought reasoning
+- **Context**: 128K tokens
+- **Capabilities**: Streaming ✓, Tools ✓, Vision ✗
+- **Use case**: Complex problem solving
+
+**Command A Vision** (`cohere.command-a-vision`)
+- **Best for**: Multimodal agent tasks
+- **Context**: 128K tokens
+- **Capabilities**: Streaming ✓, Tools ✓, Vision ✓
+- **Use case**: Document understanding with images
+
+### Google Gemini Models
+
+**Gemini 2.5 Pro** (`google.gemini-2.5-pro`)
+- **Best for**: Production workloads, high quality
+- **Context**: 1M tokens (extended context)
+- **Capabilities**: Streaming ✓, Tools ✓, Vision ✓
+- **Use case**: Long-document processing
+
+**Gemini 2.5 Flash** (`google.gemini-2.5-flash`)
+- **Best for**: Fast inference, cost efficiency
+- **Context**: 1M tokens
+- **Capabilities**: Streaming ✓, Tools ✓, Vision ✓
+- **Speed**: Very fast
+- **Use case**: Real-time applications
+
+**Gemini 2.5 Flash Lite** (`google.gemini-2.5-flash-lite`)
+- **Best for**: Maximum speed, simple tasks
+- **Context**: 1M tokens
+- **Capabilities**: Streaming ✓, Tools ✓, Vision ✓
+- **Speed**: Extremely fast
+- **Cost**: Lowest
+- **Use case**: High-volume simple queries
+
+### OpenAI Models
+
+**GPT OSS** (`openai.gpt-oss`)
+- **Best for**: OpenAI compatibility, migration
+- **Context**: Variable
+- **Capabilities**: Streaming ✓, Tools ✓, Vision ✗
+- **Use case**: Drop-in OpenAI replacement
+
+## Regional Availability
+
+**Frankfurt (eu-frankfurt-1)** - PRIMARY REGION
+- All model families available
+- Lowest latency for Europe
+- Recommended for production
+
+**Other Available Regions**:
+- Stockholm (eu-stockholm-1)
+- London (uk-london-1)
+- Amsterdam (eu-amsterdam-1)
+- Paris (eu-paris-1)
+- Mumbai (ap-mumbai-1)
+- Hyderabad (ap-hyderabad-1)
+- Singapore (ap-singapore-1)
+- Sydney (ap-sydney-1)
+- Tokyo (ap-tokyo-1)
+- Ashburn (us-ashburn-1)
+
+## Dynamic Model Selection
+
+**Strategy Pattern** (similar to Mistral implementation):
+
+```typescript
+interface ModelSelector {
+  selectModel(task: TaskType, constraints?: ModelConstraints): string;
+}
+
+class DynamicModelSelector implements ModelSelector {
+  selectModel(task: TaskType, constraints?: ModelConstraints): string {
+    // Code generation - prioritize Grok 4 Maverick
+    if (task === 'code-generation') {
+      return 'xai.grok-4-maverick';
+    }
+
+    // Fast inference - Gemini Flash Lite
+    if (constraints?.speed === 'maximum') {
+      return 'google.gemini-2.5-flash-lite';
+    }
+
+    // Long documents - Gemini Pro (1M context)
+    if (constraints?.contextSize && constraints.contextSize > 100000) {
+      return 'google.gemini-2.5-pro';
+    }
+
+    // RAG workflows - Cohere Command R+
+    if (task === 'retrieval-augmented') {
+      return 'cohere.command-r-plus';
+    }
+
+    // Vision tasks - check Gemini Flash or Llama Vision
+    if (task === 'vision' || task === 'multimodal') {
+      return 'google.gemini-2.5-flash'; // or 'meta.llama-3.2-vision-90b-instruct'
+    }
+
+    // Cost optimization - Llama 3.3 70B
+    if (constraints?.cost === 'minimum') {
+      return 'meta.llama-3.3-70b-instruct';
+    }
+
+    // Default: balanced performance
+    return 'cohere.command-r-plus';
+  }
+}
+```
+
+## Selection Criteria Matrix
+
+| Use Case | Primary Model | Alternative | Reason |
+|----------|---------------|-------------|--------|
+| Code Generation | Grok 4 Maverick | Llama 3.3 70B | Speed + quality |
+| RAG/Search | Command R+ | Gemini Pro | Retrieval optimized |
+| Agents | Command A | Grok 4 Scout | Tool calling |
+| Vision | Gemini Flash | Llama Vision | Multimodal |
+| Long Documents | Gemini Pro | Gemini Flash | 1M context |
+| Cost Sensitive | Llama 3.3 | Gemini Flash Lite | Budget |
+| Real-time | Gemini Flash Lite | Grok 4 Maverick | Speed |
+| Complex Reasoning | Command A Reasoning | Llama 3.1 405B | Chain-of-thought |
+
+## Deployment Modes
+
+**On-Demand (Shared Infrastructure)**
+- Pay-per-token pricing
+- Auto-scaling
+- No setup required
+- Best for: Development, variable workloads
+
+**Dedicated AI Clusters**
+- Reserved capacity
+- Predictable performance
+- Lower latency
+- Best for: Production, high volume
+
+**Setup Guide**: /docs/reference/oci-genai-models/README.md#deployment-modes
+
+## Capabilities Matrix
+
+Full feature comparison:
+
+| Model | Streaming | Tools | Vision | Fine-tune | Context |
+|-------|-----------|-------|--------|-----------|---------|
+| Grok 4 Maverick | ✓ | ✓ | ✗ | ✗ | 128K |
+| Llama 3.3 70B | ✓ | ✓ | ✗ | ✓ | 128K |
+| Command R+ | ✓ | ✓ | ✗ | ✓ | 128K |
+| Gemini 2.5 Pro | ✓ | ✓ | ✓ | ✗ | 1M |
+| Gemini Flash | ✓ | ✓ | ✓ | ✗ | 1M |
+| Gemini Flash Lite | ✓ | ✓ | ✓ | ✗ | 1M |
+
+## Performance Considerations
+
+**Latency** (Frankfurt region):
+- Gemini Flash Lite: ~500ms (fastest)
+- Grok 4 Maverick: ~700ms
+- Gemini Flash: ~800ms
+- Llama 3.3 70B: ~1000ms
+- Command R+: ~1200ms
+- Gemini Pro: ~1500ms
+
+**Token Limits**:
+- Standard: 128K tokens
+- Extended: 1M tokens (Gemini only)
+
+**Cost Optimization**:
+1. Use Gemini Flash Lite for simple queries
+2. Use Llama 3.3 for general purpose
+3. Reserve Grok 4/Command R+ for specialized tasks
+4. Use dedicated clusters for high volume
+
+## Related Documentation
+
+- API Reference: llms-api-reference.txt
+- Implementation Guides: llms-guides.txt
+- Use Cases: llms-use-cases.txt
