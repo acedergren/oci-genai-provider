@@ -1,5 +1,6 @@
 import { describe, it, expect } from '@jest/globals';
-import { mapFinishReason } from '../sse-parser';
+import { mapFinishReason, parseSSEStream } from '../sse-parser';
+import type { StreamPart } from '../types';
 
 describe('SSE Parser', () => {
   describe('mapFinishReason', () => {
@@ -86,6 +87,63 @@ describe('SSE Parser', () => {
     it('should handle empty events', () => {
       const emptyData = {};
       expect(Object.keys(emptyData)).toHaveLength(0);
+    });
+  });
+
+  describe('parseSSEStream', () => {
+    it('should parse text delta from stream', async () => {
+      const sseText = `event: message
+data: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"Hello"}]}}]}}
+
+`;
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller): void {
+          controller.enqueue(encoder.encode(sseText));
+          controller.close();
+        },
+      });
+
+      const response = new Response(stream);
+      const parts: StreamPart[] = [];
+
+      for await (const part of parseSSEStream(response)) {
+        parts.push(part);
+      }
+
+      expect(parts.length).toBeGreaterThan(0);
+      expect(parts[0].type).toBe('text-delta');
+      if (parts[0].type === 'text-delta') {
+        expect(parts[0].textDelta).toBe('Hello');
+      }
+    });
+
+    it('should parse finish event from stream', async () => {
+      const sseText = `event: message
+data: {"chatResponse":{"chatChoice":[{"finishReason":"STOP"}],"usage":{"promptTokens":10,"completionTokens":5}}}
+
+`;
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller): void {
+          controller.enqueue(encoder.encode(sseText));
+          controller.close();
+        },
+      });
+
+      const response = new Response(stream);
+      const parts: StreamPart[] = [];
+
+      for await (const part of parseSSEStream(response)) {
+        parts.push(part);
+      }
+
+      const finishPart = parts.find((p) => p.type === 'finish');
+      expect(finishPart).toBeDefined();
+      if (finishPart?.type === 'finish') {
+        expect(finishPart.finishReason).toBe('stop');
+        expect(finishPart.usage.promptTokens).toBe(10);
+      }
     });
   });
 });
