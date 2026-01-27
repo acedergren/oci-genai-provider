@@ -1,3 +1,34 @@
-// OCI GenAI Provider - Entry point
-// Exports will be added as modules are implemented
-export {};
+import type { LanguageModelV3 } from '@ai-sdk/provider';
+import type { OCIConfig, OCIProvider } from './types';
+import { OCILanguageModel } from './models/oci-language-model';
+
+/**
+ * Create OCI GenAI provider instance
+ */
+export function createOCI(config: OCIConfig = {}): OCIProvider {
+  return {
+    provider: 'oci-genai',
+    model: (modelId: string): LanguageModelV3 => {
+      return new OCILanguageModel(modelId, config);
+    },
+  };
+}
+
+/**
+ * Convenience function to create a language model directly
+ */
+export function oci(modelId: string, config?: OCIConfig): LanguageModelV3 {
+  const provider = createOCI(config);
+  return provider.model(modelId);
+}
+
+// Re-export types
+export type { OCIConfig, OCIProvider, ModelMetadata } from './types';
+
+// Re-export utilities
+export {
+  getModelMetadata,
+  getAllModels,
+  getModelsByFamily,
+  isValidModelId,
+} from './models/registry';
