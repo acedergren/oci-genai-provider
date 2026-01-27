@@ -4,15 +4,21 @@ This document provides Claude Code with essential project context, credentials l
 
 ## Project Overview
 
-OpenCode OCI GenAI integration project for enabling OCI Generative AI capabilities within OpenCode.
+**OCI Generative AI Provider for Vercel AI SDK** — A universal AI SDK provider that works with any application using the Vercel AI SDK, with optional OpenCode integration.
 
 ### Monorepo Architecture
 
 This project uses **pnpm workspaces** with three packages:
 
-- `@acedergren/oci-genai-provider` - Core provider (standalone, published to npm)
-- `@acedergren/opencode-oci-genai` - OpenCode integration (published to npm)
+- `@acedergren/oci-genai-provider` - **Core Vercel AI SDK provider** (universal, works everywhere)
+- `@acedergren/opencode-oci-genai` - **Optional OpenCode wrapper** (convenience layer for OpenCode users)
 - `@acedergren/test-utils` - Shared test mocks and fixtures (private)
+
+**Key Distinction**:
+
+- The core provider is a **standard Vercel AI SDK provider** — it works with Next.js, Remix, SvelteKit, Node.js, OpenCode, and any app using the AI SDK
+- The OpenCode package is **optional** — it's just a convenience wrapper that makes configuration easier for OpenCode users
+- You can use the core provider directly in OpenCode without the wrapper
 
 **Workspace Commands**:
 

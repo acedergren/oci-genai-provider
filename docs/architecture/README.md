@@ -91,40 +91,57 @@ Project coding standards and patterns:
 ### High-Level Overview
 
 ```
-┌─────────────────────────────────────────────────────┐
-│              Application Layer                       │
-├─────────────────────────────────────────────────────┤
-│  OpenCode Application  │  Vercel AI SDK Application │
-└──────┬─────────────────┴────────────┬───────────────┘
-       │                              │
-       │ opencode-oci-genai          │ Direct usage
-       │                              │
-┌──────▼──────────────────────────────▼───────────────┐
-│        @acedergren/opencode-oci-genai                │
-│  (OpenCode Integration - Optional Layer)            │
-├──────────────────────────────────────────────────────┤
-│  • Provider Registration   • Config Helpers         │
-│  • OpenCode-specific Types • Utility Functions      │
-└──────┬───────────────────────────────────────────────┘
-       │
-       │ Re-exports + extends
-       │
-┌──────▼───────────────────────────────────────────────┐
-│       @acedergren/oci-genai-provider (Core)          │
-│  LanguageModelV1 Implementation                      │
-├──────────────────────────────────────────────────────┤
-│  • Model Registry       • Message Conversion         │
-│  • Request Adapter      • SSE Stream Parser          │
-│  • Response Transformer • Error Handling             │
-│  • Authentication       • Tool Converter             │
-└──────┬───────────────────────────────────────────────┘
-       │
-       │ OCI TypeScript SDK
-       │
-┌──────▼───────────────────────────────────────────────┐
-│         OCI GenAI Service (Cloud)                    │
-│  Grok, Llama, Cohere, Gemini Models                  │
-└──────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│         Any Application Layer                 │
+├──────────────────────────────────────────────┤
+│  Next.js │ Remix │ SvelteKit │ Node.js │ ... │
+│          │ (All use Vercel AI SDK)           │
+└──────────────┬───────────────────────────────┘
+               │
+               │ Vercel AI SDK
+               │
+┌──────────────▼───────────────────────────────┐
+│     @acedergren/oci-genai-provider            │
+│     (Core Vercel AI SDK Provider)            │
+│     ✅ Universal - Works Everywhere           │
+├──────────────────────────────────────────────┤
+│  • Model Registry       • Message Conversion │
+│  • Request Adapter      • SSE Stream Parser  │
+│  • Response Transformer • Error Handling     │
+│  • Authentication       • Tool Converter     │
+└──────────────┬───────────────────────────────┘
+               │
+               │ OCI TypeScript SDK
+               │
+┌──────────────▼───────────────────────────────┐
+│      OCI GenAI Service (Cloud)               │
+│  Grok, Llama, Cohere, Gemini Models          │
+└──────────────────────────────────────────────┘
+```
+
+**Optional OpenCode Convenience Layer**:
+
+```
+┌──────────────────────────────────────────────┐
+│         OpenCode (TUI / Desktop)             │
+└──────────────┬───────────────────────────────┘
+               │
+               │ Optional convenience
+               ▼
+┌──────────────────────────────────────────────┐
+│   @acedergren/opencode-oci-genai             │
+│   (Thin Wrapper - Optional)                  │
+│   • Config helpers                           │
+│   • Model registry                           │
+│   • Validation                               │
+└──────────────┬───────────────────────────────┘
+               │
+               │ Re-exports and wraps
+               ▼
+┌──────────────────────────────────────────────┐
+│   @acedergren/oci-genai-provider             │
+│   (Core Provider)                            │
+└──────────────────────────────────────────────┘
 ```
 
 ### Workspace Dependency Flow
@@ -141,15 +158,18 @@ oci-genai-provider (core)
 opencode-integration (wrapper)
 ```
 
-### Monorepo Benefits
+### Package Separation
 
 **Why separate packages?**
 
-1. **Core Provider Independence** - `oci-genai-provider` can be used standalone with any Vercel AI SDK project
-2. **OpenCode Isolation** - OpenCode-specific features don't bloat the core provider
-3. **Shared Testing** - `test-utils` provides consistent mocks across packages
-4. **Versioning Flexibility** - Packages can be versioned independently
-5. **Clear Boundaries** - Explicit dependency graph prevents circular dependencies
+1. **Universal Core** - `oci-genai-provider` works with ANY Vercel AI SDK application
+2. **Optional Enhancement** - `opencode-oci-genai` only for OpenCode users who want convenience
+3. **Clear Boundaries** - Core provider has zero OpenCode dependencies
+4. **Independent Usage** - Can use core provider in Next.js, Remix, Node.js without OpenCode package
+5. **OpenCode Isolation** - OpenCode-specific features don't bloat the core provider
+6. **Shared Testing** - `test-utils` provides consistent mocks across packages
+7. **Versioning Flexibility** - Packages can be versioned independently
+8. **Clear Boundaries** - Explicit dependency graph prevents circular dependencies
 
 **Testing Architecture:**
 
