@@ -134,4 +134,38 @@ describe('Message Conversion', () => {
       expect(() => convertToOCIMessages(aiPrompt)).toThrow('Unsupported role');
     });
   });
+
+  describe('Performance', () => {
+    it('should convert messages with 100 parts in under 5ms', () => {
+      // Create message with 100 parts (mix of text and non-text)
+      const parts = [];
+      for (let i = 0; i < 100; i++) {
+        if (i % 2 === 0) {
+          parts.push({ type: 'text' as const, text: `Text ${i}` });
+        } else {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          parts.push({ type: 'image' as const, image: `image${i}` } as any);
+        }
+      }
+
+      const aiPrompt = [
+        {
+          role: 'user' as const,
+          content: parts,
+        },
+      ];
+
+      // Measure execution time
+      const start = performance.now();
+      const result = convertToOCIMessages(aiPrompt);
+      const duration = performance.now() - start;
+
+      // Verify correctness
+      expect(result[0].content).toHaveLength(50); // Only text parts
+      expect(result[0].content[0].text).toBe('Text 0');
+
+      // Verify performance: should be under 5ms
+      expect(duration).toBeLessThan(5);
+    });
+  });
 });

@@ -35,11 +35,14 @@ export function convertToOCIMessages(prompt: LanguageModelV3Prompt): OCIMessage[
       };
     }
 
-    // Handle array content - filter to text parts only
+    // Handle array content - single-pass conversion to text parts
     const textParts = Array.isArray(message.content)
-      ? message.content
-          .filter((part): part is { type: 'text'; text: string } => part.type === 'text')
-          .map((part) => ({ type: 'TEXT' as const, text: part.text }))
+      ? message.content.reduce<Array<{ type: 'TEXT'; text: string }>>((acc, part) => {
+          if (part.type === 'text') {
+            acc.push({ type: 'TEXT' as const, text: part.text });
+          }
+          return acc;
+        }, [])
       : [];
 
     return {
