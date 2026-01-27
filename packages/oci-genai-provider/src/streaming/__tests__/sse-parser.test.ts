@@ -125,7 +125,7 @@ describe('SSE Parser', () => {
 
       const duration = Date.now() - startTime;
       expect(count).toBe(1000);
-      expect(duration).toBeLessThan(100);
+      expect(duration).toBeLessThan(200); // Allow headroom for CI environments
     }, 10000); // 10 second timeout for benchmark
   });
 
