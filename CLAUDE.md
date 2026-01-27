@@ -224,27 +224,36 @@ oci search resource structured-search --query-text "query all resources"
 
 **Available Agents**:
 
+**Implementation & Development:**
+
+1. **typescript-specialist** (color: blue)
+   - **Purpose**: Expert TypeScript developer for type-safe implementations, generics, and advanced patterns
+   - **When to Use**: Complex types, generic functions, type system issues, TypeScript best practices
+   - **Tools**: Read, Write, Edit, Grep, Glob, Bash
+   - **Example**: "Create a type-safe converter with proper generics"
+   - **Expertise**: Discriminated unions, branded types, utility types, conditional types, ESM modules
+
 **Workflow Automation:**
 
-1. **tdd-implementor** (color: green)
+2. **tdd-implementor** (color: green)
    - **Purpose**: Implements features following strict TDD RED-GREEN-REFACTOR-COMMIT cycles
    - **When to Use**: When implementing tasks from the TDD plan
    - **Tools**: Read, Write, Edit, Bash, Grep, Glob
    - **Example**: "Implement Task 1 from the TDD plan"
 
-2. **monorepo-navigator** (color: purple)
+3. **monorepo-navigator** (color: purple)
    - **Purpose**: Navigate pnpm workspace monorepo, run package-specific commands
    - **When to Use**: When running tests/builds in specific packages or analyzing dependencies
    - **Tools**: Read, Bash, Grep, Glob
    - **Example**: "Run tests for the core provider package"
 
-3. **docs-synchronizer** (color: cyan)
+4. **docs-synchronizer** (color: cyan)
    - **Purpose**: Update documentation consistently across all files (docs/, READMEs, llms.txt, CLAUDE.md, Serena)
    - **When to Use**: When architecture changes or documentation needs syncing
    - **Tools**: Read, Edit, Write, Grep, Glob, Serena memory tools
    - **Example**: "Update documentation for the new streaming implementation"
 
-4. **test-utils-manager** (color: yellow)
+5. **test-utils-manager** (color: yellow)
    - **Purpose**: Manage @acedergren/test-utils package, OCI SDK mocks, and test fixtures
    - **When to Use**: When adding fixtures, updating mocks, or managing test infrastructure
    - **Tools**: Read, Edit, Write, Grep, Bash
@@ -252,7 +261,7 @@ oci search resource structured-search --query-text "query all resources"
 
 **Multi-Agent Orchestration:**
 
-5. **orchestrator** (color: magenta)
+6. **orchestrator** (color: magenta)
    - **Purpose**: Coordinates multiple specialized agents for complex multi-step workflows
    - **When to Use**: Tasks requiring parallel research, sequential pipelines, or team coordination
    - **Tools**: Task, TeammateTool, TaskCreate, TaskUpdate, TaskList, Read, Grep, Glob
@@ -261,29 +270,30 @@ oci search resource structured-search --query-text "query all resources"
 
 **Code Analysis & Quality:**
 
-6. **architecture-analyzer** (color: cyan)
+7. **architecture-analyzer** (color: cyan)
    - **Purpose**: Analyzes code architecture, design patterns, and structural decisions
    - **When to Use**: Evaluating design quality, identifying architectural issues, planning refactoring
    - **Tools**: Read, Grep, Glob, Bash
    - **Example**: "Analyze the architecture of the models module"
 
-7. **security-auditor** (color: red)
+8. **security-auditor** (color: red)
    - **Purpose**: Performs comprehensive security audits (OWASP Top 10, exposed secrets, auth issues)
    - **When to Use**: After code changes, before PRs, for security reviews
    - **Tools**: Read, Grep, Glob, Bash
    - **Example**: "Audit the authentication module for security vulnerabilities"
 
-8. **performance-optimizer** (color: yellow)
+9. **performance-optimizer** (color: yellow)
    - **Purpose**: Identifies performance bottlenecks and optimization opportunities
    - **When to Use**: Investigating slow operations, high memory usage, inefficient algorithms
    - **Tools**: Read, Grep, Glob, Bash
    - **Example**: "Find performance bottlenecks in the streaming pipeline"
 
-9. **integration-tester** (color: blue)
-   - **Purpose**: Tests integration points, API contracts, and cross-module interactions
-   - **When to Use**: Verifying interfaces, testing integration scenarios, validating API compatibility
-   - **Tools**: Read, Bash, Grep, Glob
-   - **Example**: "Test the integration between provider and Vercel AI SDK"
+10. **integration-tester** (color: blue)
+
+- **Purpose**: Tests integration points, API contracts, and cross-module interactions
+- **When to Use**: Verifying interfaces, testing integration scenarios, validating API compatibility
+- **Tools**: Read, Bash, Grep, Glob
+- **Example**: "Test the integration between provider and Vercel AI SDK"
 
 **How to Invoke**:
 
