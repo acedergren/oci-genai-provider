@@ -63,11 +63,11 @@ describe('SSE Parser', () => {
     it('should yield finish part with usage', () => {
       const part = {
         type: 'finish' as const,
-        finishReason: 'stop' as const,
+        finishReason: { unified: 'stop' as const, raw: 'STOP' },
         usage: { promptTokens: 1, completionTokens: 1 },
       };
       expect(part.type).toBe('finish');
-      expect(part.finishReason).toBe('stop');
+      expect(part.finishReason).toEqual({ unified: 'stop', raw: 'STOP' });
     });
   });
 
@@ -180,7 +180,7 @@ data: {"chatResponse":{"chatChoice":[{"finishReason":"STOP"}],"usage":{"promptTo
       const finishPart = parts.find((p) => p.type === 'finish');
       expect(finishPart).toBeDefined();
       if (finishPart?.type === 'finish') {
-        expect(finishPart.finishReason).toBe('stop');
+        expect(finishPart.finishReason).toEqual({ unified: 'stop', raw: 'STOP' });
         expect(finishPart.usage.promptTokens).toBe(10);
       }
     });
