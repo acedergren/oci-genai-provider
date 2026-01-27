@@ -42,5 +42,8 @@
     "directory": "packages/opencode-integration"
   },
   "author": "Alexander Cedergren <alexander.cedergren@oracle.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "tsup": "^8.0.0"
+  }
 }

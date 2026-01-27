@@ -23,9 +23,11 @@ const mockGetCompartmentId = jest.fn<(config: OCIConfig) => string>();
 
 // Mock auth module
 jest.mock('../../auth/index.js', () => ({
-  createAuthProvider: (config: OCIConfig) => mockCreateAuthProvider(config),
-  getRegion: (config: OCIConfig) => mockGetRegion(config),
-  getCompartmentId: (config: OCIConfig) => mockGetCompartmentId(config),
+  createAuthProvider: (config: OCIConfig): ReturnType<typeof mockCreateAuthProvider> =>
+    mockCreateAuthProvider(config),
+  getRegion: (config: OCIConfig): ReturnType<typeof mockGetRegion> => mockGetRegion(config),
+  getCompartmentId: (config: OCIConfig): ReturnType<typeof mockGetCompartmentId> =>
+    mockGetCompartmentId(config),
 }));
 
 // Mock OCI SDK
@@ -42,7 +44,8 @@ jest.mock('oci-generativeaiinference', () => ({
 // Mock oci-common Region
 jest.mock('oci-common', () => ({
   Region: {
-    fromRegionId: (regionId: string) => mockFromRegionId(regionId),
+    fromRegionId: (regionId: string): ReturnType<typeof mockFromRegionId> =>
+      mockFromRegionId(regionId),
   },
 }));
 
