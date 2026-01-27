@@ -16,12 +16,17 @@
     "README.md"
   ],
   "keywords": [
-    "opencode",
     "oci",
     "oracle-cloud",
     "generative-ai",
-    "ai"
+    "opencode",
+    "ai",
+    "llm"
   ],
+  "homepage": "https://github.com/acedergren/opencode-oci-genai#readme",
+  "bugs": {
+    "url": "https://github.com/acedergren/opencode-oci-genai/issues"
+  },
   "scripts": {
     "build": "tsup",
     "test": "jest --passWithNoTests",
