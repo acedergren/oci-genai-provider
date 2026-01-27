@@ -6,6 +6,24 @@ This document provides Claude Code with essential project context, credentials l
 
 OpenCode OCI GenAI integration project for enabling OCI Generative AI capabilities within OpenCode.
 
+### Monorepo Architecture
+
+This project uses **pnpm workspaces** with three packages:
+
+- `@acedergren/oci-genai-provider` - Core provider (standalone, published to npm)
+- `@acedergren/opencode-oci-genai` - OpenCode integration (published to npm)
+- `@acedergren/test-utils` - Shared test mocks and fixtures (private)
+
+**Workspace Commands**:
+
+```bash
+pnpm install                          # Install all dependencies
+pnpm build                            # Build all packages
+pnpm test                             # Run all tests
+pnpm --filter @acedergren/oci-genai-provider test    # Test specific package
+pnpm --filter @acedergren/oci-genai-provider build   # Build specific package
+```
+
 ## Credentials & Secrets
 
 ### GitHub Authentication
@@ -114,6 +132,27 @@ Pre-commit hooks are configured to run:
 4. **Security Scanning** - Check for exposed secrets
 5. **Tests** - Run unit tests before commit
 
+**Common Linting Issues**:
+
+- Remove `async` from functions without `await` - use `Promise.resolve()` or `Promise.reject()` instead
+- Prefix unused parameters with underscore (`_param`)
+- Add explicit return types to functions
+
+## Testing Strategy
+
+**Test-Driven Development (TDD)**:
+
+- 121 comprehensive tests across 14 test files
+- 80%+ code coverage target (branches, functions, lines, statements)
+- RED-GREEN-REFACTOR-COMMIT cycles with atomic commits
+- Implementation plan: `docs/plans/2026-01-27-core-provider-tdd-implementation.md`
+
+**Test Infrastructure** (`@acedergren/test-utils`):
+
+- Shared OCI SDK mocks (oci-common, oci-generativeaiinference)
+- Test fixtures: `TEST_CONFIG`, `TEST_MODEL_IDS`, `TEST_OCIDS`
+- Usage: `import { TEST_CONFIG, TEST_MODEL_IDS } from '@acedergren/test-utils'`
+
 ## CI/CD Pipeline
 
 **GitHub Actions Workflows**:
@@ -160,7 +199,32 @@ oci search resource structured-search --query-text "query all resources"
 - Authentication: OCI API key (from `~/.oci/config`)
 - SDK: OCI SDK for Node.js/TypeScript
 
+## Serena Integration
+
+**Project Memory**: Serena memories created for this project (activate with project path):
+
+```bash
+# Activate project: /Users/acedergr/Projects/opencode-oci-genai
+```
+
+**Available Memories**:
+
+- `monorepo-architecture` - Package structure, dependencies, workspace commands
+- `testing-strategy-tdd` - 121 tests, TDD workflow, test utilities
+- `implementation-status` - Current status, completed/pending tasks, key decisions
+- `core-provider-api` - Public API, module structure, usage examples
+
+**When to Use**: Read relevant memories at session start to understand project context without re-exploration.
+
+## Key Documentation
+
+- **Architecture**: `docs/architecture/README.md` - Monorepo structure, design decisions
+- **Testing Guide**: `docs/testing/README.md` - TDD workflow, best practices, coverage
+- **Implementation Plans**: `docs/plans/` - TDD plan, test specifications
+- **Getting Started**: `docs/getting-started/README.md` - Package selection, installation
+- **Package READMEs**: `packages/*/README.md` - Package-specific documentation
+
 ---
 
-**Last Updated**: 2026-01-26
+**Last Updated**: 2026-01-27
 **Maintained By**: Claude Code
