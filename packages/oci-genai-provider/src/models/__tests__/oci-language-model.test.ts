@@ -202,7 +202,7 @@ describe('OCILanguageModel', () => {
 
       expect(result.content).toBeDefined();
       expect(result.content.length).toBeGreaterThan(0);
-      expect(result.finishReason).toBe('stop');
+      expect(result.finishReason).toEqual({ unified: 'stop', raw: 'STOP' });
     });
 
     it('should return usage statistics', async () => {
