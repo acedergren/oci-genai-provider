@@ -1,3 +1,5 @@
+import type { LanguageModelV3FinishReason } from '@ai-sdk/provider';
+
 export interface TextDeltaPart {
   type: 'text-delta';
   textDelta: string;
@@ -5,7 +7,7 @@ export interface TextDeltaPart {
 
 export interface FinishPart {
   type: 'finish';
-  finishReason: 'stop' | 'length' | 'content-filter' | 'other';
+  finishReason: LanguageModelV3FinishReason;
   usage: {
     promptTokens: number;
     completionTokens: number;
@@ -13,3 +15,15 @@ export interface FinishPart {
 }
 
 export type StreamPart = TextDeltaPart | FinishPart;
+
+/**
+ * Unified finish reason values matching AI SDK v3 spec.
+ * Used for the 'unified' field of LanguageModelV3FinishReason.
+ */
+export type UnifiedFinishReason =
+  | 'stop'
+  | 'length'
+  | 'content-filter'
+  | 'tool-calls'
+  | 'error'
+  | 'other';
