@@ -162,5 +162,5 @@ oci search resource structured-search --query-text "query all resources"
 
 ---
 
-**Last Updated**: 2026-01-26
+**Last Updated**: 2026-01-27
 **Maintained By**: Claude Code
