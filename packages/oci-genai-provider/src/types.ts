@@ -1,6 +1,46 @@
 import type { LanguageModelV3 } from '@ai-sdk/provider';
 
 /**
+ * Request options for configuring retry and timeout behavior.
+ */
+export interface RequestOptions {
+  /**
+   * Request timeout in milliseconds.
+   * @default 30000 (30 seconds)
+   */
+  timeoutMs?: number;
+
+  /**
+   * Retry configuration for transient failures.
+   */
+  retry?: {
+    /**
+     * Enable automatic retry on transient failures.
+     * @default true
+     */
+    enabled?: boolean;
+
+    /**
+     * Maximum number of retry attempts.
+     * @default 3
+     */
+    maxRetries?: number;
+
+    /**
+     * Base delay in milliseconds for exponential backoff.
+     * @default 100
+     */
+    baseDelayMs?: number;
+
+    /**
+     * Maximum delay in milliseconds between retries.
+     * @default 10000
+     */
+    maxDelayMs?: number;
+  };
+}
+
+/**
  * Authentication method for OCI
  */
 export type OCIAuthMethod =
@@ -46,6 +86,12 @@ export interface OCIConfig {
    * Custom endpoint URL (for testing/dedicated clusters)
    */
   endpoint?: string;
+
+  /**
+   * Default request options for retry and timeout behavior.
+   * These can be overridden per-request.
+   */
+  requestOptions?: RequestOptions;
 }
 
 /**
