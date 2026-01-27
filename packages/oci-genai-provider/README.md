@@ -15,7 +15,7 @@ This provider implements the Vercel AI SDK's `LanguageModelV1` interface, which 
 
 **No special setup required** - just install and use like any other AI SDK provider.
 
-> 💡 **Using OpenCode?** Check out [@acedergren/opencode-oci-genai](../opencode-integration) for a convenient integration package with config helpers and model presets.
+> 💡 **Using OpenCode?** Check out [@acedergren/oci-genai-provider](../opencode-integration) for a convenient integration package with config helpers and model presets.
 
 ## Features
 
@@ -287,8 +287,8 @@ This package is part of a monorepo. For contributors:
 
 ```bash
 # Clone the monorepo
-git clone https://github.com/acedergren/opencode-oci-genai.git
-cd opencode-oci-genai
+git clone https://github.com/acedergren/oci-genai-provider.git
+cd oci-genai-provider
 
 # Install dependencies (requires pnpm 8+)
 pnpm install
@@ -326,8 +326,8 @@ MIT
 
 ## Links
 
-- [Documentation](https://github.com/acedergren/opencode-oci-genai/tree/main/docs)
-- [Testing Guide](https://github.com/acedergren/opencode-oci-genai/tree/main/docs/testing)
-- [TDD Plan](https://github.com/acedergren/opencode-oci-genai/tree/main/docs/plans/2026-01-27-core-provider-tdd-implementation.md)
-- [Examples](https://github.com/acedergren/opencode-oci-genai/tree/main/packages/examples)
-- [Issues](https://github.com/acedergren/opencode-oci-genai/issues)
+- [Documentation](https://github.com/acedergren/oci-genai-provider/tree/main/docs)
+- [Testing Guide](https://github.com/acedergren/oci-genai-provider/tree/main/docs/testing)
+- [TDD Plan](https://github.com/acedergren/oci-genai-provider/tree/main/docs/plans/2026-01-27-core-provider-tdd-implementation.md)
+- [Examples](https://github.com/acedergren/oci-genai-provider/tree/main/packages/examples)
+- [Issues](https://github.com/acedergren/oci-genai-provider/issues)

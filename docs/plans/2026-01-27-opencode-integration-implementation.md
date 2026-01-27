@@ -23,6 +23,7 @@
 ## Task 1: OpenCode Configuration Types
 
 **Files:**
+
 - Create: `packages/opencode-integration/src/types.ts`
 
 **Step 1: Define OpenCode-specific config**
@@ -89,6 +90,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 2: Provider Registration
 
 **Files:**
+
 - Create: `packages/opencode-integration/src/register.ts`
 
 **Step 1: Implement registration function**
@@ -99,8 +101,7 @@ import type { OpenCodeOCIConfig } from './types';
 
 export function registerOCIProvider(config?: OpenCodeOCIConfig) {
   const displayName = config?.displayName || 'OCI GenAI';
-  const description =
-    config?.description || 'Oracle Cloud Infrastructure Generative AI';
+  const description = config?.description || 'Oracle Cloud Infrastructure Generative AI';
   const enabled = config?.enabled !== false;
   const priority = config?.priority || 100;
 
@@ -112,9 +113,7 @@ export function registerOCIProvider(config?: OpenCodeOCIConfig) {
   const provider = createOCI(config);
 
   // Register with OpenCode (OpenCode API TBD)
-  console.log(
-    `[OpenCode] Registered ${displayName}: ${getAllModels().length} models available`
-  );
+  console.log(`[OpenCode] Registered ${displayName}: ${getAllModels().length} models available`);
 
   return {
     ...provider,
@@ -163,6 +162,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 3: Configuration Helpers
 
 **Files:**
+
 - Create: `packages/opencode-integration/src/config.ts`
 
 **Step 1: Implement config validation**
@@ -242,6 +242,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 4: Convenience Utilities
 
 **Files:**
+
 - Create: `packages/opencode-integration/src/utils.ts`
 
 **Step 1: Implement model selector**
@@ -268,9 +269,7 @@ export function selectBestModel(
 
   // Filter by context window
   if (requirements.contextWindow) {
-    candidates = candidates.filter(
-      (m) => m.contextWindow >= requirements.contextWindow
-    );
+    candidates = candidates.filter((m) => m.contextWindow >= requirements.contextWindow);
   }
 
   // Filter by capabilities
@@ -324,6 +323,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 5: Main Export & Documentation
 
 **Files:**
+
 - Update: `packages/opencode-integration/src/index.ts`
 - Create: `packages/opencode-integration/README.md`
 
@@ -379,15 +379,15 @@ OCI_CONFIG_PROFILE=DEFAULT
 
 \`\`\`json
 {
-  "providers": {
-    "oci": {
-      "displayName": "OCI GenAI",
-      "region": "eu-frankfurt-1",
-      "compartmentId": "ocid1.compartment.oc1..your-id",
-      "enabled": true,
-      "priority": 100
-    }
-  }
+"providers": {
+"oci": {
+"displayName": "OCI GenAI",
+"region": "eu-frankfurt-1",
+"compartmentId": "ocid1.compartment.oc1..your-id",
+"enabled": true,
+"priority": 100
+}
+}
 }
 \`\`\`
 
@@ -412,12 +412,13 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 6: Build & Verify
 
 **Files:**
+
 - Run build and verify
 
 **Step 1: Install dependencies**
 
 ```bash
-cd /Users/acedergr/Projects/opencode-oci-genai
+cd /Users/acedergr/Projects/oci-genai-provider
 pnpm install
 ```
 
