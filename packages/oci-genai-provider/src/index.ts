@@ -23,7 +23,7 @@ export function oci(modelId: string, config?: OCIConfig): LanguageModelV3 {
 }
 
 // Re-export types
-export type { OCIConfig, OCIProvider, ModelMetadata } from './types';
+export type { OCIConfig, OCIProvider, ModelMetadata, RequestOptions } from './types';
 
 // Re-export utilities
 export {
@@ -49,3 +49,12 @@ export type {
   RateLimitErrorOptions,
   AuthenticationErrorOptions,
 } from './errors';
+
+// Re-export utility functions
+export {
+  withRetry,
+  withTimeout,
+  TimeoutError,
+  isRetryableError as isRetryableNetworkError,
+} from './utils';
+export type { RetryOptions } from './utils';
