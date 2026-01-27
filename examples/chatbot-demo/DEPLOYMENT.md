@@ -88,6 +88,53 @@ jobs:
           directory: examples/chatbot-demo/.svelte-kit/cloudflare
 ```
 
+## Cloudflare Access (Required)
+
+**Important**: Protect this demo with Cloudflare Access to prevent unauthorized usage of your OCI GenAI billing.
+
+### Setup Cloudflare Access
+
+1. **Go to Cloudflare Dashboard** → Zero Trust → Access → Applications
+
+2. **Create Application**
+   - Application type: **Self-hosted**
+   - Application name: `OCI GenAI Chatbot`
+   - Application domain: `your-demo.pages.dev` (or custom domain)
+
+3. **Configure Policy**
+   - Policy name: `Authorized Users`
+   - Action: **Allow**
+   - Include rules (choose one or more):
+     - **Emails**: Specific email addresses
+     - **Email domains**: e.g., `@oracle.com`
+     - **GitHub organization**: Your GitHub org
+     - **One-time PIN**: For easy sharing
+
+4. **Example Policy for Personal Use**
+
+   ```
+   Policy: Allow Owner
+   Include: Emails = your-email@example.com
+   ```
+
+5. **Example Policy for Team**
+   ```
+   Policy: Allow Team
+   Include: Email domain = yourcompany.com
+   ```
+
+### Verify Protection
+
+After setup, accessing the demo URL will:
+
+1. Redirect to Cloudflare Access login
+2. Require authentication (email, GitHub, etc.)
+3. Only allow configured users through
+
+**Note**: API tokens for Cloudflare are stored in OCI Vault (AC-Vault).
+
+---
+
 ## Local Development
 
 ```bash
