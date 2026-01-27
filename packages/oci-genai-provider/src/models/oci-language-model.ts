@@ -95,9 +95,7 @@ export class OCILanguageModel implements LanguageModelV3 {
 
       const choice = response.chatResponse?.chatChoice?.[0];
       const textContent = choice?.message?.content?.[0]?.text ?? '';
-      const finishReason = mapFinishReason(
-        choice?.finishReason ?? 'STOP'
-      ) as unknown as LanguageModelV3FinishReason;
+      const finishReason = mapFinishReason(choice?.finishReason ?? 'STOP');
 
       return {
         content: [{ type: 'text', text: textContent }],
