@@ -211,6 +211,28 @@ packages/
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for development guidelines.
 
+## Legal Disclaimer
+
+**NO AFFILIATION WITH ORACLE CORPORATION**
+
+This project is an independent, community-developed software project and has no official affiliation, endorsement, sponsorship, or connection with Oracle Corporation and/or its subsidiaries or affiliates (collectively, "Oracle"). The use of the term "OCI" or "Oracle Cloud Infrastructure" in this project refers solely to compatibility with Oracle's cloud services and does not imply any relationship with or endorsement by Oracle.
+
+**DISCLAIMER OF WARRANTIES AND LIMITATION OF LIABILITY**
+
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS, COPYRIGHT HOLDERS, CONTRIBUTORS, ORACLE CORPORATION, OR ANY OF ITS AFFILIATES BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+BY USING THIS SOFTWARE, YOU ACKNOWLEDGE AND AGREE THAT:
+
+1. Neither the project maintainers nor Oracle Corporation and/or its affiliates make any representations or warranties regarding this software;
+2. You assume all risks and responsibilities associated with the use of this software;
+3. Neither the project maintainers nor Oracle Corporation and/or its affiliates shall have any liability or responsibility for any direct, indirect, incidental, special, exemplary, or consequential damages arising from your use of this software;
+4. This software is provided for convenience and interoperability purposes only and does not constitute professional advice or services;
+5. You are solely responsible for compliance with all applicable laws, regulations, and Oracle's terms of service when using this software with Oracle Cloud Infrastructure services.
+
+**INDEPENDENT PROJECT NOTICE**
+
+This is a community project created and maintained independently by Alexander Cedergren. Questions, issues, or support requests should be directed to this project's repository and not to Oracle Corporation or its support channels.
+
 ## License
 
 MIT
