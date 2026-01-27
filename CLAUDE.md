@@ -216,6 +216,38 @@ oci search resource structured-search --query-text "query all resources"
 
 **When to Use**: Read relevant memories at session start to understand project context without re-exploration.
 
+## Project Agents
+
+**Agent Definitions**: Specialized Claude Code agents are defined in `agents.md` for workflow-specific tasks.
+
+**Available Agents**:
+
+1. **tdd-implementor** (color: green)
+   - **Purpose**: Implements features following strict TDD RED-GREEN-REFACTOR-COMMIT cycles
+   - **When to Use**: When implementing tasks from the TDD plan
+   - **Tools**: Read, Write, Edit, Bash, Grep, Glob
+   - **Example**: "Implement Task 1 from the TDD plan"
+
+2. **monorepo-navigator** (color: purple)
+   - **Purpose**: Navigate pnpm workspace monorepo, run package-specific commands
+   - **When to Use**: When running tests/builds in specific packages or analyzing dependencies
+   - **Tools**: Read, Bash, Grep, Glob
+   - **Example**: "Run tests for the core provider package"
+
+3. **docs-synchronizer** (color: cyan)
+   - **Purpose**: Update documentation consistently across all files (docs/, READMEs, llms.txt, CLAUDE.md, Serena)
+   - **When to Use**: When architecture changes or documentation needs syncing
+   - **Tools**: Read, Edit, Write, Grep, Glob, Serena memory tools
+   - **Example**: "Update documentation for the new streaming implementation"
+
+4. **test-utils-manager** (color: yellow)
+   - **Purpose**: Manage @acedergren/test-utils package, OCI SDK mocks, and test fixtures
+   - **When to Use**: When adding fixtures, updating mocks, or managing test infrastructure
+   - **Tools**: Read, Edit, Write, Grep, Bash
+   - **Example**: "Add a new model ID fixture for testing"
+
+**How to Invoke**: Use the Task tool with the appropriate `subagent_type` when the task matches an agent's purpose.
+
 ## Key Documentation
 
 - **Architecture**: `docs/architecture/README.md` - Monorepo structure, design decisions
