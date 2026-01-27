@@ -1,139 +1,115 @@
 import { describe, it, expect } from '@jest/globals';
+import { OCIGenAIError, isRetryableError, handleOCIError } from '../errors';
 
 describe('Error Handling', () => {
   describe('OCIGenAIError', () => {
     it('should create error with message', () => {
-      const error = {
-        message: 'Test error',
-        name: 'OCIGenAIError',
-      };
+      const error = new OCIGenAIError('Test error');
       expect(error.message).toBe('Test error');
       expect(error.name).toBe('OCIGenAIError');
     });
 
     it('should include status code', () => {
-      const error = {
-        statusCode: 429,
-        retryable: true,
-      };
+      const error = new OCIGenAIError('Rate limited', 429, true);
       expect(error.statusCode).toBe(429);
     });
 
     it('should mark as retryable', () => {
-      const error = {
-        statusCode: 429,
-        retryable: true,
-      };
+      const error = new OCIGenAIError('Rate limited', 429, true);
       expect(error.retryable).toBe(true);
     });
 
-    it('should mark as non-retryable', () => {
-      const error = {
-        statusCode: 400,
-        retryable: false,
-      };
+    it('should mark as non-retryable by default', () => {
+      const error = new OCIGenAIError('Bad request', 400);
       expect(error.retryable).toBe(false);
     });
   });
 
   describe('isRetryableError', () => {
     it('should identify 429 as retryable', () => {
-      const statusCode = 429;
-      const retryable = statusCode === 429 || statusCode >= 500;
-      expect(retryable).toBe(true);
+      expect(isRetryableError(429)).toBe(true);
     });
 
     it('should identify 500 as retryable', () => {
-      const statusCode = 500;
-      const retryable = statusCode >= 500;
-      expect(retryable).toBe(true);
+      expect(isRetryableError(500)).toBe(true);
     });
 
     it('should identify 503 as retryable', () => {
-      const statusCode = 503;
-      const retryable = statusCode >= 500;
-      expect(retryable).toBe(true);
+      expect(isRetryableError(503)).toBe(true);
     });
 
     it('should mark 400 as non-retryable', () => {
-      const statusCode = 400;
-      const retryable = statusCode >= 500;
-      expect(retryable).toBe(false);
+      expect(isRetryableError(400)).toBe(false);
     });
 
     it('should mark 401 as non-retryable', () => {
-      const statusCode = 401;
-      const retryable = statusCode >= 500;
-      expect(retryable).toBe(false);
+      expect(isRetryableError(401)).toBe(false);
     });
 
     it('should mark 403 as non-retryable', () => {
-      const statusCode = 403;
-      const retryable = statusCode >= 500;
-      expect(retryable).toBe(false);
+      expect(isRetryableError(403)).toBe(false);
     });
 
     it('should mark 404 as non-retryable', () => {
-      const statusCode = 404;
-      const retryable = statusCode >= 500;
-      expect(retryable).toBe(false);
+      expect(isRetryableError(404)).toBe(false);
     });
   });
 
   describe('handleOCIError', () => {
     it('should add auth context to 401 errors', () => {
-      const message = 'Unauthorized\nCheck OCI authentication configuration.';
-      expect(message).toContain('authentication');
+      const rawError = { message: 'Unauthorized', statusCode: 401 };
+      const error = handleOCIError(rawError);
+      expect(error.message).toContain('authentication');
     });
 
     it('should add IAM context to 403 errors', () => {
-      const message = 'Forbidden\nCheck IAM policies and compartment access.';
-      expect(message).toContain('IAM policies');
+      const rawError = { message: 'Forbidden', statusCode: 403 };
+      const error = handleOCIError(rawError);
+      expect(error.message).toContain('IAM policies');
     });
 
     it('should add model context to 404 errors', () => {
-      const message = 'Not found\nCheck model ID and regional availability.';
-      expect(message).toContain('model ID');
+      const rawError = { message: 'Not found', statusCode: 404 };
+      const error = handleOCIError(rawError);
+      expect(error.message).toContain('model ID');
     });
 
     it('should add rate limit context to 429 errors', () => {
-      const message = 'Too many requests\nRate limit exceeded. Implement retry with backoff.';
-      expect(message).toContain('Rate limit');
+      const rawError = { message: 'Too many requests', statusCode: 429 };
+      const error = handleOCIError(rawError);
+      expect(error.message).toContain('Rate limit');
     });
 
     it('should preserve original message', () => {
-      const original = 'Original error message';
-      expect(original).toBe('Original error message');
+      const rawError = new Error('Original error message');
+      const error = handleOCIError(rawError);
+      expect(error.message).toContain('Original error message');
     });
 
     it('should wrap non-OCI errors', () => {
       const error = new Error('Network timeout');
-      expect(error.message).toContain('timeout');
+      const wrapped = handleOCIError(error);
+      expect(wrapped).toBeInstanceOf(OCIGenAIError);
+      expect(wrapped.message).toContain('timeout');
     });
   });
 
   describe('Error Integration', () => {
-    it('should wrap doGenerate errors', () => {
-      const wrappedError = {
-        name: 'OCIGenAIError',
-        message: 'API call failed',
-      };
-      expect(wrappedError.name).toBe('OCIGenAIError');
+    it('should return OCIGenAIError if already wrapped', () => {
+      const original = new OCIGenAIError('Already wrapped', 500, true);
+      const result = handleOCIError(original);
+      expect(result).toBe(original);
     });
 
-    it('should wrap doStream errors', () => {
-      const wrappedError = {
-        name: 'OCIGenAIError',
-        message: 'Stream failed',
-      };
-      expect(wrappedError.name).toBe('OCIGenAIError');
+    it('should set retryable based on status code', () => {
+      const rawError = { message: 'Server error', statusCode: 503 };
+      const error = handleOCIError(rawError);
+      expect(error.retryable).toBe(true);
     });
 
     it('should preserve status code in wrapped error', () => {
-      const wrapped = {
-        statusCode: 403,
-        retryable: false,
-      };
+      const rawError = { message: 'Forbidden', statusCode: 403 };
+      const wrapped = handleOCIError(rawError);
       expect(wrapped.statusCode).toBe(403);
       expect(wrapped.retryable).toBe(false);
     });
