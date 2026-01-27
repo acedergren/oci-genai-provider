@@ -218,9 +218,13 @@ oci search resource structured-search --query-text "query all resources"
 
 ## Project Agents
 
-**Agent Definitions**: Specialized Claude Code agents are defined in `agents.md` for workflow-specific tasks.
+**Agent Definitions**: Specialized Claude Code agents are defined in `.claude/agents/` directory for workflow-specific tasks.
+
+**Location**: Each agent is in a separate `.md` file in `.claude/agents/`
 
 **Available Agents**:
+
+**Workflow Automation:**
 
 1. **tdd-implementor** (color: green)
    - **Purpose**: Implements features following strict TDD RED-GREEN-REFACTOR-COMMIT cycles
@@ -246,7 +250,46 @@ oci search resource structured-search --query-text "query all resources"
    - **Tools**: Read, Edit, Write, Grep, Bash
    - **Example**: "Add a new model ID fixture for testing"
 
-**How to Invoke**: Use the Task tool with the appropriate `subagent_type` when the task matches an agent's purpose.
+**Multi-Agent Orchestration:**
+
+5. **orchestrator** (color: magenta)
+   - **Purpose**: Coordinates multiple specialized agents for complex multi-step workflows
+   - **When to Use**: Tasks requiring parallel research, sequential pipelines, or team coordination
+   - **Tools**: Task, TeammateTool, TaskCreate, TaskUpdate, TaskList, Read, Grep, Glob
+   - **Example**: "Review the entire provider for quality, security, and performance"
+   - **Patterns**: Parallel specialists, sequential pipelines, swarm workers, research+implement
+
+**Code Analysis & Quality:**
+
+6. **architecture-analyzer** (color: cyan)
+   - **Purpose**: Analyzes code architecture, design patterns, and structural decisions
+   - **When to Use**: Evaluating design quality, identifying architectural issues, planning refactoring
+   - **Tools**: Read, Grep, Glob, Bash
+   - **Example**: "Analyze the architecture of the models module"
+
+7. **security-auditor** (color: red)
+   - **Purpose**: Performs comprehensive security audits (OWASP Top 10, exposed secrets, auth issues)
+   - **When to Use**: After code changes, before PRs, for security reviews
+   - **Tools**: Read, Grep, Glob, Bash
+   - **Example**: "Audit the authentication module for security vulnerabilities"
+
+8. **performance-optimizer** (color: yellow)
+   - **Purpose**: Identifies performance bottlenecks and optimization opportunities
+   - **When to Use**: Investigating slow operations, high memory usage, inefficient algorithms
+   - **Tools**: Read, Grep, Glob, Bash
+   - **Example**: "Find performance bottlenecks in the streaming pipeline"
+
+9. **integration-tester** (color: blue)
+   - **Purpose**: Tests integration points, API contracts, and cross-module interactions
+   - **When to Use**: Verifying interfaces, testing integration scenarios, validating API compatibility
+   - **Tools**: Read, Bash, Grep, Glob
+   - **Example**: "Test the integration between provider and Vercel AI SDK"
+
+**How to Invoke**:
+
+- **Automatic**: Agents are auto-discovered by Claude Code. Describe the task and Claude will use the appropriate agent.
+- **Explicit**: Request specific agent: "Use the security-auditor agent"
+- **Orchestrated**: Use orchestrator for complex multi-agent workflows: "Use the orchestrator to coordinate parallel code reviews"
 
 ## Key Documentation
 
