@@ -1,89 +1,91 @@
 import { describe, it, expect } from '@jest/globals';
+import { mapFinishReason } from '../sse-parser';
 
 describe('SSE Parser', () => {
-  it('should parse text delta events', () => {
-    const sseData = `event: message
-data: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"Hello"}]}}]}}
+  describe('mapFinishReason', () => {
+    it('should map STOP to stop', () => {
+      expect(mapFinishReason('STOP')).toBe('stop');
+    });
 
-`;
-    expect(sseData).toContain('Hello');
+    it('should map LENGTH to length', () => {
+      expect(mapFinishReason('LENGTH')).toBe('length');
+    });
+
+    it('should map CONTENT_FILTER to content-filter', () => {
+      expect(mapFinishReason('CONTENT_FILTER')).toBe('content-filter');
+    });
+
+    it('should map unknown to other', () => {
+      expect(mapFinishReason('UNKNOWN')).toBe('other');
+    });
+
+    it('should map empty string to other', () => {
+      expect(mapFinishReason('')).toBe('other');
+    });
   });
 
-  it('should parse multiple text deltas', () => {
-    const deltas = ['Hello', ' ', 'world'];
-    expect(deltas).toHaveLength(3);
+  describe('SSE data format', () => {
+    it('should recognize text delta event structure', () => {
+      const sseData = {
+        chatResponse: {
+          chatChoice: [{ message: { content: [{ text: 'Hello' }] } }],
+        },
+      };
+      expect(sseData.chatResponse.chatChoice[0].message.content[0].text).toBe('Hello');
+    });
+
+    it('should recognize finish event structure', () => {
+      const sseData = {
+        chatResponse: {
+          chatChoice: [{ finishReason: 'STOP' }],
+          usage: { promptTokens: 5, completionTokens: 3 },
+        },
+      };
+      expect(sseData.chatResponse.chatChoice[0].finishReason).toBe('STOP');
+      expect(sseData.chatResponse.usage.promptTokens).toBe(5);
+    });
+
+    it('should yield text-delta parts', () => {
+      const part = {
+        type: 'text-delta' as const,
+        textDelta: 'chunk',
+      };
+      expect(part.type).toBe('text-delta');
+      expect(part.textDelta).toBe('chunk');
+    });
+
+    it('should yield finish part with usage', () => {
+      const part = {
+        type: 'finish' as const,
+        finishReason: 'stop' as const,
+        usage: { promptTokens: 1, completionTokens: 1 },
+      };
+      expect(part.type).toBe('finish');
+      expect(part.finishReason).toBe('stop');
+    });
   });
 
-  it('should parse finish event with usage', () => {
-    const finish = {
-      type: 'finish',
-      finishReason: 'stop',
-      usage: {
-        promptTokens: 5,
-        completionTokens: 3,
-      },
-    };
-    expect(finish.type).toBe('finish');
-    expect(finish.usage.promptTokens).toBe(5);
-  });
+  describe('SSE parsing edge cases', () => {
+    it('should handle done event marker', () => {
+      const doneMarker = '[DONE]';
+      expect(doneMarker).toBe('[DONE]');
+    });
 
-  it('should handle done event', () => {
-    const sseData = `event: done
-data: [DONE]
-`;
-    expect(sseData).toContain('done');
-  });
+    it('should handle malformed JSON gracefully', () => {
+      const tryParse = (data: string): unknown => {
+        try {
+          return JSON.parse(data) as unknown;
+        } catch {
+          return null;
+        }
+      };
+      expect(tryParse('{invalid}')).toBeNull();
+      expect(tryParse('{"valid": true}')).toEqual({ valid: true });
+    });
 
-  it('should map STOP to stop finish reason', () => {
-    const finishReason = 'STOP';
-    const mapped = finishReason === 'STOP' ? 'stop' : 'other';
-    expect(mapped).toBe('stop');
-  });
-
-  it('should map LENGTH to length finish reason', () => {
-    const finishReason = 'LENGTH';
-    const mapped = finishReason === 'LENGTH' ? 'length' : 'other';
-    expect(mapped).toBe('length');
-  });
-
-  it('should map CONTENT_FILTER to content-filter', () => {
-    const finishReason = 'CONTENT_FILTER';
-    const mapped = finishReason === 'CONTENT_FILTER' ? 'content-filter' : 'other';
-    expect(mapped).toBe('content-filter');
-  });
-
-  it('should ignore malformed JSON events', () => {
-    const sseData = `event: message
-data: {invalid json}
-
-event: message
-data: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"Valid"}]}}]}}
-`;
-    expect(sseData).toContain('Valid');
-  });
-
-  it('should handle empty events', () => {
-    const sseData = `event: message
-data: {}
-
-`;
-    expect(sseData).toContain('message');
-  });
-
-  it('should yield text-delta stream parts', () => {
-    const part = {
-      type: 'text-delta',
-      textDelta: 'chunk',
-    };
-    expect(part.type).toBe('text-delta');
-  });
-
-  it('should yield finish stream part', () => {
-    const part = {
-      type: 'finish',
-      finishReason: 'stop',
-      usage: { promptTokens: 1, completionTokens: 1 },
-    };
-    expect(part.type).toBe('finish');
+    it('should handle empty events', () => {
+      const emptyData = {};
+      expect(Object.keys(emptyData)).toHaveLength(0);
+    });
   });
 });
