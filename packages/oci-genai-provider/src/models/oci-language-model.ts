@@ -1,7 +1,6 @@
 import type {
   LanguageModelV3,
   LanguageModelV3CallOptions,
-  LanguageModelV3FinishReason,
   LanguageModelV3GenerateResult,
   LanguageModelV3StreamPart,
   LanguageModelV3StreamResult,
@@ -167,7 +166,7 @@ export class OCILanguageModel implements LanguageModelV3 {
                 // Convert SSE finish to V3 format
                 controller.enqueue({
                   type: 'finish',
-                  finishReason: part.finishReason as unknown as LanguageModelV3FinishReason,
+                  finishReason: part.finishReason,
                   usage: {
                     inputTokens: {
                       total: part.usage.promptTokens,
