@@ -1,9 +1,11 @@
 # OCI Generative AI Provider for Vercel AI SDK
 
-> 🚀 **Official Oracle Cloud Infrastructure provider for the Vercel AI SDK** — Use xAI Grok, Meta Llama, Cohere, and Google Gemini models in your AI-powered applications.
+> 🚀 **Community-built Oracle Cloud Infrastructure provider for the Vercel AI SDK** — Use xAI Grok, Meta Llama, Cohere, and Google Gemini models in your AI-powered applications.
 
+[![CI](https://github.com/acedergren/oci-genai-provider/actions/workflows/ci.yml/badge.svg)](https://github.com/acedergren/oci-genai-provider/actions/workflows/ci.yml)
+[![Deploy Demo](https://github.com/acedergren/oci-genai-provider/actions/workflows/deploy-cf-pages.yml/badge.svg)](https://github.com/acedergren/oci-genai-provider/actions/workflows/deploy-cf-pages.yml)
+[![codecov](https://codecov.io/gh/acedergren/oci-genai-provider/branch/main/graph/badge.svg)](https://codecov.io/gh/acedergren/oci-genai-provider)
 [![Tests](https://img.shields.io/badge/tests-121%20passing-green)](https://github.com/acedergren/oci-genai-provider)
-[![Coverage](https://img.shields.io/badge/coverage-80%25%2B-brightgreen)](https://github.com/acedergren/oci-genai-provider)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
 
 ## What is This?
@@ -61,6 +63,10 @@ npm install @acedergren/opencode-oci-genai
 ## Examples
 
 Ready-to-run examples demonstrating the OCI GenAI Provider:
+
+### 🚀 [Live Demo](https://oci-genai-chatbot.pages.dev)
+
+Try the **SvelteKit Chatbot Demo** live on Cloudflare Pages (Cloudflare Access authentication required).
 
 ### [SvelteKit Chatbot](./examples/chatbot-demo/)
 
@@ -211,5 +217,7 @@ MIT
 
 ---
 
-**Maintained by**: Alexander Cedergren @ Oracle
+**Community Project**: Created and maintained by [Alexander Cedergren](https://github.com/acedergren) for OCI
 **Built with**: Vercel AI SDK, OCI TypeScript SDK, TypeScript 5.3
+
+_This is an independent community project, not an official Oracle product._
