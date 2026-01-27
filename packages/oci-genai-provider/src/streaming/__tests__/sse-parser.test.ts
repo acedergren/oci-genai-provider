@@ -5,23 +5,28 @@ import type { StreamPart } from '../types';
 describe('SSE Parser', () => {
   describe('mapFinishReason', () => {
     it('should map STOP to stop', () => {
-      expect(mapFinishReason('STOP')).toBe('stop');
+      const result = mapFinishReason('STOP');
+      expect(result).toEqual({ unified: 'stop', raw: 'STOP' });
     });
 
     it('should map LENGTH to length', () => {
-      expect(mapFinishReason('LENGTH')).toBe('length');
+      const result = mapFinishReason('LENGTH');
+      expect(result).toEqual({ unified: 'length', raw: 'LENGTH' });
     });
 
     it('should map CONTENT_FILTER to content-filter', () => {
-      expect(mapFinishReason('CONTENT_FILTER')).toBe('content-filter');
+      const result = mapFinishReason('CONTENT_FILTER');
+      expect(result).toEqual({ unified: 'content-filter', raw: 'CONTENT_FILTER' });
     });
 
     it('should map unknown to other', () => {
-      expect(mapFinishReason('UNKNOWN')).toBe('other');
+      const result = mapFinishReason('UNKNOWN');
+      expect(result).toEqual({ unified: 'other', raw: 'UNKNOWN' });
     });
 
     it('should map empty string to other', () => {
-      expect(mapFinishReason('')).toBe('other');
+      const result = mapFinishReason('');
+      expect(result).toEqual({ unified: 'other', raw: '' });
     });
   });
 
