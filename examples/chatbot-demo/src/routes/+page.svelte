@@ -27,6 +27,11 @@
   }
 </script>
 
+<svelte:head>
+  <title>OCI GenAI Chat Demo</title>
+  <meta name="description" content="Chat with Oracle Cloud Infrastructure Generative AI models" />
+</svelte:head>
+
 <div class="h-screen flex flex-col">
   <!-- Header -->
   <header class="glass-effect border-b border-border p-4">
