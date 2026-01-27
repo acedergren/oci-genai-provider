@@ -89,4 +89,4 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "⚠️ **Protected by Cloudflare Access** - Authentication required" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "📚 [Deployment Documentation](examples/chatbot-demo/DEPLOYMENT.md)" >> $GITHUB_STEP_SUMMARY
+          echo "📚 [Deployment Documentation](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/examples/chatbot-demo/DEPLOYMENT.md)" >> $GITHUB_STEP_SUMMARY
