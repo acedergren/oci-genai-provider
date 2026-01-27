@@ -24,13 +24,13 @@ fi
 echo "📝 Running TypeScript type checking..."
 npm run type-check
 
-# Run tests only if TypeScript files are staged
-TS_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.ts$' | tr '\n' ' ')
+# Run tests only if TypeScript files in packages are staged
+TS_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '^packages/.*\.ts$' | tr '\n' ' ')
 if [ -n "$TS_FILES" ]; then
-  echo "🧪 Running tests for changed TypeScript files..."
-  npm test -- --bail --findRelatedTests $TS_FILES
+  echo "🧪 Running tests..."
+  pnpm test
 else
-  echo "📝 No TypeScript files staged, skipping related tests..."
+  echo "📝 No package TypeScript files staged, skipping tests..."
 fi
 
 echo "✅ Pre-commit checks passed!"
