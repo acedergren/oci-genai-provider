@@ -58,6 +58,18 @@ npm install @acedergren/opencode-oci-genai
 
 **Documentation**: [OpenCode Integration Guide](./docs/guides/opencode-integration/README.md)
 
+## Live Demo
+
+Try the [SvelteKit Chatbot Demo](./examples/chatbot-demo) to see the OCI GenAI Provider in action.
+
+Features:
+- Real-time streaming responses
+- Multiple model support (Cohere, Llama)
+- Beautiful bioluminescence design
+- Mobile responsive
+
+[View Demo Source →](./examples/chatbot-demo)
+
 ## Features
 
 - **16+ Models**: xAI Grok 4, Meta Llama 3.3, Cohere Command, Google Gemini
