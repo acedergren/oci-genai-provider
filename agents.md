@@ -369,7 +369,7 @@ git commit --no-verify
 
 ## Contact and Support
 
-- **Repository**: `/Users/acedergr/Projects/opencode-oci-genai`
+- **Repository**: `/Users/acedergr/Projects/oci-genai-provider`
 - **Documentation**: `docs/README.md`
 - **Issues**: Use descriptive commit messages for traceability
 

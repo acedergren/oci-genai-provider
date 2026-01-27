@@ -7,12 +7,12 @@ Get up and running with the OCI Generative AI provider for Vercel AI SDK in unde
 This project provides two packages:
 
 - **`@acedergren/oci-genai-provider`** - Core provider, works with any Vercel AI SDK project
-- **`@acedergren/opencode-oci-genai`** - OpenCode-specific integration (includes core provider)
+- **`@acedergren/oci-genai-provider`** - OpenCode-specific integration (includes core provider)
 
 Choose the package based on your use case:
 
 - Using with **Vercel AI SDK** directly? → Install `@acedergren/oci-genai-provider`
-- Using with **OpenCode**? → Install `@acedergren/opencode-oci-genai`
+- Using with **OpenCode**? → Install `@acedergren/oci-genai-provider`
 
 ## Prerequisites
 
@@ -40,11 +40,11 @@ yarn add @acedergren/oci-genai-provider ai
 **For OpenCode projects:**
 
 ```bash
-npm install @acedergren/opencode-oci-genai
+npm install @acedergren/oci-genai-provider
 # or
-pnpm add @acedergren/opencode-oci-genai
+pnpm add @acedergren/oci-genai-provider
 # or
-yarn add @acedergren/opencode-oci-genai
+yarn add @acedergren/oci-genai-provider
 ```
 
 ### 2. Configuration
@@ -128,8 +128,8 @@ OCI GenAI has rate limits. If you hit them:
 ## Getting Help
 
 - 📖 [Full Documentation](../README.md)
-- 🐛 [Report Issues](https://github.com/acedergren/opencode-oci-genai/issues)
-- 💬 [Discussions](https://github.com/acedergren/opencode-oci-genai/discussions)
+- 🐛 [Report Issues](https://github.com/acedergren/oci-genai-provider/issues)
+- 💬 [Discussions](https://github.com/acedergren/oci-genai-provider/discussions)
 
 ## For Contributors
 
@@ -139,8 +139,8 @@ If you're contributing to this project:
 
 ```bash
 # Clone repository
-git clone https://github.com/acedergren/opencode-oci-genai.git
-cd opencode-oci-genai
+git clone https://github.com/acedergren/oci-genai-provider.git
+cd oci-genai-provider
 
 # Install dependencies (requires pnpm 8+)
 pnpm install

@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-The opencode-oci-genai provider requires specific OCI IAM policies to function. Current API call failures are due to **missing IAM permissions on compartment AC**, not code issues. This document provides ready-to-use policy statements.
+The oci-genai-provider requires specific OCI IAM policies to function. Current API call failures are due to **missing IAM permissions on compartment AC**, not code issues. This document provides ready-to-use policy statements.
 
 ---
 
@@ -18,6 +18,7 @@ Allow group <YOUR_GROUP_NAME> to read compartments in compartment AC
 ```
 
 **What this enables:**
+
 - Call GenAI inference APIs (chat, stream)
 - Use on-demand models (Grok, Llama, Gemini, Cohere)
 - Access playground for testing
@@ -38,6 +39,7 @@ Allow group <YOUR_GROUP_NAME> to use generative-ai-family in compartment AC
 **Resource Type:** `generative-ai-family` (aggregate covering all GenAI resources)
 
 **Individual resources included:**
+
 - `generative-ai-chat` - Chat/conversational models
 - `generative-ai-text-generation` - Text generation
 - `generative-ai-text-embedding` - Embeddings
@@ -45,10 +47,12 @@ Allow group <YOUR_GROUP_NAME> to use generative-ai-family in compartment AC
 - `generative-ai-model` - Custom models
 
 **Why needed:** Provider makes API calls to:
+
 - `GenerativeAiInferenceClient.chat()` - Main inference operation
 - `GenerativeAiInferenceClient.chatStream()` - Streaming responses
 
 **Operations enabled:**
+
 - ✅ Inference (chat, completion, streaming)
 - ✅ Model discovery and listing
 - ✅ Playground access
@@ -66,6 +70,7 @@ Allow group <YOUR_GROUP_NAME> to read compartments in compartment AC
 **Why needed:** GenAI API calls require validating that the compartment exists and is accessible
 
 **Operations enabled:**
+
 - Verify compartment OCID is valid
 - Read compartment metadata
 - List child compartments (if any)
@@ -82,6 +87,7 @@ Allow group <YOUR_GROUP_NAME> to use vaults in compartment <VAULT_COMPARTMENT>
 ```
 
 **What this enables:**
+
 - Retrieve OAuth client secret from OCI Vault
 - Required for `packages/opencode-oci-genai-auth` plugin
 - API: `SecretsClient.getSecretBundle({ secretId })`
@@ -100,6 +106,7 @@ Allow group <YOUR_GROUP_NAME> to use autonomous-databases in compartment <ADB_CO
 ```
 
 **What this enables:**
+
 - Connect to Oracle ADB 23ai/26ai
 - Execute `DBMS_HYBRID_VECTOR` searches
 - Read database connection strings
@@ -204,6 +211,7 @@ Allow dynamic-group GenAI-Service-Instances to use generative-ai-family in compa
 ```
 
 **Provider configuration for instance principal:**
+
 ```typescript
 const provider = createOCIGenAI({
   compartmentId: process.env.OCI_COMPARTMENT_ID,
@@ -233,11 +241,12 @@ export OCI_COMPARTMENT_ID="ocid1.compartment.oc1..aaaaaaaarekfofhmfup6d33agbnicu
 export OCI_CONFIG_PROFILE="ASHBURN"
 
 # Run live test
-cd /Users/acedergr/Projects/opencode-oci-genai
+cd /Users/acedergr/Projects/oci-genai-provider
 node test-live-api.mjs
 ```
 
 **Expected output:**
+
 ```
 ✅ API call successful
 💬 Generated Response: [model response]
@@ -262,6 +271,7 @@ opencode --model oci-genai/meta.llama-3.3-70b-instruct
 **Cause:** Missing or incorrect IAM policies
 
 **Solutions:**
+
 1. Verify group membership: `oci iam group list-users --group-id <GROUP_OCID>`
 2. Check policy exists: `oci iam policy list --compartment-id <COMPARTMENT_OCID>`
 3. Wait 1-2 minutes for policy propagation
@@ -272,6 +282,7 @@ opencode --model oci-genai/meta.llama-3.3-70b-instruct
 **Cause:** GenAI service not subscribed in tenancy
 
 **Solutions:**
+
 1. OCI Console → Analytics & AI → Generative AI
 2. Click "Enable Service" if prompted
 3. Contact OCI administrator to enable GenAI in your region
@@ -281,6 +292,7 @@ opencode --model oci-genai/meta.llama-3.3-70b-instruct
 **Cause:** Model not available in specified region
 
 **Solutions:**
+
 1. Verify model availability: Check OCI GenAI console for model list
 2. Use correct region: Models like Grok are in `us-ashburn-1`
 3. Check model ID spelling (e.g., `meta.llama-3.3-70b-instruct`)
@@ -349,6 +361,7 @@ Allow group <YOUR_GROUP_NAME> to read compartments in compartment AC
 ```
 
 **Replace:**
+
 - `<YOUR_GROUP_NAME>` → Your OCI group name (e.g., `Developers`, `GenAI-Users`)
 - `<VAULT_COMPARTMENT>` → Compartment containing your Vault (if using OAuth)
 - `<ADB_COMPARTMENT>` → Compartment containing your ADB (if using database RAG)
@@ -360,14 +373,15 @@ Allow group <YOUR_GROUP_NAME> to read compartments in compartment AC
 - [Official OCI GenAI IAM Documentation](https://docs.oracle.com/en-us/iaas/Content/generative-ai/iam-policies.htm)
 - [OCI IAM Policy Reference](https://docs.oracle.com/en-us/iaas/Content/Identity/Reference/policyreference.htm)
 - [Managing Dynamic Groups](https://docs.oracle.com/en-us/iaas/Content/Identity/Tasks/managingdynamicgroups.htm)
-- Provider README: `/Users/acedergr/Projects/opencode-oci-genai/packages/opencode-oci-genai/README.md`
-- Test Results: `/Users/acedergr/Projects/opencode-oci-genai/TEST_RESULTS_SUMMARY.md`
+- Provider README: `/Users/acedergr/Projects/oci-genai-provider/packages/opencode-oci-genai/README.md`
+- Test Results: `/Users/acedergr/Projects/oci-genai-provider/TEST_RESULTS_SUMMARY.md`
 
 ---
 
 ## Next Steps
 
 1. **Identify your OCI group name:**
+
    ```bash
    oci iam group list --compartment-id <TENANCY_OCID>
    ```
@@ -377,6 +391,7 @@ Allow group <YOUR_GROUP_NAME> to read compartments in compartment AC
 3. **Wait 1-2 minutes** for policy propagation
 
 4. **Test with live API script:**
+
    ```bash
    export OCI_COMPARTMENT_ID="ocid1.compartment.oc1..aaaaaaaarekfofhmfup6d33agbnicuop2waas3ssdwdc7qjgencirdgvl3iq"
    node test-live-api.mjs

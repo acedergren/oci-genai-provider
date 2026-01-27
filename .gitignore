@@ -62,24 +62,6 @@ package-lock.json
 yarn.lock
 pnpm-lock.yaml
 
-# Turborepo
-.turbo/
-
-# Serena
-.serena/
-
-# Claude Code
+# Misc
 .claude/debug/
 .claude/file-history/
-.claude/projects/
-
-# Documentation builds
-.docusaurus/
-public/
-
-# Misc
-*.tgz
-*.tar.gz
-*.pid
-*.seed
-*.pid.lock

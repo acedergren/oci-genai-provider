@@ -2,8 +2,8 @@
 
 > 🚀 **Official Oracle Cloud Infrastructure provider for the Vercel AI SDK** — Use xAI Grok, Meta Llama, Cohere, and Google Gemini models in your AI-powered applications.
 
-[![Tests](https://img.shields.io/badge/tests-117%20passing-green)](https://github.com/acedergren/opencode-oci-genai)
-[![Coverage](https://img.shields.io/badge/coverage-80%25%2B-brightgreen)](https://github.com/acedergren/opencode-oci-genai)
+[![Tests](https://img.shields.io/badge/tests-117%20passing-green)](https://github.com/acedergren/oci-genai-provider)
+[![Coverage](https://img.shields.io/badge/coverage-80%25%2B-brightgreen)](https://github.com/acedergren/oci-genai-provider)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
 
 ## What is This?
@@ -63,6 +63,7 @@ npm install @acedergren/opencode-oci-genai
 Try the [SvelteKit Chatbot Demo](./examples/chatbot-demo) to see the OCI GenAI Provider in action.
 
 Features:
+
 - Real-time streaming responses
 - Multiple model support (Cohere, Llama)
 - Beautiful bioluminescence design

@@ -1,5 +1,5 @@
 {
-  "name": "opencode-oci-genai",
+  "name": "oci-genai-provider",
   "version": "0.1.0",
   "private": true,
   "description": "Monorepo for OCI Generative AI integrations",
@@ -18,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/acedergren/opencode-oci-genai.git"
+    "url": "git+https://github.com/acedergren/oci-genai-provider.git"
   },
   "keywords": [
     "oci",
