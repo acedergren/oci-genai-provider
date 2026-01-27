@@ -7,6 +7,7 @@ import type {
   LanguageModelV3StreamResult,
 } from '@ai-sdk/provider';
 import { GenerativeAiInferenceClient } from 'oci-generativeaiinference';
+import { Region } from 'oci-common';
 import type { OCIConfig } from '../types';
 import { isValidModelId } from './registry';
 import { convertToOCIMessages } from '../converters/messages';
@@ -49,16 +50,24 @@ export class OCILanguageModel implements LanguageModelV3 {
 
   private async getClient(): Promise<GenerativeAiInferenceClient> {
     if (!this._client) {
-      const authProvider = await createAuthProvider(this.config);
-      const region = getRegion(this.config);
+      try {
+        const authProvider = await createAuthProvider(this.config);
+        const regionId = getRegion(this.config);
 
-      this._client = new GenerativeAiInferenceClient({
-        authenticationDetailsProvider: authProvider,
-      });
+        this._client = new GenerativeAiInferenceClient({
+          authenticationDetailsProvider: authProvider,
+        });
 
-      // Set region on the client
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-      (this._client as any).region = region;
+        // Set region using proper OCI Region API
+        this._client.region = Region.fromRegionId(regionId);
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'Unknown error during client initialization';
+        throw new Error(
+          `Failed to initialize OCI client: ${message}. ` +
+            `Check your OCI configuration (config file, credentials, region).`
+        );
+      }
     }
     return this._client;
   }

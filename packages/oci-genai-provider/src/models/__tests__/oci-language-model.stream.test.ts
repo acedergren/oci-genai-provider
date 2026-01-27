@@ -1,5 +1,32 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { OCILanguageModel } from '../oci-language-model';
+import type { AuthenticationDetailsProvider } from 'oci-common';
+import type { OCIConfig } from '../../types';
+
+// Mock auth provider
+const mockAuthProvider: AuthenticationDetailsProvider = {
+  getKeyId: jest.fn(() => Promise.resolve('mock-key-id')),
+  getPrivateKey: jest.fn(() => '-----BEGIN PRIVATE KEY-----\nMOCK\n-----END PRIVATE KEY-----'),
+  getPassphrase: jest.fn(() => null),
+};
+
+const mockCreateAuthProvider = jest.fn<
+  (config: OCIConfig) => Promise<AuthenticationDetailsProvider>
+>(() => Promise.resolve(mockAuthProvider));
+const mockGetRegion = jest.fn<(config: OCIConfig) => string>(() => 'eu-frankfurt-1');
+
+// Mock auth module
+jest.mock('../../auth/index.js', () => ({
+  createAuthProvider: (config: OCIConfig) => mockCreateAuthProvider(config),
+  getRegion: (config: OCIConfig) => mockGetRegion(config),
+}));
+
+// Mock oci-common Region
+jest.mock('oci-common', () => ({
+  Region: {
+    fromRegionId: jest.fn((regionId: string) => ({ regionId })),
+  },
+}));
 
 // Mock OCI SDK to return streaming response
 jest.mock('oci-generativeaiinference', () => ({
@@ -28,6 +55,7 @@ data: {"chatResponse":{"chatChoice":[{"finishReason":"STOP"}],"usage":{"promptTo
 
       return Promise.resolve(new Response(stream));
     }),
+    region: undefined,
   })),
 }));
 

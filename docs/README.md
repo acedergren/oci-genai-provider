@@ -1,23 +1,34 @@
-# OpenCode OCI GenAI Provider Documentation
+# OCI GenAI Provider Documentation
 
-Complete documentation for the Oracle Cloud Infrastructure (OCI) Generative AI provider for the Vercel AI SDK.
+Complete documentation for the **Vercel AI SDK provider** for Oracle Cloud Infrastructure Generative AI.
+
+## About This Project
+
+This is a **Vercel AI SDK provider** that enables OCI Generative AI models in any application using the Vercel AI SDK:
+
+- ✅ **Universal**: Works with Next.js, Remix, SvelteKit, Node.js, and any Vercel AI SDK app
+- ✅ **Production-Ready**: 117 tests passing, 80%+ coverage, TDD workflow
+- ✅ **Well-Documented**: Comprehensive guides and API reference
+- ✅ **Type-Safe**: Full TypeScript support with AI SDK v3
+
+**OpenCode Integration**: Optional convenience package for OpenCode users.
 
 ## Monorepo Structure
 
-This project is organized as a monorepo with three packages:
+This project is organized as a monorepo:
 
-- **`@acedergren/oci-genai-provider`** - Core OCI GenAI provider (standalone, works with any Vercel AI SDK project)
-- **`@acedergren/opencode-oci-genai`** - OpenCode-specific integration and utilities
-- **`@acedergren/test-utils`** - Shared test utilities and mocks (private package)
+- **`@acedergren/oci-genai-provider`** - Core Vercel AI SDK provider (works everywhere)
+- **`@acedergren/opencode-oci-genai`** - Optional OpenCode convenience wrapper
+- **`@acedergren/test-utils`** - Shared test utilities (private)
 
 ## Quick Navigation
 
 ### 🚀 Getting Started
 
-- [Quick Start](getting-started/README.md) - Get up and running in 5 minutes
-- [Installation](getting-started/installation.md) - Package installation and setup
-- [First Chat](getting-started/first-chat.md) - Your first AI conversation
-- [Configuration](getting-started/configuration.md) - Configuration options
+- [Installation & Setup](getting-started/README.md) - Get up and running
+- [Quick Start Guide](../packages/oci-genai-provider/README.md) - First example
+- [Vercel AI SDK Integration](api-reference/vercel-ai-sdk/) - How it works with AI SDK
+- [OpenCode Integration](guides/opencode-integration/) - **Optional** OpenCode setup
 
 ### 📚 API Reference
 
@@ -31,9 +42,15 @@ This project is organized as a monorepo with three packages:
 - [IAM Policies](guides/iam-policies/) - Required IAM policies and setup
 - [Streaming](guides/streaming/) - Implementing streaming responses
 - [Tool Calling](guides/tool-calling/) - Function calling integration
-- [OpenCode Integration](guides/opencode-integration/) - OpenCode setup
 - [Deployment](guides/deployment/) - Production deployment
 - [Monitoring](guides/monitoring/) - Logging and monitoring
+
+### 🎯 Framework Integration
+
+- [Next.js Integration](use-cases/nextjs/) - Using with Next.js App Router
+- [Remix Integration](use-cases/remix/) - Using with Remix
+- [Node.js Integration](use-cases/nodejs/) - Using with Node.js
+- [OpenCode Integration](guides/opencode-integration/) - Using with OpenCode (optional)
 
 ### 🔍 Reference
 

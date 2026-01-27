@@ -2,6 +2,21 @@
 
 Oracle Cloud Infrastructure (OCI) Generative AI provider for the [Vercel AI SDK](https://sdk.vercel.ai/docs).
 
+## Works with Any Vercel AI SDK Application
+
+This provider implements the Vercel AI SDK's `LanguageModelV1` interface, which means it works with:
+
+- ✅ **Next.js** - App Router and Pages Router
+- ✅ **Remix** - Streaming and non-streaming
+- ✅ **SvelteKit** - Any SvelteKit app
+- ✅ **Express/Fastify** - Node.js servers
+- ✅ **OpenCode** - Terminal and Desktop (with optional integration package)
+- ✅ **Any Framework** - If it uses Vercel AI SDK, it works
+
+**No special setup required** - just install and use like any other AI SDK provider.
+
+> 💡 **Using OpenCode?** Check out [@acedergren/opencode-oci-genai](../opencode-integration) for a convenient integration package with config helpers and model presets.
+
 ## Features
 
 - ✅ **16+ Models** - Grok, Llama, Cohere, Gemini
@@ -10,6 +25,16 @@ Oracle Cloud Infrastructure (OCI) Generative AI provider for the [Vercel AI SDK]
 - ✅ **Multiple Auth Methods** - Config file, instance principal, resource principal
 - ✅ **Regional Support** - Frankfurt, Stockholm, Ashburn, and more
 - ✅ **Type Safe** - Full TypeScript support
+
+## Why Use OCI GenAI?
+
+| Feature                | OCI GenAI               | Other Providers |
+| ---------------------- | ----------------------- | --------------- |
+| **EU Data Residency**  | ✅ Frankfurt, Stockholm | Limited         |
+| **Grok Models**        | ✅ xAI Grok 4           | ❌              |
+| **Cost**               | 💰 Competitive          | Varies          |
+| **Context Window**     | Up to 1M tokens         | Up to 2M tokens |
+| **Enterprise Support** | ✅ Oracle Cloud         | Varies          |
 
 ## Installation
 

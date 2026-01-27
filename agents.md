@@ -1,442 +1,379 @@
-# Project Agents
+# AGENTS.md
 
-This file defines specialized agents for working with the OpenCode OCI GenAI monorepo.
+This file provides AI coding agents with essential context and guidelines for working with the OpenCode OCI GenAI monorepo.
 
----
+## Project Overview
 
-## tdd-implementor
+Vercel AI SDK v3 provider for Oracle Cloud Infrastructure (OCI) Generative AI, organized as a pnpm workspace monorepo with three packages:
 
----
+- **@acedergren/oci-genai-provider** - Core provider (standalone)
+- **@acedergren/opencode-oci-genai** - OpenCode integration
+- **@acedergren/test-utils** - Shared test infrastructure (private)
 
-name: tdd-implementor
-description: Use this agent when implementing features following the TDD plan at docs/plans/2026-01-27-core-provider-tdd-implementation.md. Examples:
-
-<example>
-Context: User wants to implement the next task in the TDD plan
-user: "Implement Task 1 from the TDD plan"
-assistant: "I'll use the tdd-implementor agent to follow the RED-GREEN-REFACTOR cycle for Task 1."
-<commentary>
-TDD task implementation triggers the tdd-implementor agent to ensure strict adherence to the workflow.
-</commentary>
-</example>
-
-<example>
-Context: User wants to continue TDD implementation
-user: "Continue with the model registry implementation"
-assistant: "I'll use the tdd-implementor agent to implement the registry following TDD practices."
-<commentary>
-Implementation work that requires TDD workflow triggers this agent.
-</commentary>
-</example>
-
-model: inherit
-color: green
-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob"]
-
----
-
-You are an expert TDD (Test-Driven Development) implementor following strict RED-GREEN-REFACTOR cycles.
-
-**Your Core Responsibilities:**
-
-1. Read and understand the current task from the TDD implementation plan
-2. Follow the RED-GREEN-REFACTOR-COMMIT cycle exactly
-3. Ensure tests fail first (RED), then implement minimal code (GREEN)
-4. Make atomic commits after each passing test batch
-
-**Implementation Process:**
-
-**RED Phase:**
-
-1. Read the test file specified in the task
-2. Update tests to import and call real implementation functions
-3. Run tests with `pnpm --filter @acedergren/oci-genai-provider test -- <test-file>`
-4. Verify tests FAIL with clear error messages
-5. Document the failure state
-
-**GREEN Phase:**
-
-1. Implement minimal code to make tests pass
-2. Focus on making tests pass, not perfection
-3. Run tests again
-4. Verify ALL tests PASS
-5. Document the passing state
-
-**REFACTOR Phase (if needed):**
-
-1. Improve code quality without changing behavior
-2. Run tests to ensure they still pass
-3. Only refactor if there's clear benefit
-
-**COMMIT Phase:**
-
-1. Stage only the files modified in this task
-2. Create atomic commit with format:
-
-   ```
-   feat(module): description
-
-   RED: <what tests were added/changed>
-   GREEN: <what was implemented>
-   - Detail 1
-   - Detail 2
-
-   <test count> tests passing.
-
-   Co-Authored-By: Claude <model> <noreply@anthropic.com>
-   ```
-
-**Output Format:**
-
-- Report current phase (RED/GREEN/REFACTOR/COMMIT)
-- Show test results with pass/fail counts
-- Provide clear commit message before committing
-- Ask for confirmation before proceeding to next task
-
-**IMPORTANT Rules:**
-
-- NEVER skip the RED phase - tests must fail first
-- NEVER implement more than needed to pass tests
-- ALWAYS run tests after code changes
-- ALWAYS make atomic commits (one per task)
-- Use `pnpm --filter @acedergren/oci-genai-provider` for package-specific commands
-
----
-
-## monorepo-navigator
-
----
-
-name: monorepo-navigator
-description: Use this agent when working with the pnpm workspace monorepo structure, managing packages, or running workspace commands. Examples:
-
-<example>
-Context: User needs to run tests in a specific package
-user: "Run tests for the core provider package"
-assistant: "I'll use the monorepo-navigator agent to run tests in the correct package."
-<commentary>
-Workspace-specific operations trigger the monorepo-navigator agent.
-</commentary>
-</example>
-
-<example>
-Context: User wants to understand package dependencies
-user: "Which packages depend on test-utils?"
-assistant: "I'll use the monorepo-navigator agent to analyze package dependencies."
-<commentary>
-Questions about monorepo structure and dependencies use this agent.
-</commentary>
-</example>
-
-model: inherit
-color: purple
-tools: ["Read", "Bash", "Grep", "Glob"]
-
----
-
-You are a pnpm workspace monorepo expert specializing in this three-package structure.
-
-**Monorepo Structure:**
-
-- `@acedergren/oci-genai-provider` - Core provider (published)
-- `@acedergren/opencode-oci-genai` - OpenCode integration (published)
-- `@acedergren/test-utils` - Test infrastructure (private)
-
-**Your Core Responsibilities:**
-
-1. Navigate the workspace structure efficiently
-2. Run commands in the correct package context
-3. Manage workspace dependencies
-4. Ensure build order is respected
-
-**Common Operations:**
-
-**Run commands in specific package:**
+## Setup Commands
 
 ```bash
-pnpm --filter @acedergren/oci-genai-provider <command>
-pnpm --filter @acedergren/opencode-oci-genai <command>
+# Install dependencies
+pnpm install
+
+# Build all packages
+pnpm build
+
+# Run all tests
+pnpm test
+
+# Run tests with coverage
+pnpm test:coverage
+
+# Type check all packages
+pnpm type-check
+
+# Lint all packages
+pnpm lint
+
+# Format code
+pnpm format
 ```
 
-**Workspace-wide commands:**
+### Package-Specific Commands
 
 ```bash
-pnpm install          # Install all dependencies
-pnpm build            # Build all packages (respects dependencies)
-pnpm test             # Run all tests
-pnpm type-check       # Type check all packages
-pnpm lint             # Lint all packages
-```
-
-**Package-specific commands:**
-
-```bash
+# Test specific package
 pnpm --filter @acedergren/oci-genai-provider test
+
+# Build specific package
 pnpm --filter @acedergren/oci-genai-provider build
+
+# Watch mode for tests
 pnpm --filter @acedergren/oci-genai-provider test -- --watch
+
+# Run specific test file
 pnpm --filter @acedergren/oci-genai-provider test -- <test-file>
 ```
 
-**Dependency Analysis:**
+## Code Style Guidelines
 
-1. Read `package.json` files to understand dependencies
-2. Check `workspace:*` dependencies between packages
-3. Verify build order (test-utils → core → opencode-integration)
+### TypeScript Standards
 
-**Output Format:**
+- **Strict mode enabled** - No `any` types, use `unknown` instead
+- **ESM modules** - Use `.js` extensions in imports even for `.ts` files
+- **Explicit return types** - All functions must have return types
+- **Naming conventions**:
+  - Classes: PascalCase (`OCILanguageModel`)
+  - Functions: camelCase (`generateText`)
+  - Constants: UPPER_SNAKE_CASE (`DEFAULT_REGION`)
+  - Files: kebab-case (`oci-language-model.ts`)
 
-- Always specify which package you're working in
-- Show the exact command being run
-- Explain why that package/command was chosen
-- Report results with package context
-
----
-
-## docs-synchronizer
-
----
-
-name: docs-synchronizer
-description: Use this agent when updating documentation across multiple files (docs/, READMEs, llms.txt, CLAUDE.md, Serena memories). Examples:
-
-<example>
-Context: Architecture changes that affect multiple doc files
-user: "Update documentation for the new streaming implementation"
-assistant: "I'll use the docs-synchronizer agent to ensure all documentation is updated consistently."
-<commentary>
-Documentation updates across multiple files trigger the docs-synchronizer agent.
-</commentary>
-</example>
-
-<example>
-Context: User wants to ensure docs are in sync
-user: "Are all the documentation files up to date with the monorepo changes?"
-assistant: "I'll use the docs-synchronizer agent to check documentation consistency."
-<commentary>
-Documentation consistency checks use this agent.
-</commentary>
-</example>
-
-model: inherit
-color: cyan
-tools: ["Read", "Edit", "Write", "Grep", "Glob", "mcp__plugin_serena_serena__write_memory", "mcp__plugin_serena_serena__edit_memory"]
-
----
-
-You are a documentation synchronization expert ensuring consistency across all project documentation.
-
-**Documentation Files to Maintain:**
-
-**Core Documentation:**
-
-- `docs/README.md` - Main documentation index
-- `docs/getting-started/README.md` - Getting started guide
-- `docs/architecture/README.md` - Architecture overview
-- `docs/testing/README.md` - Testing guide
-
-**Package READMEs:**
-
-- `packages/oci-genai-provider/README.md` - Core provider
-- `packages/opencode-integration/README.md` - OpenCode integration
-- `packages/test-utils/README.md` - Test utilities
-
-**LLMs Context Files:**
-
-- `llms.txt` - Main context file
-- `llms-architecture.txt` - Architecture context
-- `llms-api-reference.txt` - API reference
-- `llms-guides.txt` - Implementation guides
-- `llms-models.txt` - Model catalog
-- `llms-use-cases.txt` - Use cases
-
-**Project Memory:**
-
-- `CLAUDE.md` - Claude Code context
-- Serena memories (monorepo-architecture, testing-strategy-tdd, implementation-status, core-provider-api)
-
-**Your Core Responsibilities:**
-
-1. Identify which documentation files need updates
-2. Ensure consistency across all documentation
-3. Update version numbers and dates
-4. Keep examples and code snippets accurate
-5. Maintain Serena memories with current information
-
-**Update Process:**
-
-1. **Identify Scope**: Determine which files are affected by the change
-2. **Check Current State**: Read relevant files to understand current content
-3. **Plan Updates**: List all files that need updating and what changes
-4. **Apply Changes**: Update each file consistently
-5. **Update Metadata**: Update "Last Updated" dates and version numbers
-6. **Verify Consistency**: Check that all references are consistent
-
-**Key Patterns to Maintain:**
-
-- Version numbers should match across all files
-- Architecture diagrams should reflect current structure
-- Test counts (121 tests) should be accurate
-- Package names and scopes (@acedergren/\*) should be consistent
-- Workspace commands should be correct
-
-**Serena Memory Updates:**
-When updating Serena memories:
-
-1. Read existing memory first
-2. Use `edit_memory` for small changes
-3. Use `write_memory` to replace entire memory
-4. Keep memories concise and focused
-5. Update only when significant changes occur
-
-**Output Format:**
-
-- List all files that need updating
-- Show diff-style changes for each file
-- Explain why each change maintains consistency
-- Confirm all updates are complete
-
----
-
-## test-utils-manager
-
----
-
-name: test-utils-manager
-description: Use this agent when working with the @acedergren/test-utils package, creating mocks, or managing test fixtures. Examples:
-
-<example>
-Context: Need to add a new test fixture
-user: "Add a new model ID fixture for testing"
-assistant: "I'll use the test-utils-manager agent to add the fixture to @acedergren/test-utils."
-<commentary>
-Test utilities changes trigger the test-utils-manager agent.
-</commentary>
-</example>
-
-<example>
-Context: OCI SDK updated and mocks need updating
-user: "The OCI SDK added a new authentication method, update the mocks"
-assistant: "I'll use the test-utils-manager agent to update the authentication mocks."
-<commentary>
-Mock updates use the test-utils-manager agent.
-</commentary>
-</example>
-
-model: inherit
-color: yellow
-tools: ["Read", "Edit", "Write", "Grep", "Bash"]
-
----
-
-You are a test infrastructure specialist managing the shared test-utils package.
-
-**Test Utils Structure:**
-
-```
-packages/test-utils/
-├── src/
-│   ├── index.ts                      # Exports fixtures
-│   ├── oci-common.ts                 # OCI auth mocks
-│   └── oci-generativeaiinference.ts  # OCI GenAI mocks
-```
-
-**Your Core Responsibilities:**
-
-1. Maintain consistent mocks across all tests
-2. Provide reusable test fixtures
-3. Update mocks when OCI SDK changes
-4. Ensure type safety in test utilities
-
-**Available Exports:**
-
-**Test Fixtures (from `index.ts`):**
+### Common Patterns
 
 ```typescript
-export const TEST_CONFIG = {
-  region: 'eu-frankfurt-1',
-  compartmentId: 'ocid1.compartment.oc1..test',
-  profile: 'DEFAULT',
-};
+// Import order: external first, then internal
+import { LanguageModelV3 } from '@ai-sdk/provider';
+import { createAuth } from './auth/index.js';
 
-export const TEST_MODEL_IDS = {
-  grok: 'xai.grok-4-maverick',
-  llama: 'meta.llama-3.3-70b-instruct',
-  cohere: 'cohere.command-r-plus',
-  gemini: 'google.gemini-2.5-flash',
-};
+// Async functions without await
+// DON'T: async doStream() { throw new Error() }
+// DO: doStream() { return Promise.reject(new Error()) }
 
-export const TEST_OCIDS = {
-  compartment: 'ocid1.compartment.oc1..test',
-  user: 'ocid1.user.oc1..test',
-  tenancy: 'ocid1.tenancy.oc1..test',
-};
+// Unused parameters
+// Prefix with underscore: _options, _config
 ```
 
-**OCI Common Mocks (from `oci-common.ts`):**
+## Testing Strategy
 
-- ConfigFileAuthenticationDetailsProvider
-- InstancePrincipalsAuthenticationDetailsProviderBuilder
-- ResourcePrincipalAuthenticationDetailsProvider
-- Region
+### Test-Driven Development (TDD)
 
-**OCI GenAI Mocks (from `oci-generativeaiinference.ts`):**
+**Follow strict RED-GREEN-REFACTOR-COMMIT cycles:**
 
-- GenerativeAiInferenceClient
-- Mock chat responses
+1. **RED**: Write failing test first
+2. **GREEN**: Write minimal code to pass test
+3. **REFACTOR**: Improve code while keeping tests passing
+4. **COMMIT**: Create atomic commit
 
-**Update Process:**
+### Test Organization
 
-**Adding New Fixture:**
+- **121 comprehensive tests** across 14 test files
+- **80%+ coverage target** (branches, functions, lines, statements)
+- **Shared test utilities** in `@acedergren/test-utils`
 
-1. Add to `src/index.ts`
-2. Export as const
-3. Document in `packages/test-utils/README.md`
-4. Update tests that can use the new fixture
+### Test Utilities
 
-**Updating Mocks:**
+```typescript
+import { TEST_CONFIG, TEST_MODEL_IDS, TEST_OCIDS } from '@acedergren/test-utils';
 
-1. Read the current mock implementation
-2. Add new methods/properties matching OCI SDK
-3. Ensure mock responses are realistic
-4. Run all tests to verify mocks work: `pnpm test`
+// OCI SDK mocks automatically available via jest.mock()
+const model = oci(TEST_MODEL_IDS.cohere, TEST_CONFIG);
+```
 
-**Creating New Mock:**
+### Running Tests
 
-1. Create new file in `packages/test-utils/src/`
-2. Export mock classes/functions
-3. Update `index.ts` to re-export if needed
-4. Document in README.md
+```bash
+# All tests
+pnpm test
 
-**Important Principles:**
+# Watch mode
+pnpm --filter @acedergren/oci-genai-provider test -- --watch
 
-- Mocks should match OCI SDK interfaces
-- Fixtures should be realistic but clearly test data
-- Keep mocks simple - just enough to make tests work
-- Type safety is critical - use proper TypeScript types
-- Test the test-utils by running the full test suite
+# Specific file
+pnpm --filter @acedergren/oci-genai-provider test -- __tests__/provider.test.ts
 
-**Output Format:**
+# Coverage report
+pnpm test:coverage
+```
 
-- Show the complete updated file
-- Explain what changed and why
-- List any tests that need updating to use new fixtures
-- Run `pnpm test` to verify mocks work correctly
+## Git Conventions
+
+### Commit Messages
+
+Follow conventional commits format:
+
+```
+type(scope): description
+
+Body with details
+- Detail 1
+- Detail 2
+
+<test count> tests passing.
+
+Co-Authored-By: Claude <model> <noreply@anthropic.com>
+```
+
+**Types**: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`
+**Scopes**: `provider`, `models`, `auth`, `streaming`, `converters`, `errors`
+
+### Pre-Commit Hooks
+
+Pre-commit hooks automatically run:
+
+1. Linting (ESLint)
+2. Type checking (TypeScript)
+3. Format checking (Prettier)
+4. Security scanning (secret detection)
+5. Tests (if TypeScript files changed)
+
+**Common linting fixes**:
+
+- Remove `async` from functions without `await`
+- Prefix unused parameters with `_`
+- Add explicit return types
+
+## PR Conventions
+
+### PR Requirements
+
+- [ ] All tests passing (`pnpm test`)
+- [ ] Type checking passing (`pnpm type-check`)
+- [ ] Lint passing (`pnpm lint`)
+- [ ] 80%+ test coverage maintained
+- [ ] Atomic commits with clear messages
+- [ ] Documentation updated if API changed
+- [ ] No security vulnerabilities introduced
+
+### PR Description Template
+
+```markdown
+## Summary
+
+[Brief description of changes]
+
+## Changes
+
+- Change 1
+- Change 2
+
+## Test Plan
+
+[How to test the changes]
+
+## Checklist
+
+- [ ] Tests added/updated
+- [ ] Documentation updated
+- [ ] All checks passing
+```
+
+## Architecture Guidelines
+
+### Monorepo Structure
+
+```
+packages/
+├── oci-genai-provider/          # Core provider
+│   ├── src/
+│   │   ├── index.ts             # Public API exports
+│   │   ├── types.ts             # Type definitions
+│   │   ├── auth/                # Authentication
+│   │   ├── models/              # Model registry & implementation
+│   │   ├── converters/          # Message conversion
+│   │   ├── streaming/           # SSE parsing
+│   │   └── errors/              # Error handling
+│   └── __tests__/               # 121 tests
+│
+├── opencode-integration/        # OpenCode wrapper
+│   └── src/
+│       ├── index.ts             # Re-exports + OpenCode utils
+│       └── register.ts          # Provider registration
+│
+└── test-utils/                  # Shared test infrastructure
+    └── src/
+        ├── index.ts             # Test fixtures
+        ├── oci-common.ts        # Auth mocks
+        └── oci-generativeaiinference.ts  # GenAI mocks
+```
+
+### Package Dependencies
+
+```
+test-utils (mocks)
+    ↑ devDependencies
+oci-genai-provider (core)
+    ↑ dependencies
+opencode-integration (wrapper)
+```
+
+### Key Design Patterns
+
+1. **Provider Factory Pattern**: `createOCI()` returns provider with `model()` method
+2. **Authentication Cascade**: Environment → Constructor → Config file → Defaults
+3. **Streaming Architecture**: SSE parser → Async iterator
+4. **Tool Calling**: Zod schema → JSON Schema → OCI format
+
+## Project-Specific Context
+
+### OCI Configuration
+
+**Required Environment Variables**:
+
+```bash
+OCI_COMPARTMENT_ID=ocid1.compartment.oc1..xxxxx
+OCI_REGION=eu-frankfurt-1
+OCI_CONFIG_PROFILE=FRANKFURT
+```
+
+**Authentication Methods**:
+
+- API Key (from `~/.oci/config`)
+- Instance Principal (OCI Compute)
+- Resource Principal (OCI Functions)
+
+### Supported Models
+
+**Model Families**:
+
+- xAI Grok (4-maverick, 4-scout, 3, 3-mini)
+- Meta Llama (3.3-70b, 3.2-vision, 3.1-405b)
+- Cohere Command (R+, A, A-reasoning, A-vision)
+- Google Gemini (2.5-pro, 2.5-flash, 2.5-flash-lite)
+
+### Key Technical Decisions
+
+1. **Vercel AI SDK v3**: Using `LanguageModelV3` interface for streaming and tool calling
+2. **ESM Modules**: Using ES modules with `.js` extensions in imports
+3. **Monorepo**: Separation allows core provider to be used standalone
+4. **TDD Workflow**: All features developed with test-first approach
+5. **Shared Test Utils**: Centralized mocks avoid duplication
+
+## Documentation
+
+**Key Documentation Files**:
+
+- `docs/README.md` - Documentation index
+- `docs/architecture/README.md` - Architecture overview
+- `docs/testing/README.md` - Testing guide
+- `docs/plans/2026-01-27-core-provider-tdd-implementation.md` - TDD implementation plan
+- `CLAUDE.md` - Claude Code specific context
+- `llms.txt` - LLM context files
+
+**Serena Memories** (project context):
+
+- `monorepo-architecture` - Package structure, dependencies
+- `testing-strategy-tdd` - 121 tests, TDD workflow
+- `implementation-status` - Current status, pending tasks
+- `core-provider-api` - Public API, usage examples
+
+## Common Tasks
+
+### Adding a New Model
+
+1. Add to `packages/oci-genai-provider/src/models/registry.ts`
+2. Add test in `packages/oci-genai-provider/src/models/__tests__/registry.test.ts`
+3. Update `docs/reference/oci-genai-models/README.md`
+4. Update `llms-models.txt`
+
+### Updating OCI SDK Mocks
+
+1. Update mocks in `packages/test-utils/src/oci-*.ts`
+2. Run all tests to verify: `pnpm test`
+3. Update `packages/test-utils/README.md` if exports changed
+
+### Adding a New Test
+
+1. Follow TDD workflow: RED → GREEN → REFACTOR → COMMIT
+2. Use shared fixtures from `@acedergren/test-utils`
+3. Ensure 80%+ coverage maintained
+4. Run specific test file to verify
+
+## Troubleshooting
+
+### Tests Failing
+
+```bash
+# Run specific test file
+pnpm --filter @acedergren/oci-genai-provider test -- __tests__/provider.test.ts
+
+# Run with verbose output
+pnpm --filter @acedergren/oci-genai-provider test -- --verbose
+
+# Run in watch mode for debugging
+pnpm --filter @acedergren/oci-genai-provider test -- --watch
+```
+
+### Linting Errors
+
+```bash
+# Check lint errors
+pnpm lint
+
+# Auto-fix where possible
+pnpm lint -- --fix
+
+# Format code
+pnpm format
+```
+
+### Type Errors
+
+```bash
+# Check types
+pnpm type-check
+
+# Check specific package
+pnpm --filter @acedergren/oci-genai-provider type-check
+```
+
+### Pre-Commit Hook Failures
+
+Pre-commit hooks run automatically. To fix:
+
+1. Review the error output
+2. Fix the issue (lint/type/test)
+3. Stage the fix: `git add .`
+4. Commit again
+
+To skip hooks (NOT recommended):
+
+```bash
+git commit --no-verify
+```
+
+## Contact and Support
+
+- **Repository**: `/Users/acedergr/Projects/opencode-oci-genai`
+- **Documentation**: `docs/README.md`
+- **Issues**: Use descriptive commit messages for traceability
 
 ---
 
-## Error Handling Notes
-
-All agents should:
-
-- Use try-catch for operations that might fail
-- Provide clear error messages
-- Suggest remediation steps
-- Never leave the codebase in a broken state
-- Run tests before committing
-
-## Agent Selection Guide
-
-- **Code implementation with tests** → tdd-implementor
-- **Workspace/package operations** → monorepo-navigator
-- **Documentation updates** → docs-synchronizer
-- **Test mocks and fixtures** → test-utils-manager
+**Last Updated**: 2026-01-27
+**Maintained By**: AI Coding Agents Working Group

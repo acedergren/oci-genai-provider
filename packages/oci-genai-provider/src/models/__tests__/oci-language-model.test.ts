@@ -1,36 +1,46 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { OCILanguageModel } from '../oci-language-model';
+import type { AuthenticationDetailsProvider } from 'oci-common';
+import type { OCIConfig } from '../../types';
+
+// Mock functions that will be accessible in mocks
+const mockAuthProviderGetKeyId = jest.fn(() =>
+  Promise.resolve('ocid1.tenancy.oc1..test/ocid1.user.oc1..test/fingerprint')
+);
+const mockAuthProviderGetPrivateKey = jest.fn(
+  () => '-----BEGIN PRIVATE KEY-----\nMOCK\n-----END PRIVATE KEY-----'
+);
+const mockAuthProviderGetPassphrase = jest.fn(() => null);
+
+const mockCreateAuthProvider =
+  jest.fn<(config: OCIConfig) => Promise<AuthenticationDetailsProvider>>();
+const mockGetRegion = jest.fn<(config: OCIConfig) => string>();
+const mockChat = jest.fn<() => Promise<unknown>>();
+const mockGenerativeAiInferenceClientConstructor = jest.fn();
+const mockFromRegionId = jest.fn<(regionId: string) => unknown>();
 
 // Mock auth module
 jest.mock('../../auth/index.js', () => ({
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  createAuthProvider: jest.fn(() =>
-    Promise.resolve({
-      getKeyId: () => 'mock-key-id',
-    })
-  ),
-  getRegion: jest.fn(() => 'eu-frankfurt-1'),
+  createAuthProvider: (config: OCIConfig) => mockCreateAuthProvider(config),
+  getRegion: (config: OCIConfig) => mockGetRegion(config),
 }));
 
 // Mock OCI SDK
 jest.mock('oci-generativeaiinference', () => ({
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  GenerativeAiInferenceClient: jest.fn().mockImplementation(() => ({
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    chat: jest.fn().mockImplementation(() =>
-      Promise.resolve({
-        chatResponse: {
-          chatChoice: [
-            {
-              message: { content: [{ text: 'Generated response' }] },
-              finishReason: 'STOP',
-            },
-          ],
-          usage: { promptTokens: 15, completionTokens: 10, totalTokens: 25 },
-        },
-      })
-    ),
-  })),
+  GenerativeAiInferenceClient: jest.fn().mockImplementation((config: unknown) => {
+    mockGenerativeAiInferenceClientConstructor(config);
+    return {
+      chat: mockChat,
+      region: undefined,
+    };
+  }),
+}));
+
+// Mock oci-common Region
+jest.mock('oci-common', () => ({
+  Region: {
+    fromRegionId: (regionId: string) => mockFromRegionId(regionId),
+  },
 }));
 
 describe('OCILanguageModel', () => {
@@ -39,8 +49,30 @@ describe('OCILanguageModel', () => {
     compartmentId: 'ocid1.compartment.oc1..test',
   };
 
+  const mockAuthProvider: AuthenticationDetailsProvider = {
+    getKeyId: mockAuthProviderGetKeyId,
+    getPrivateKey: mockAuthProviderGetPrivateKey,
+    getPassphrase: mockAuthProviderGetPassphrase,
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
+
+    // Set up default mock implementations
+    mockCreateAuthProvider.mockResolvedValue(mockAuthProvider);
+    mockGetRegion.mockReturnValue('eu-frankfurt-1');
+    mockFromRegionId.mockReturnValue({ regionId: 'eu-frankfurt-1' });
+    mockChat.mockResolvedValue({
+      chatResponse: {
+        chatChoice: [
+          {
+            message: { content: [{ text: 'Generated response' }] },
+            finishReason: 'STOP',
+          },
+        ],
+        usage: { promptTokens: 15, completionTokens: 10, totalTokens: 25 },
+      },
+    });
   });
 
   describe('Authentication', () => {
@@ -53,10 +85,12 @@ describe('OCILanguageModel', () => {
 
       const model = new OCILanguageModel('cohere.command-r-plus', config);
 
-      // Verify model was created but client is not initialized yet
+      // Verify model was created
       expect(model.modelId).toBe('cohere.command-r-plus');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-      expect((model as any)._client).toBeUndefined();
+
+      // Client should not be created yet - verify by checking mocks
+      expect(mockCreateAuthProvider).not.toHaveBeenCalled();
+      expect(mockGenerativeAiInferenceClientConstructor).not.toHaveBeenCalled();
 
       const options = {
         prompt: [{ role: 'user' as const, content: [{ type: 'text' as const, text: 'test' }] }],
@@ -65,9 +99,63 @@ describe('OCILanguageModel', () => {
       // Make API call which should trigger lazy client initialization
       await model.doGenerate(options);
 
-      // Verify client is now initialized
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-      expect((model as any)._client).toBeDefined();
+      // Verify client was initialized with proper auth provider
+      expect(mockCreateAuthProvider).toHaveBeenCalledWith(config);
+      expect(mockCreateAuthProvider).toHaveBeenCalledTimes(1);
+      expect(mockGenerativeAiInferenceClientConstructor).toHaveBeenCalledWith({
+        authenticationDetailsProvider: mockAuthProvider,
+      });
+      expect(mockGenerativeAiInferenceClientConstructor).toHaveBeenCalledTimes(1);
+    });
+
+    it('should reuse client across multiple calls', async () => {
+      const config = {
+        auth: 'config_file' as const,
+        configPath: '~/.oci/config',
+        compartmentId: 'ocid1.compartment.oc1..test',
+      };
+
+      const model = new OCILanguageModel('cohere.command-r-plus', config);
+      const options = {
+        prompt: [{ role: 'user' as const, content: [{ type: 'text' as const, text: 'test' }] }],
+      };
+
+      // Make first API call
+      await model.doGenerate(options);
+
+      // Make second API call
+      await model.doGenerate(options);
+
+      // Verify client was created only once (reused)
+      expect(mockCreateAuthProvider).toHaveBeenCalledTimes(1);
+      expect(mockGenerativeAiInferenceClientConstructor).toHaveBeenCalledTimes(1);
+
+      // But chat should have been called twice
+      expect(mockChat).toHaveBeenCalledTimes(2);
+    });
+
+    it('should throw helpful error if auth provider creation fails', async () => {
+      const config = {
+        auth: 'config_file' as const,
+        configPath: '/nonexistent/config',
+        compartmentId: 'ocid1.compartment.oc1..test',
+      };
+
+      // Mock auth provider to throw error for this test
+      mockCreateAuthProvider.mockRejectedValue(new Error('Config file not found'));
+
+      const model = new OCILanguageModel('meta.llama-3.1-70b-instruct', config);
+      const options = {
+        prompt: [{ role: 'user' as const, content: [{ type: 'text' as const, text: 'test' }] }],
+      };
+
+      // Should throw helpful error message
+      await expect(model.doGenerate(options)).rejects.toThrow(
+        'Failed to initialize OCI client: Config file not found'
+      );
+
+      // Verify second call also throws (client initialization failed)
+      await expect(model.doGenerate(options)).rejects.toThrow('Check your OCI configuration');
     });
   });
 
