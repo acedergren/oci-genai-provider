@@ -32,3 +32,20 @@ export {
   getModelsByFamily,
   isValidModelId,
 } from './models/registry';
+
+// Re-export error types
+export {
+  OCIGenAIError,
+  NetworkError,
+  RateLimitError,
+  AuthenticationError,
+  ModelNotFoundError,
+  isRetryableError,
+  handleOCIError,
+} from './errors';
+export type {
+  OCIGenAIErrorOptions,
+  NetworkErrorOptions,
+  RateLimitErrorOptions,
+  AuthenticationErrorOptions,
+} from './errors';
