@@ -1,0 +1,225 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: en-US
+early_access: false
+
+# Expert reviewer tone for Running Days SaaS fitness app
+tone_instructions: >-
+  Senior engineer reviewing SvelteKit 5 + Fastify + Oracle SaaS.
+  Expert in TypeScript, SvelteKit runes, Fastify APIs, Oracle DB, Repository Pattern.
+  Focus: correctness, security, test coverage, architecture. Pragmatic & concise.
+
+# High-level behavior
+reviews:
+  profile: chill
+  high_level_summary: true
+  review_status: true
+  collapse_walkthrough: false
+  poem: false
+  request_changes_workflow: true
+
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+      - develop
+      - release/*
+
+  auto_title_placeholder: '@coderabbitai summary'
+  auto_title_instructions: >-
+    1-line summary (max 72 chars). Start with verb: Add/Fix/Update/Refactor/Feat.
+    Example: "Fix: prevent race condition in goal creation"
+
+  # Pre-merge checks enforce architectural invariants
+  pre_merge_checks:
+    docstrings:
+      mode: warning
+      threshold: 80
+
+    title:
+      mode: warning
+      requirements: >-
+        Imperative verb (Add/Fix/Update/Refactor). Max 72 chars.
+        Reference issue if exists.
+
+    description:
+      mode: error
+
+    issue_assessment:
+      mode: warning
+
+    custom_checks:
+      - name: No Hardcoded Secrets
+        mode: error
+        instructions: >-
+          FAIL if PR contains API keys, passwords, JWTs, tokens, or wallet files.
+          PASS if all secrets use environment variables or OCI Vault.
+
+      - name: Repository Pattern Compliance (API)
+        mode: error
+        instructions: >-
+          In apps/api routes: ALL database access must use request.repos.*
+          (users, workouts, goals, runs). FAIL if direct db.query() or raw SQL.
+          PASS if all queries use await request.repos.<entity>.<method>(ctx).
+
+      - name: Authentication Guard on Protected Routes
+        mode: error
+        instructions: >-
+          All apps/api routes accessing user data must have
+          preHandler: [fastify.authenticate]. Rate limit auth endpoints to 10 req/min.
+          FAIL if user routes lack auth. PASS if protected and rate-limited.
+
+      - name: Svelte 5 Runes Compliance
+        mode: warning
+        instructions: >-
+          In apps/web Svelte files: use ONLY Svelte 5 runes
+          ($state, $derived, $props, $effect, {#snippet}).
+          FAIL if legacy syntax: $:, export let, bind:, $store.
+
+      - name: Breaking Changes Documented
+        mode: warning
+        instructions: >-
+          If PR modifies OpenAPI schema, API endpoint contract, or database schema:
+          PR description must document breaking changes and migration path.
+
+  # Security tools integration
+  # Semgrep runs custom Running Days security rules (in .semgrep.yaml)
+  # + registry rules for OWASP, TypeScript, and SvelteKit best practices
+  tools:
+    gitleaks:
+      enabled: true
+    semgrep:
+      enabled: true
+      config_file: '.semgrep.yaml'
+    biome:
+      enabled: true
+    sqlfluff:
+      enabled: true
+    yamllint:
+      enabled: true
+    hadolint:
+      enabled: true
+    checkov:
+      enabled: true
+    shellcheck:
+      enabled: true
+
+  # Path-specific review instructions
+  path_instructions:
+    # Global code review guidelines
+    - path: '{apps,packages,infrastructure}/**/*.{ts,tsx,js,jsx,py,go,rs,java,swift}'
+      instructions: |
+        This is a Cloud SaaS monorepo with strict invariants.
+
+        Your role: Pragmatic senior engineer reviewing for correctness and test gaps.
+        Limit comments to 15 maximum. Use concise, direct, polite tone.
+
+        Focus on:
+        - Logic correctness and edge cases
+        - Test coverage gaps on behavior changes
+        - Runtime failures and error handling
+        - CRITICAL security only:
+          * Authn/authz bypass or logic errors
+          * Secrets/credentials in code or logs
+          * Permission/access control misconfig
+          * Insecure defaults (weak crypto, missing validation)
+          * SQL injection, XSS, SSRF, command injection
+
+        Ignore: Style, formatting, naming (linters handle it), documentation (Codex handles it).
+
+        When a change modifies a shared interface or contract whose full impact
+        cannot be determined from diff alone, recommend @greptileai for impact analysis.
+
+    # API layer: Fastify routes
+    - path: apps/api/src/routes/**/*.ts
+      instructions: |
+        Repository Pattern Enforcement:
+        - ALL database operations use request.repos.* (users, workouts, goals, runs)
+        - No fastify.db, db.query(), or raw SQL
+        - Pass DbContext for multi-tenant user scoping
+
+        Security: Routes with user data must have preHandler: [fastify.authenticate].
+        Auth endpoints rate-limited to 10 req/min. No logging of tokens/PII.
+        Validate request payloads with Zod. Test multi-tenant boundaries.
+
+        API Contracts: OpenAPI schema matches implementation.
+        Flag breaking changes (new required fields, removed endpoints, renamed fields).
+        Error format: { error, code, details? }. Use correct HTTP status codes.
+
+    # Web layer: SvelteKit frontend
+    - path: apps/web/src/**/*.{ts,tsx,svelte}
+      instructions: |
+        Svelte 5 Runes: Use ONLY $state, $derived, $props, $effect, {#snippet}.
+        No legacy: $: reactive, export let, bind:, $store subscriptions.
+
+        Security & XSS: Use text interpolation {value}, not {@html value}.
+        If HTML needed, sanitize with DOMPurify first. Validate URLs.
+        No eval(), Function(), or dynamic code execution.
+
+        Styling: CSS colors must use OKLCH (Tailwind 4). No hex/rgb/hsl.
+        Use Tailwind utilities. Mobile-first responsive design.
+
+        Performance: No N+1 queries. Lazy load routes. Image optimization.
+        Dynamic imports for code-splitting.
+
+    # iOS app: Swift
+    - path: apps/ios/**/*.swift
+      instructions: |
+        Swift Concurrency: async/await, no completion handlers.
+        Verify Sign in with Apple (SWIA) PKCE flow correctness.
+        UI updates on MainActor. No force unwraps (!).
+
+        Security: Auth tokens in Keychain, not UserDefaults.
+        Certificate pinning for API calls. No logging of sensitive data.
+
+    # Database layer: Repository pattern
+    - path: packages/database/src/repositories/**/*.ts
+      instructions: |
+        Single responsibility: one entity per repository.
+        All queries accept DbContext for user scoping.
+        Use Oracle parameterized queries (bindings, no string concatenation).
+        Error handling: throw ApplicationError(code, message).
+        No async side effects (logging, external APIs).
+        100% test coverage for security-critical queries.
+
+    # Shared types: API contracts
+    - path: packages/types/src/**/*.ts
+      instructions: |
+        Zod schemas must match OpenAPI definitions.
+        Export type from schema: type User = z.infer<typeof userSchema>.
+        Use discriminated unions for error types.
+        Document breaking changes in JSDoc comments.
+        Never use 'any'; use unknown with type guards.
+
+    # Skip tests (validated by CI)
+    - path: '**/*.{test,spec}.{ts,tsx,js,jsx,py}'
+      instructions: Skip detailed review — tests are validated by CI.
+
+    # Skip documentation (low-risk)
+    - path: '{docs/**,**/*.md}'
+      instructions: Skip review — documentation changes are low-risk.
+
+  # Knowledge base: contextual learning
+  assess_linked_issues: true
+  related_issues: true
+  related_prs: true
+  suggested_labels: true
+  auto_apply_labels: false
+  suggested_reviewers: true
+  auto_assign_reviewers: false
+
+# Chat integrations
+chat:
+  auto_reply: true
+  integrations:
+    linear:
+      usage: auto
+
+# Knowledge base settings
+knowledge_base:
+  learnings:
+    scope: auto
+  issues:
+    scope: auto
+  pull_requests:
+    scope: auto
