@@ -38,6 +38,7 @@ export async function* parseSSEStream(response: Response): AsyncGenerator<Stream
   const reader = body.getReader();
   const decoder = new TextDecoder();
   const parts: StreamPart[] = [];
+  let yieldedIndex = 0;
 
   const parser = createParser({
     onEvent: (event: EventSourceMessage) => {
@@ -84,14 +85,14 @@ export async function* parseSSEStream(response: Response): AsyncGenerator<Stream
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
     parser.feed(decoder.decode(result.value, { stream: true }));
 
-    // Yield any parts that were parsed
-    while (parts.length > 0) {
-      yield parts.shift()!;
+    // Yield any parts that were parsed (O(1) per yield)
+    while (yieldedIndex < parts.length) {
+      yield parts[yieldedIndex++];
     }
   }
 
   // Yield any remaining parts
-  while (parts.length > 0) {
-    yield parts.shift()!;
+  while (yieldedIndex < parts.length) {
+    yield parts[yieldedIndex++];
   }
 }
