@@ -1,29 +1,110 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { OCILanguageModel } from '../oci-language-model';
+
+// Mock OCI SDK to return streaming response
+jest.mock('oci-generativeaiinference', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  GenerativeAiInferenceClient: jest.fn().mockImplementation(() => ({
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    chat: jest.fn().mockImplementation(() => {
+      // Create a mock streaming response
+      const encoder = new TextEncoder();
+      const sseData = `event: message
+data: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"Hello"}]}}]}}
+
+event: message
+data: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":" world"}]}}]}}
+
+event: message
+data: {"chatResponse":{"chatChoice":[{"finishReason":"STOP"}],"usage":{"promptTokens":10,"completionTokens":5}}}
+
+`;
+      const stream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(encoder.encode(sseData));
+          controller.close();
+        },
+      });
+
+      return Promise.resolve(new Response(stream));
+    }),
+  })),
+}));
 
 describe('OCILanguageModel.doStream', () => {
-  const _mockConfig = {
+  const mockConfig = {
     region: 'eu-frankfurt-1',
     compartmentId: 'ocid1.compartment.oc1..test',
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    // Use mockConfig to avoid linter warning
-    expect(_mockConfig.region).toBeDefined();
   });
 
-  it('should return stream with rawCall', () => {
-    const result = {
-      stream: new ReadableStream(),
-      rawCall: {
-        rawPrompt: [],
-        rawSettings: { isStream: true },
-      },
-    };
+  it('should return stream result with stream property', async () => {
+    const model = new OCILanguageModel('cohere.command-r-plus', mockConfig);
+
+    const result = await model.doStream({
+      prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
+    });
 
     expect(result).toHaveProperty('stream');
-    expect(result).toHaveProperty('rawCall');
-    expect(result.rawCall.rawSettings).toHaveProperty('isStream');
+    expect(result.stream).toBeDefined();
+  });
+
+  it('should stream text deltas', async () => {
+    const model = new OCILanguageModel('cohere.command-r-plus', mockConfig);
+
+    const result = await model.doStream({
+      prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
+    });
+
+    const reader = result.stream.getReader();
+    const parts: unknown[] = [];
+    let done = false;
+
+    while (!done) {
+      const { value, done: isDone } = await reader.read();
+      done = isDone;
+      if (value) {
+        parts.push(value);
+      }
+    }
+
+    // Should have text deltas
+    const textDeltas = parts.filter(
+      (p): p is { type: 'text-delta'; delta: string } =>
+        (p as { type: string }).type === 'text-delta'
+    );
+    expect(textDeltas.length).toBeGreaterThan(0);
+  });
+
+  it('should include finish part with usage', async () => {
+    const model = new OCILanguageModel('cohere.command-r-plus', mockConfig);
+
+    const result = await model.doStream({
+      prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
+    });
+
+    const reader = result.stream.getReader();
+    const parts: unknown[] = [];
+    let done = false;
+
+    while (!done) {
+      const { value, done: isDone } = await reader.read();
+      done = isDone;
+      if (value) {
+        parts.push(value);
+      }
+    }
+
+    // Should have finish part
+    const finishPart = parts.find(
+      (p): p is { type: 'finish'; finishReason: string } =>
+        (p as { type: string }).type === 'finish'
+    );
+    expect(finishPart).toBeDefined();
+    expect(finishPart?.finishReason).toBe('stop');
   });
 
   it('should set isStream flag in request', () => {
@@ -37,58 +118,12 @@ describe('OCILanguageModel.doStream', () => {
   });
 
   it('should include temperature in streaming request', () => {
-    const inferenceConfig = {
-      temperature: 0.8,
-    };
+    const inferenceConfig = { temperature: 0.8 };
     expect(inferenceConfig.temperature).toBe(0.8);
   });
 
   it('should include maxTokens in streaming request', () => {
-    const inferenceConfig = {
-      maxTokens: 200,
-    };
+    const inferenceConfig = { maxTokens: 200 };
     expect(inferenceConfig.maxTokens).toBe(200);
-  });
-
-  it('should yield text-delta parts', () => {
-    const parts = [
-      { type: 'text-delta', textDelta: 'Hello' },
-      { type: 'text-delta', textDelta: ' world' },
-    ];
-
-    for (const part of parts) {
-      expect(part.type).toBe('text-delta');
-      expect(part).toHaveProperty('textDelta');
-    }
-  });
-
-  it('should yield finish part with usage', () => {
-    const finishPart = {
-      type: 'finish',
-      finishReason: 'stop',
-      usage: {
-        promptTokens: 10,
-        completionTokens: 5,
-      },
-    };
-
-    expect(finishPart.type).toBe('finish');
-    expect(finishPart.usage.promptTokens).toBe(10);
-  });
-
-  it('should convert async generator to ReadableStream', () => {
-    const stream = new ReadableStream({
-      start(controller): void {
-        controller.enqueue({ type: 'text-delta', textDelta: 'test' });
-        controller.close();
-      },
-    });
-
-    expect(stream).toBeInstanceOf(ReadableStream);
-  });
-
-  it('should handle streaming errors', () => {
-    const error = new Error('Stream error');
-    expect(error.message).toBe('Stream error');
   });
 });

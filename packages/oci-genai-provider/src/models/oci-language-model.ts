@@ -3,13 +3,14 @@ import type {
   LanguageModelV3CallOptions,
   LanguageModelV3FinishReason,
   LanguageModelV3GenerateResult,
+  LanguageModelV3StreamPart,
   LanguageModelV3StreamResult,
 } from '@ai-sdk/provider';
 import { GenerativeAiInferenceClient } from 'oci-generativeaiinference';
 import type { OCIConfig } from '../types';
 import { isValidModelId } from './registry';
 import { convertToOCIMessages } from '../converters/messages';
-import { mapFinishReason } from '../streaming/sse-parser';
+import { mapFinishReason, parseSSEStream } from '../streaming/sse-parser';
 
 interface OCIChatChoice {
   message?: {
@@ -95,7 +96,70 @@ export class OCILanguageModel implements LanguageModelV3 {
     };
   }
 
-  doStream(_options: LanguageModelV3CallOptions): Promise<LanguageModelV3StreamResult> {
-    return Promise.reject(new Error('Not implemented'));
+  async doStream(options: LanguageModelV3CallOptions): Promise<LanguageModelV3StreamResult> {
+    const messages = convertToOCIMessages(options.prompt);
+
+    const response = (await this.client.chat({
+      chatDetails: {
+        compartmentId: this.config.compartmentId ?? '',
+        servingMode: {
+          servingType: 'ON_DEMAND',
+          modelId: this.modelId,
+        },
+        chatRequest: {
+          apiFormat: 'GENERIC',
+          messages,
+          isStream: true,
+        },
+      },
+    })) as unknown as Response;
+
+    // Parse SSE stream and convert to V3 format
+    const sseStream = parseSSEStream(response);
+    let textPartId = 0;
+
+    const v3Stream = new ReadableStream<LanguageModelV3StreamPart>({
+      async start(controller) {
+        try {
+          for await (const part of sseStream) {
+            if (part.type === 'text-delta') {
+              // Convert SSE text-delta to V3 format
+              controller.enqueue({
+                type: 'text-delta',
+                id: `text-${textPartId++}`,
+                delta: part.textDelta,
+              });
+            } else if (part.type === 'finish') {
+              // Convert SSE finish to V3 format
+              controller.enqueue({
+                type: 'finish',
+                finishReason: part.finishReason as unknown as LanguageModelV3FinishReason,
+                usage: {
+                  inputTokens: {
+                    total: part.usage.promptTokens,
+                    noCache: undefined,
+                    cacheRead: undefined,
+                    cacheWrite: undefined,
+                  },
+                  outputTokens: {
+                    total: part.usage.completionTokens,
+                    text: undefined,
+                    reasoning: undefined,
+                  },
+                },
+              });
+            }
+          }
+          controller.close();
+        } catch (error) {
+          controller.error(error);
+        }
+      },
+    });
+
+    return {
+      stream: v3Stream,
+      request: { body: JSON.stringify(messages) },
+    };
   }
 }
