@@ -1,6 +1,17 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { OCILanguageModel } from '../oci-language-model';
 
+// Mock auth module
+jest.mock('../../auth/index.js', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  createAuthProvider: jest.fn(() =>
+    Promise.resolve({
+      getKeyId: () => 'mock-key-id',
+    })
+  ),
+  getRegion: jest.fn(() => 'eu-frankfurt-1'),
+}));
+
 // Mock OCI SDK
 jest.mock('oci-generativeaiinference', () => ({
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
@@ -30,6 +41,34 @@ describe('OCILanguageModel', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('Authentication', () => {
+    it('should initialize client with proper auth provider lazily', async () => {
+      const config = {
+        auth: 'config_file' as const,
+        configPath: '~/.oci/config',
+        compartmentId: 'ocid1.compartment.oc1..test',
+      };
+
+      const model = new OCILanguageModel('cohere.command-r-plus', config);
+
+      // Verify model was created but client is not initialized yet
+      expect(model.modelId).toBe('cohere.command-r-plus');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+      expect((model as any)._client).toBeUndefined();
+
+      const options = {
+        prompt: [{ role: 'user' as const, content: [{ type: 'text' as const, text: 'test' }] }],
+      };
+
+      // Make API call which should trigger lazy client initialization
+      await model.doGenerate(options);
+
+      // Verify client is now initialized
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+      expect((model as any)._client).toBeDefined();
+    });
   });
 
   describe('Construction', () => {
