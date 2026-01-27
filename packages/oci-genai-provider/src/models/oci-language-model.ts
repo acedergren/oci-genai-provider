@@ -12,7 +12,7 @@ import type { OCIConfig } from '../types';
 import { isValidModelId } from './registry';
 import { convertToOCIMessages } from '../converters/messages';
 import { mapFinishReason, parseSSEStream } from '../streaming/sse-parser';
-import { createAuthProvider, getRegion } from '../auth/index.js';
+import { createAuthProvider, getRegion, getCompartmentId } from '../auth/index.js';
 
 interface OCIChatChoice {
   message?: {
@@ -75,10 +75,11 @@ export class OCILanguageModel implements LanguageModelV3 {
   async doGenerate(options: LanguageModelV3CallOptions): Promise<LanguageModelV3GenerateResult> {
     const messages = convertToOCIMessages(options.prompt);
     const client = await this.getClient();
+    const compartmentId = getCompartmentId(this.config);
 
     const response = (await client.chat({
       chatDetails: {
-        compartmentId: this.config.compartmentId ?? '',
+        compartmentId,
         servingMode: {
           servingType: 'ON_DEMAND',
           modelId: this.modelId,
@@ -124,10 +125,11 @@ export class OCILanguageModel implements LanguageModelV3 {
   async doStream(options: LanguageModelV3CallOptions): Promise<LanguageModelV3StreamResult> {
     const messages = convertToOCIMessages(options.prompt);
     const client = await this.getClient();
+    const compartmentId = getCompartmentId(this.config);
 
     const response = (await client.chat({
       chatDetails: {
-        compartmentId: this.config.compartmentId ?? '',
+        compartmentId,
         servingMode: {
           servingType: 'ON_DEMAND',
           modelId: this.modelId,

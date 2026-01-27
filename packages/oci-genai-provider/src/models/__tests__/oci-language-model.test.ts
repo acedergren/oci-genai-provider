@@ -19,10 +19,13 @@ const mockChat = jest.fn<() => Promise<unknown>>();
 const mockGenerativeAiInferenceClientConstructor = jest.fn();
 const mockFromRegionId = jest.fn<(regionId: string) => unknown>();
 
+const mockGetCompartmentId = jest.fn<(config: OCIConfig) => string>();
+
 // Mock auth module
 jest.mock('../../auth/index.js', () => ({
   createAuthProvider: (config: OCIConfig) => mockCreateAuthProvider(config),
   getRegion: (config: OCIConfig) => mockGetRegion(config),
+  getCompartmentId: (config: OCIConfig) => mockGetCompartmentId(config),
 }));
 
 // Mock OCI SDK
@@ -61,6 +64,7 @@ describe('OCILanguageModel', () => {
     // Set up default mock implementations
     mockCreateAuthProvider.mockResolvedValue(mockAuthProvider);
     mockGetRegion.mockReturnValue('eu-frankfurt-1');
+    mockGetCompartmentId.mockReturnValue('ocid1.compartment.oc1..test');
     mockFromRegionId.mockReturnValue({ regionId: 'eu-frankfurt-1' });
     mockChat.mockResolvedValue({
       chatResponse: {
@@ -207,6 +211,58 @@ describe('OCILanguageModel', () => {
 
       expect(result.usage.inputTokens.total).toBe(15);
       expect(result.usage.outputTokens.total).toBe(10);
+    });
+  });
+
+  describe('Compartment ID validation', () => {
+    it('should throw error when compartmentId is missing', async () => {
+      const configWithoutCompartment = {
+        region: 'eu-frankfurt-1',
+      };
+
+      // Mock getCompartmentId to throw error for missing compartmentId
+      mockGetCompartmentId.mockImplementation(() => {
+        throw new Error(
+          'Compartment ID not found. Provide via config.compartmentId or OCI_COMPARTMENT_ID environment variable.'
+        );
+      });
+
+      const model = new OCILanguageModel('cohere.command-r-plus', configWithoutCompartment);
+      const options = {
+        prompt: [{ role: 'user' as const, content: [{ type: 'text' as const, text: 'test' }] }],
+      };
+
+      await expect(model.doGenerate(options)).rejects.toThrow(
+        'Compartment ID not found. Provide via config.compartmentId or OCI_COMPARTMENT_ID environment variable.'
+      );
+    });
+
+    it('should use compartmentId from config when provided', async () => {
+      const configWithCompartment = {
+        region: 'eu-frankfurt-1',
+        compartmentId: 'ocid1.compartment.oc1..specific',
+      };
+
+      mockGetCompartmentId.mockReturnValue('ocid1.compartment.oc1..specific');
+
+      const model = new OCILanguageModel('cohere.command-r-plus', configWithCompartment);
+      const options = {
+        prompt: [{ role: 'user' as const, content: [{ type: 'text' as const, text: 'test' }] }],
+      };
+
+      await model.doGenerate(options);
+
+      // Verify getCompartmentId was called with the config
+      expect(mockGetCompartmentId).toHaveBeenCalledWith(configWithCompartment);
+
+      // Verify chat was called with the validated compartmentId
+      expect(mockChat).toHaveBeenCalledWith(
+        expect.objectContaining({
+          chatDetails: expect.objectContaining({
+            compartmentId: 'ocid1.compartment.oc1..specific',
+          }),
+        })
+      );
     });
   });
 });

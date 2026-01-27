@@ -14,11 +14,15 @@ const mockCreateAuthProvider = jest.fn<
   (config: OCIConfig) => Promise<AuthenticationDetailsProvider>
 >(() => Promise.resolve(mockAuthProvider));
 const mockGetRegion = jest.fn<(config: OCIConfig) => string>(() => 'eu-frankfurt-1');
+const mockGetCompartmentId = jest.fn<(config: OCIConfig) => string>(
+  (config) => config.compartmentId ?? 'ocid1.compartment.oc1..test'
+);
 
 // Mock auth module
 jest.mock('../../auth/index.js', () => ({
   createAuthProvider: (config: OCIConfig) => mockCreateAuthProvider(config),
   getRegion: (config: OCIConfig) => mockGetRegion(config),
+  getCompartmentId: (config: OCIConfig) => mockGetCompartmentId(config),
 }));
 
 // Mock oci-common Region
