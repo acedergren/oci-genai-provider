@@ -90,6 +90,40 @@ describe('SSE Parser', () => {
     });
   });
 
+  describe('Performance', () => {
+    it('should parse 1000 events in under 100ms', async () => {
+      const events: string[] = [];
+      for (let i = 0; i < 1000; i++) {
+        events.push(
+          `event: message\ndata: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"token${i}"}]}}]}}\n\n`
+        );
+      }
+      const sseText = events.join('');
+
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller): void {
+          controller.enqueue(encoder.encode(sseText));
+          controller.close();
+        },
+      });
+
+      const response = new Response(stream);
+      const startTime = Date.now();
+
+      let count = 0;
+      for await (const part of parseSSEStream(response)) {
+        if (part.type === 'text-delta') {
+          count++;
+        }
+      }
+
+      const duration = Date.now() - startTime;
+      expect(count).toBe(1000);
+      expect(duration).toBeLessThan(100);
+    }, 10000); // 10 second timeout for benchmark
+  });
+
   describe('parseSSEStream', () => {
     it('should parse text delta from stream', async () => {
       const sseText = `event: message
