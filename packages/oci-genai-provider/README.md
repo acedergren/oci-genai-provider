@@ -95,6 +95,34 @@ console.log(result.text);
 
 ## Authentication
 
+The provider uses lazy initialization for OCI authentication. The auth provider is created on the first API call using your configuration:
+
+```typescript
+import { createOCI } from '@acedergren/oci-genai-provider';
+
+const provider = createOCI({
+  authMethod: 'config_file', // or 'instance_principal', 'resource_principal'
+  configFilePath: '~/.oci/config',
+  compartmentId: process.env.OCI_COMPARTMENT_ID,
+  region: 'us-ashburn-1',
+});
+
+const model = provider.model('cohere.command-r-plus');
+// Auth provider created on first API call
+const result = await generateText({ model, prompt: 'Hello!' });
+```
+
+**Authentication Methods:**
+
+- `config_file` (default): Uses `~/.oci/config` file
+- `instance_principal`: For OCI compute instances
+- `resource_principal`: For OCI Functions
+
+**Required Configuration:**
+
+- `compartmentId`: Always required (from config or `OCI_COMPARTMENT_ID` env var)
+- `region`: Optional, defaults to `eu-frankfurt-1`
+
 ### Config File (Default)
 
 Uses `~/.oci/config`:
@@ -212,26 +240,32 @@ OCI_CLI_AUTH=api_key
 
 ## Error Handling
 
-The provider includes helpful error messages:
+All OCI API errors are wrapped with `OCIGenAIError` providing contextual help:
 
 ```typescript
+import { OCIGenAIError } from '@acedergren/oci-genai-provider';
+
 try {
-  const result = await generateText({
-    model: oci('invalid.model'),
-    prompt: 'Test',
-  });
+  const result = await generateText({ model, prompt: 'Hello!' });
 } catch (error) {
-  if (error.statusCode === 401) {
-    // Authentication error - check your OCI config
-  } else if (error.statusCode === 403) {
-    // Permission error - check IAM policies
-  } else if (error.statusCode === 404) {
-    // Model not found - check model ID and region
-  } else if (error.statusCode === 429) {
-    // Rate limit - implement retry with backoff
+  if (error instanceof OCIGenAIError) {
+    console.error(error.message); // User-friendly message
+    console.error(error.context); // Additional context
+
+    if (error.retryable) {
+      // Implement retry logic for 429, 500+ errors
+    }
   }
 }
 ```
+
+**Error Types:**
+
+- `401 Unauthorized`: Check authentication configuration
+- `403 Forbidden`: Check IAM policies and compartment access
+- `404 Not Found`: Verify model ID and region
+- `429 Rate Limit`: Implement exponential backoff
+- `500+ Server Error`: Retryable, implement retry logic
 
 ## TypeScript
 

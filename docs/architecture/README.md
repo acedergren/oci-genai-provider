@@ -178,6 +178,41 @@ opencode-integration (wrapper)
 - **Shared mocks** in `test-utils` for consistency
 - **TDD workflow** with RED-GREEN-REFACTOR cycles
 
+## Key Design Decisions
+
+### Lazy Authentication Initialization
+
+Authentication is initialized lazily on the first API call rather than in the constructor:
+
+**Rationale:**
+
+- Allows synchronous construction of model instances
+- Auth provider creation is async (may read config files)
+- Defers expensive initialization until actually needed
+- Simplifies testing (auth can be mocked per-request)
+
+**Implementation:**
+
+```typescript
+private async getClient(): Promise<GenerativeAiInferenceClient> {
+  if (!this._client) {
+    const authProvider = await createAuthProvider(this.config);
+    this._client = new GenerativeAiInferenceClient({ authenticationDetailsProvider: authProvider });
+  }
+  return this._client;
+}
+```
+
+### Error Handling Architecture
+
+All OCI SDK errors are wrapped with `handleOCIError()`:
+
+**Provides:**
+
+- Contextual error messages for common issues
+- Retry detection for transient failures
+- User-friendly guidance for resolution
+
 ### Key Components
 
 #### 1. Provider Interface (`OCIGenAIProvider`)
