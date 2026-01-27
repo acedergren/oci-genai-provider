@@ -265,4 +265,75 @@ describe('OCILanguageModel', () => {
       );
     });
   });
+
+  describe('Error handling', () => {
+    it('should wrap 401 errors with OCIGenAIError and authentication context', async () => {
+      const model = new OCILanguageModel('cohere.command-r-plus', mockConfig);
+
+      // Mock API to throw 401 error
+      const authError = new Error('Unauthorized') as Error & { statusCode?: number };
+      authError.statusCode = 401;
+      mockChat.mockRejectedValue(authError);
+
+      const options = {
+        prompt: [{ role: 'user' as const, content: [{ type: 'text' as const, text: 'test' }] }],
+      };
+
+      try {
+        await model.doGenerate(options);
+        throw new Error('Expected error to be thrown');
+      } catch (error) {
+        expect(error).toHaveProperty('name', 'OCIGenAIError');
+        expect(error).toHaveProperty('statusCode', 401);
+        expect(error).toHaveProperty('message');
+        expect((error as Error).message).toContain('authentication');
+      }
+    });
+
+    it('should wrap 429 errors with retryable flag', async () => {
+      const model = new OCILanguageModel('cohere.command-r-plus', mockConfig);
+
+      // Mock API to throw 429 error
+      const rateLimitError = new Error('Too Many Requests') as Error & { statusCode?: number };
+      rateLimitError.statusCode = 429;
+      mockChat.mockRejectedValue(rateLimitError);
+
+      const options = {
+        prompt: [{ role: 'user' as const, content: [{ type: 'text' as const, text: 'test' }] }],
+      };
+
+      try {
+        await model.doGenerate(options);
+        throw new Error('Expected error to be thrown');
+      } catch (error) {
+        expect(error).toHaveProperty('name', 'OCIGenAIError');
+        expect(error).toHaveProperty('statusCode', 429);
+        expect(error).toHaveProperty('retryable', true);
+      }
+    });
+
+    it('should wrap streaming errors with OCIGenAIError', async () => {
+      const model = new OCILanguageModel('cohere.command-r-plus', mockConfig);
+
+      // Mock API to throw 500 error
+      const serverError = new Error('Internal Server Error') as Error & { statusCode?: number };
+      serverError.statusCode = 500;
+      mockChat.mockRejectedValue(serverError);
+
+      const options = {
+        prompt: [{ role: 'user' as const, content: [{ type: 'text' as const, text: 'test' }] }],
+      };
+
+      try {
+        const result = await model.doStream(options);
+        // Try to consume stream - should error
+        const reader = result.stream.getReader();
+        await reader.read();
+        throw new Error('Expected error to be thrown');
+      } catch (error) {
+        expect(error).toHaveProperty('name', 'OCIGenAIError');
+        expect(error).toHaveProperty('statusCode', 500);
+      }
+    });
+  });
 });

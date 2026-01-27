@@ -13,6 +13,7 @@ import { isValidModelId } from './registry';
 import { convertToOCIMessages } from '../converters/messages';
 import { mapFinishReason, parseSSEStream } from '../streaming/sse-parser';
 import { createAuthProvider, getRegion, getCompartmentId } from '../auth/index.js';
+import { handleOCIError } from '../errors/index.js';
 
 interface OCIChatChoice {
   message?: {
@@ -77,49 +78,53 @@ export class OCILanguageModel implements LanguageModelV3 {
     const client = await this.getClient();
     const compartmentId = getCompartmentId(this.config);
 
-    const response = (await client.chat({
-      chatDetails: {
-        compartmentId,
-        servingMode: {
-          servingType: 'ON_DEMAND',
-          modelId: this.modelId,
+    try {
+      const response = (await client.chat({
+        chatDetails: {
+          compartmentId,
+          servingMode: {
+            servingType: 'ON_DEMAND',
+            modelId: this.modelId,
+          },
+          chatRequest: {
+            apiFormat: 'GENERIC',
+            messages,
+          },
         },
-        chatRequest: {
-          apiFormat: 'GENERIC',
-          messages,
-        },
-      },
-    })) as OCIChatResponse;
+      })) as OCIChatResponse;
 
-    const choice = response.chatResponse?.chatChoice?.[0];
-    const textContent = choice?.message?.content?.[0]?.text ?? '';
-    const finishReason = mapFinishReason(
-      choice?.finishReason ?? 'STOP'
-    ) as unknown as LanguageModelV3FinishReason;
+      const choice = response.chatResponse?.chatChoice?.[0];
+      const textContent = choice?.message?.content?.[0]?.text ?? '';
+      const finishReason = mapFinishReason(
+        choice?.finishReason ?? 'STOP'
+      ) as unknown as LanguageModelV3FinishReason;
 
-    return {
-      content: [{ type: 'text', text: textContent }],
-      finishReason,
-      usage: {
-        inputTokens: {
-          total: response.chatResponse?.usage?.promptTokens ?? 0,
-          noCache: undefined,
-          cacheRead: undefined,
-          cacheWrite: undefined,
+      return {
+        content: [{ type: 'text', text: textContent }],
+        finishReason,
+        usage: {
+          inputTokens: {
+            total: response.chatResponse?.usage?.promptTokens ?? 0,
+            noCache: undefined,
+            cacheRead: undefined,
+            cacheWrite: undefined,
+          },
+          outputTokens: {
+            total: response.chatResponse?.usage?.completionTokens ?? 0,
+            text: undefined,
+            reasoning: undefined,
+          },
         },
-        outputTokens: {
-          total: response.chatResponse?.usage?.completionTokens ?? 0,
-          text: undefined,
-          reasoning: undefined,
+        warnings: [],
+        request: { body: JSON.stringify(messages) },
+        response: {
+          body: response,
         },
-      },
-      warnings: [],
-      request: { body: JSON.stringify(messages) },
-      response: {
-        body: response,
-      },
-      providerMetadata: {},
-    };
+        providerMetadata: {},
+      };
+    } catch (error) {
+      throw handleOCIError(error);
+    }
   }
 
   async doStream(options: LanguageModelV3CallOptions): Promise<LanguageModelV3StreamResult> {
@@ -127,67 +132,71 @@ export class OCILanguageModel implements LanguageModelV3 {
     const client = await this.getClient();
     const compartmentId = getCompartmentId(this.config);
 
-    const response = (await client.chat({
-      chatDetails: {
-        compartmentId,
-        servingMode: {
-          servingType: 'ON_DEMAND',
-          modelId: this.modelId,
+    try {
+      const response = (await client.chat({
+        chatDetails: {
+          compartmentId,
+          servingMode: {
+            servingType: 'ON_DEMAND',
+            modelId: this.modelId,
+          },
+          chatRequest: {
+            apiFormat: 'GENERIC',
+            messages,
+            isStream: true,
+          },
         },
-        chatRequest: {
-          apiFormat: 'GENERIC',
-          messages,
-          isStream: true,
-        },
-      },
-    })) as unknown as Response;
+      })) as unknown as Response;
 
-    // Parse SSE stream and convert to V3 format
-    const sseStream = parseSSEStream(response);
-    let textPartId = 0;
+      // Parse SSE stream and convert to V3 format
+      const sseStream = parseSSEStream(response);
+      let textPartId = 0;
 
-    const v3Stream = new ReadableStream<LanguageModelV3StreamPart>({
-      async start(controller): Promise<void> {
-        try {
-          for await (const part of sseStream) {
-            if (part.type === 'text-delta') {
-              // Convert SSE text-delta to V3 format
-              controller.enqueue({
-                type: 'text-delta',
-                id: `text-${textPartId++}`,
-                delta: part.textDelta,
-              });
-            } else if (part.type === 'finish') {
-              // Convert SSE finish to V3 format
-              controller.enqueue({
-                type: 'finish',
-                finishReason: part.finishReason as unknown as LanguageModelV3FinishReason,
-                usage: {
-                  inputTokens: {
-                    total: part.usage.promptTokens,
-                    noCache: undefined,
-                    cacheRead: undefined,
-                    cacheWrite: undefined,
+      const v3Stream = new ReadableStream<LanguageModelV3StreamPart>({
+        async start(controller): Promise<void> {
+          try {
+            for await (const part of sseStream) {
+              if (part.type === 'text-delta') {
+                // Convert SSE text-delta to V3 format
+                controller.enqueue({
+                  type: 'text-delta',
+                  id: `text-${textPartId++}`,
+                  delta: part.textDelta,
+                });
+              } else if (part.type === 'finish') {
+                // Convert SSE finish to V3 format
+                controller.enqueue({
+                  type: 'finish',
+                  finishReason: part.finishReason as unknown as LanguageModelV3FinishReason,
+                  usage: {
+                    inputTokens: {
+                      total: part.usage.promptTokens,
+                      noCache: undefined,
+                      cacheRead: undefined,
+                      cacheWrite: undefined,
+                    },
+                    outputTokens: {
+                      total: part.usage.completionTokens,
+                      text: undefined,
+                      reasoning: undefined,
+                    },
                   },
-                  outputTokens: {
-                    total: part.usage.completionTokens,
-                    text: undefined,
-                    reasoning: undefined,
-                  },
-                },
-              });
+                });
+              }
             }
+            controller.close();
+          } catch (error) {
+            controller.error(handleOCIError(error));
           }
-          controller.close();
-        } catch (error) {
-          controller.error(error);
-        }
-      },
-    });
+        },
+      });
 
-    return {
-      stream: v3Stream,
-      request: { body: JSON.stringify(messages) },
-    };
+      return {
+        stream: v3Stream,
+        request: { body: JSON.stringify(messages) },
+      };
+    } catch (error) {
+      throw handleOCIError(error);
+    }
   }
 }
