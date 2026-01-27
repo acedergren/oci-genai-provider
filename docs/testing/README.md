@@ -2,6 +2,13 @@
 
 This document describes the test suite organization and testing practices for the OCI GenAI monorepo.
 
+## Quick Links
+
+- **[Test Suite Specification](../plans/2026-01-26-test-suite-specification.md)** - Complete test specifications (121 tests)
+- **[TDD Implementation Plan](../plans/2026-01-27-core-provider-tdd-implementation.md)** - RED-GREEN-REFACTOR implementation guide
+- **[Core Implementation Plan](../plans/2026-01-27-core-provider-implementation.md)** - High-level implementation roadmap
+- **[OpenCode Integration Plan](../plans/2026-01-27-opencode-integration-implementation.md)** - OpenCode wrapper implementation
+
 ## Test Suite Structure
 
 ```
@@ -214,6 +221,167 @@ jest.mock('oci-generativeaiinference');
 import { TEST_CONFIG } from '@acedergren/test-utils';
 ```
 
+## Test-Driven Development (TDD)
+
+This project follows strict TDD practices with the RED-GREEN-REFACTOR cycle.
+
+### TDD Workflow
+
+```
+┌─────────────┐
+│  1. RED     │  Write failing test
+│  (Fail)     │  Run: pnpm test
+└──────┬──────┘  Expected: FAIL
+       │
+       ▼
+┌─────────────┐
+│  2. GREEN   │  Write minimal code to pass
+│  (Pass)     │  Run: pnpm test
+└──────┬──────┘  Expected: PASS
+       │
+       ▼
+┌─────────────┐
+│  3. REFACTOR│  Improve code quality
+│  (Pass)     │  Run: pnpm test
+└──────┬──────┘  Expected: PASS
+       │
+       ▼
+┌─────────────┐
+│  4. COMMIT  │  Atomic commit
+│             │  git commit -m "feat: ..."
+└─────────────┘
+```
+
+### Implementation Steps
+
+Each task in the [TDD Plan](../plans/2026-01-27-core-provider-tdd-implementation.md) follows:
+
+1. **RED**: Update test to call real implementation → FAIL
+2. **GREEN**: Implement minimal code → PASS
+3. **COMMIT**: Commit passing tests
+
+### TDD Benefits
+
+- **No drift** - Tests define behavior, implementation follows exactly
+- **Atomic commits** - Every commit has passing tests
+- **Design feedback** - Tests reveal design issues early
+- **Confidence** - High coverage from day one
+- **Documentation** - Tests serve as usage examples
+
+## Best Practices
+
+### 1. Test Structure
+
+Follow **Arrange-Act-Assert** pattern:
+
+```typescript
+it('should convert user message', () => {
+  // Arrange
+  const input = [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }];
+
+  // Act
+  const result = convertToOCIMessages(input);
+
+  // Assert
+  expect(result[0].role).toBe('USER');
+  expect(result[0].content[0].text).toBe('Hello');
+});
+```
+
+### 2. Test Naming
+
+Use descriptive names that explain **what** and **why**:
+
+```typescript
+// ✅ Good - describes behavior and expectation
+it('should return undefined for invalid model ID', () => {});
+it('should add auth context to 401 errors', () => {});
+
+// ❌ Bad - vague or implementation-focused
+it('test model validation', () => {});
+it('calls getModelMetadata', () => {});
+```
+
+### 3. One Concept Per Test
+
+Each test should verify one specific behavior:
+
+```typescript
+// ✅ Good - separate tests for each concept
+it('should map STOP to stop', () => {});
+it('should map LENGTH to length', () => {});
+it('should map unknown to other', () => {});
+
+// ❌ Bad - testing multiple concepts
+it('should map all finish reasons', () => {
+  expect(mapFinishReason('STOP')).toBe('stop');
+  expect(mapFinishReason('LENGTH')).toBe('length');
+  expect(mapFinishReason('OTHER')).toBe('other');
+});
+```
+
+### 4. Use Shared Fixtures
+
+Import from `@acedergren/test-utils`:
+
+```typescript
+import { TEST_CONFIG, TEST_MODEL_IDS, TEST_OCIDS } from '@acedergren/test-utils';
+
+const model = oci(TEST_MODEL_IDS.grok, TEST_CONFIG);
+```
+
+### 5. Mock External Dependencies
+
+Use mocks from `test-utils` for OCI SDK:
+
+```typescript
+jest.mock('oci-common');
+jest.mock('oci-generativeaiinference');
+```
+
+### 6. Test Error Cases
+
+Always test both success and error paths:
+
+```typescript
+it('should throw error for invalid model ID', () => {
+  expect(() => new OCILanguageModel('invalid', config)).toThrow('Invalid model ID');
+});
+```
+
+## Coverage Requirements
+
+### Target: 80%+ on all metrics
+
+- **Branches**: 80%
+- **Functions**: 80%
+- **Lines**: 80%
+- **Statements**: 80%
+
+### Checking Coverage
+
+```bash
+# Generate coverage report
+pnpm test:coverage
+
+# View HTML report
+open coverage/lcov-report/index.html
+```
+
+### Coverage Exclusions
+
+Acceptable reasons to exclude code from coverage:
+
+- Defensive error handling for "impossible" states
+- Type guards that TypeScript proves are unnecessary
+- Debug logging code
+
+Mark with:
+
+```typescript
+/* istanbul ignore next */
+```
+
 ## Running Tests
 
 ```bash
@@ -258,18 +426,69 @@ jobs:
       - run: pnpm test:coverage
 ```
 
-## Test Data
+## Test Utilities Package
 
-### Fixtures
+The `@acedergren/test-utils` package provides shared testing infrastructure.
 
-Common test data is available from `@acedergren/test-utils`:
+### What's Included
+
+**OCI SDK Mocks:**
+
+```typescript
+// Automatically mocked by test-utils
+import { ConfigFileAuthenticationDetailsProvider } from 'oci-common';
+import { GenerativeAiInferenceClient } from 'oci-generativeaiinference';
+```
+
+**Test Fixtures:**
 
 ```typescript
 import { TEST_CONFIG, TEST_MODEL_IDS, TEST_OCIDS } from '@acedergren/test-utils';
 
-// Use in tests
-const model = oci(TEST_MODEL_IDS.grok, TEST_CONFIG);
+TEST_CONFIG = {
+  region: 'eu-frankfurt-1',
+  compartmentId: 'ocid1.compartment.oc1..test',
+  profile: 'DEFAULT',
+};
+
+TEST_MODEL_IDS = {
+  grok: 'xai.grok-4-maverick',
+  llama: 'meta.llama-3.3-70b-instruct',
+  cohere: 'cohere.command-r-plus',
+  gemini: 'google.gemini-2.5-flash',
+};
+
+TEST_OCIDS = {
+  compartment: 'ocid1.compartment.oc1..test',
+  user: 'ocid1.user.oc1..test',
+  tenancy: 'ocid1.tenancy.oc1..test',
+};
 ```
+
+### Usage in Tests
+
+```typescript
+import { describe, it, expect } from '@jest/globals';
+import { TEST_CONFIG, TEST_MODEL_IDS } from '@acedergren/test-utils';
+import { createOCI } from '../index';
+
+describe('Provider Factory', () => {
+  it('should create provider with test config', () => {
+    const provider = createOCI(TEST_CONFIG);
+    const model = provider.model(TEST_MODEL_IDS.cohere);
+    expect(model.modelId).toBe(TEST_MODEL_IDS.cohere);
+  });
+});
+```
+
+### Why a Separate Package?
+
+1. **Consistency** - Same mocks across all packages
+2. **Reusability** - Both core and OpenCode packages use the same fixtures
+3. **Clarity** - Clear separation between production and test code
+4. **Maintainability** - Single place to update mocks when OCI SDK changes
+
+## Test Data
 
 ### Environment Variables
 
@@ -301,17 +520,42 @@ Test environment variables (set in `setup.ts`):
 
 ## Future Improvements
 
-- [ ] Add integration tests with real SDK (no network)
-- [ ] Create example applications with E2E tests
-- [ ] Set up visual regression testing
-- [ ] Add performance benchmarking
-- [ ] Implement mutation testing
+Planned enhancements to the test suite:
+
+- [ ] **Integration Tests** - Real OCI SDK without network calls
+- [ ] **E2E Tests** - Example applications with full workflows
+- [ ] **Performance Tests** - Latency and throughput benchmarks
+- [ ] **Mutation Testing** - Verify test quality with Stryker
+- [ ] **Property-based Testing** - Randomized input testing with fast-check
+- [ ] **Visual Regression** - For any UI components (future)
+- [ ] **Contract Testing** - Verify OCI API compatibility
 
 ## Contributing
 
 When adding new features:
 
-1. Write tests first (TDD)
-2. Ensure 80%+ coverage
-3. Update this documentation
-4. Run full test suite before committing
+1. **Follow TDD** - Write tests first using [TDD Plan](../plans/2026-01-27-core-provider-tdd-implementation.md)
+2. **Use RED-GREEN-REFACTOR** - Ensure tests fail before implementing
+3. **Atomic commits** - Commit after each passing test batch
+4. **80%+ coverage** - Check with `pnpm test:coverage`
+5. **Update docs** - Keep this guide current
+6. **Shared utilities** - Add new fixtures to `test-utils` if reusable
+
+### Testing Checklist
+
+Before submitting a PR:
+
+- [ ] All tests pass (`pnpm test`)
+- [ ] Coverage meets 80% threshold (`pnpm test:coverage`)
+- [ ] Type checking passes (`pnpm type-check`)
+- [ ] Linting passes (`pnpm lint`)
+- [ ] Tests follow naming conventions
+- [ ] Error cases are tested
+- [ ] Mocks use `test-utils` fixtures
+
+---
+
+**Last Updated**: 2026-01-27
+**Test Count**: 121 tests across 14 files
+**Coverage Target**: 80% (branches, functions, lines, statements)
+**TDD Approach**: RED-GREEN-REFACTOR with atomic commits

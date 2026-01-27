@@ -2,6 +2,18 @@
 
 Get up and running with the OCI Generative AI provider for Vercel AI SDK in under 5 minutes.
 
+## Package Selection
+
+This project provides two packages:
+
+- **`@acedergren/oci-genai-provider`** - Core provider, works with any Vercel AI SDK project
+- **`@acedergren/opencode-oci-genai`** - OpenCode-specific integration (includes core provider)
+
+Choose the package based on your use case:
+
+- Using with **Vercel AI SDK** directly? → Install `@acedergren/oci-genai-provider`
+- Using with **OpenCode**? → Install `@acedergren/opencode-oci-genai`
+
 ## Prerequisites
 
 Before you begin, ensure you have:
@@ -15,12 +27,24 @@ Before you begin, ensure you have:
 
 ### 1. Installation
 
+**For Vercel AI SDK projects:**
+
 ```bash
-npm install @acedergren/oci-genai-provider
+npm install @acedergren/oci-genai-provider ai
 # or
-pnpm add @acedergren/oci-genai-provider
+pnpm add @acedergren/oci-genai-provider ai
 # or
-yarn add @acedergren/oci-genai-provider
+yarn add @acedergren/oci-genai-provider ai
+```
+
+**For OpenCode projects:**
+
+```bash
+npm install @acedergren/opencode-oci-genai
+# or
+pnpm add @acedergren/opencode-oci-genai
+# or
+yarn add @acedergren/opencode-oci-genai
 ```
 
 ### 2. Configuration
@@ -106,6 +130,45 @@ OCI GenAI has rate limits. If you hit them:
 - 📖 [Full Documentation](../README.md)
 - 🐛 [Report Issues](https://github.com/acedergren/opencode-oci-genai/issues)
 - 💬 [Discussions](https://github.com/acedergren/opencode-oci-genai/discussions)
+
+## For Contributors
+
+If you're contributing to this project:
+
+### Workspace Setup
+
+```bash
+# Clone repository
+git clone https://github.com/acedergren/opencode-oci-genai.git
+cd opencode-oci-genai
+
+# Install dependencies (requires pnpm 8+)
+pnpm install
+
+# Build all packages
+pnpm build
+
+# Run tests
+pnpm test
+
+# Type check
+pnpm type-check
+```
+
+### Package Structure
+
+```
+packages/
+├── oci-genai-provider/     # Core provider (published to npm)
+├── opencode-integration/   # OpenCode wrapper (published to npm)
+└── test-utils/             # Shared test utilities (private)
+```
+
+### Development Workflow
+
+1. Follow [TDD Implementation Plan](../plans/2026-01-27-core-provider-tdd-implementation.md)
+2. Run tests in watch mode: `pnpm --filter @acedergren/oci-genai-provider test -- --watch`
+3. Review [Testing Guide](../testing/README.md) for best practices
 
 ---
 

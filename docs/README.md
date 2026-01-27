@@ -2,6 +2,14 @@
 
 Complete documentation for the Oracle Cloud Infrastructure (OCI) Generative AI provider for the Vercel AI SDK.
 
+## Monorepo Structure
+
+This project is organized as a monorepo with three packages:
+
+- **`@acedergren/oci-genai-provider`** - Core OCI GenAI provider (standalone, works with any Vercel AI SDK project)
+- **`@acedergren/opencode-oci-genai`** - OpenCode-specific integration and utilities
+- **`@acedergren/test-utils`** - Shared test utilities and mocks (private package)
+
 ## Quick Navigation
 
 ### 🚀 Getting Started
@@ -54,6 +62,12 @@ Complete documentation for the Oracle Cloud Infrastructure (OCI) Generative AI p
 - [Design Decisions](architecture/design-decisions.md) - Why we built it this way
 - [Provider Flow](architecture/provider-flow.md) - Request/response flow
 
+### 🧪 Testing
+
+- [Testing Guide](testing/README.md) - Comprehensive testing documentation
+- [Test Suite Specification](plans/2026-01-26-test-suite-specification.md) - 121 tests across all modules
+- [TDD Implementation Plan](plans/2026-01-27-core-provider-tdd-implementation.md) - RED-GREEN-REFACTOR cycles
+
 ### 🔒 Security
 
 - [Security Best Practices](security/README.md) - Secure your implementation
@@ -62,6 +76,40 @@ Complete documentation for the Oracle Cloud Infrastructure (OCI) Generative AI p
 
 - [Requirements Specification](archive/requirements-spec.md) - Original requirements
 - [Planning Documents](archive/planning-documents/) - Project planning
+
+## Development
+
+### Workspace Commands
+
+This is a pnpm workspace monorepo. Common commands:
+
+```bash
+# Install all dependencies
+pnpm install
+
+# Build all packages
+pnpm build
+
+# Run tests in all packages
+pnpm test
+
+# Run tests with coverage
+pnpm test:coverage
+
+# Type check all packages
+pnpm type-check
+
+# Lint all packages
+pnpm lint
+
+# Run tests in specific package
+pnpm --filter @acedergren/oci-genai-provider test
+```
+
+### Package Dependencies
+
+- `opencode-integration` depends on `oci-genai-provider` (workspace dependency)
+- Both packages depend on `test-utils` for testing (workspace dev dependency)
 
 ## About This Documentation
 
@@ -81,13 +129,23 @@ All documentation includes source attribution for traceability.
 - ✓ All internal links validated
 - ✓ Source attribution included
 - ✓ Updated monthly for API changes
+- ✓ 121 comprehensive tests (80%+ coverage target)
+- ✓ TDD-based development workflow
 
 ## Contributing
 
 See [Contributing Guidelines](../CONTRIBUTING.md) for information on improving this documentation.
 
+For development setup:
+
+1. Clone the repository
+2. Run `pnpm install` (requires pnpm 8+)
+3. Review [Testing Guide](testing/README.md) for test practices
+4. Follow [TDD Implementation Plan](plans/2026-01-27-core-provider-tdd-implementation.md) for new features
+
 ---
 
-**Last Updated**: 2026-01-26
+**Last Updated**: 2026-01-27
 **Documentation Version**: 1.0.0
-**Provider Version**: TBD
+**Provider Version**: 0.1.0 (in development)
+**Monorepo Architecture**: pnpm workspaces

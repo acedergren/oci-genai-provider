@@ -222,6 +222,45 @@ const config: OCIConfig = {
 };
 ```
 
+## Development
+
+This package is part of a monorepo. For contributors:
+
+```bash
+# Clone the monorepo
+git clone https://github.com/acedergren/opencode-oci-genai.git
+cd opencode-oci-genai
+
+# Install dependencies (requires pnpm 8+)
+pnpm install
+
+# Build this package
+pnpm --filter @acedergren/oci-genai-provider build
+
+# Run tests
+pnpm --filter @acedergren/oci-genai-provider test
+
+# Run tests in watch mode
+pnpm --filter @acedergren/oci-genai-provider test -- --watch
+
+# Type check
+pnpm --filter @acedergren/oci-genai-provider type-check
+```
+
+### Test Suite
+
+- **121 comprehensive tests** covering all modules
+- **80%+ coverage** target
+- **TDD workflow** with RED-GREEN-REFACTOR cycles
+- See [Testing Guide](../../docs/testing/README.md)
+
+### Contributing
+
+1. Follow the [TDD Implementation Plan](../../docs/plans/2026-01-27-core-provider-tdd-implementation.md)
+2. Write tests first (RED)
+3. Implement minimal code (GREEN)
+4. Commit atomically
+
 ## License
 
 MIT
@@ -229,5 +268,7 @@ MIT
 ## Links
 
 - [Documentation](https://github.com/acedergren/opencode-oci-genai/tree/main/docs)
+- [Testing Guide](https://github.com/acedergren/opencode-oci-genai/tree/main/docs/testing)
+- [TDD Plan](https://github.com/acedergren/opencode-oci-genai/tree/main/docs/plans/2026-01-27-core-provider-tdd-implementation.md)
 - [Examples](https://github.com/acedergren/opencode-oci-genai/tree/main/packages/examples)
 - [Issues](https://github.com/acedergren/opencode-oci-genai/issues)
