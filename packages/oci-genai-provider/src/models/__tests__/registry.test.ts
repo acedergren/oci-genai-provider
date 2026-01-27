@@ -1,124 +1,110 @@
 import { describe, it, expect } from '@jest/globals';
+import { isValidModelId, getModelMetadata, getAllModels, getModelsByFamily } from '../registry';
 
 describe('Model Registry', () => {
   describe('isValidModelId', () => {
     describe('Grok models', () => {
       it('should validate xai.grok-4-maverick', () => {
-        expect('xai.grok-4-maverick').toContain('xai.grok');
+        expect(isValidModelId('xai.grok-4-maverick')).toBe(true);
       });
 
       it('should validate xai.grok-4-scout', () => {
-        expect('xai.grok-4-scout').toContain('xai.grok');
+        expect(isValidModelId('xai.grok-4-scout')).toBe(true);
       });
 
       it('should validate xai.grok-3', () => {
-        expect('xai.grok-3').toContain('xai.grok');
+        expect(isValidModelId('xai.grok-3')).toBe(true);
       });
 
       it('should validate xai.grok-3-mini', () => {
-        expect('xai.grok-3-mini').toContain('xai.grok');
+        expect(isValidModelId('xai.grok-3-mini')).toBe(true);
       });
 
       it('should reject invalid Grok model', () => {
-        expect('xai.invalid').not.toBe('xai.grok-4-maverick');
+        expect(isValidModelId('xai.invalid')).toBe(false);
       });
     });
 
     describe('Llama models', () => {
       it('should validate meta.llama-3.3-70b-instruct', () => {
-        expect('meta.llama-3.3-70b-instruct').toContain('meta.llama');
+        expect(isValidModelId('meta.llama-3.3-70b-instruct')).toBe(true);
       });
 
       it('should validate meta.llama-3.2-vision-90b-instruct', () => {
-        expect('meta.llama-3.2-vision-90b-instruct').toContain('vision');
+        expect(isValidModelId('meta.llama-3.2-vision-90b-instruct')).toBe(true);
       });
 
       it('should validate meta.llama-3.1-405b-instruct', () => {
-        expect('meta.llama-3.1-405b-instruct').toContain('405b');
+        expect(isValidModelId('meta.llama-3.1-405b-instruct')).toBe(true);
       });
     });
 
     describe('Cohere models', () => {
       it('should validate cohere.command-r-plus', () => {
-        expect('cohere.command-r-plus').toContain('cohere');
+        expect(isValidModelId('cohere.command-r-plus')).toBe(true);
       });
 
       it('should validate cohere.command-a', () => {
-        expect('cohere.command-a').toContain('command-a');
+        expect(isValidModelId('cohere.command-a')).toBe(true);
       });
 
       it('should validate cohere.command-a-reasoning', () => {
-        expect('cohere.command-a-reasoning').toContain('reasoning');
+        expect(isValidModelId('cohere.command-a-reasoning')).toBe(true);
       });
 
       it('should validate cohere.command-a-vision', () => {
-        expect('cohere.command-a-vision').toContain('vision');
+        expect(isValidModelId('cohere.command-a-vision')).toBe(true);
       });
     });
 
     describe('Gemini models', () => {
       it('should validate google.gemini-2.5-pro', () => {
-        expect('google.gemini-2.5-pro').toContain('gemini');
+        expect(isValidModelId('google.gemini-2.5-pro')).toBe(true);
       });
 
       it('should validate google.gemini-2.5-flash', () => {
-        expect('google.gemini-2.5-flash').toContain('flash');
+        expect(isValidModelId('google.gemini-2.5-flash')).toBe(true);
       });
 
       it('should validate google.gemini-2.5-flash-lite', () => {
-        expect('google.gemini-2.5-flash-lite').toContain('lite');
+        expect(isValidModelId('google.gemini-2.5-flash-lite')).toBe(true);
       });
     });
 
     it('should reject completely invalid model ID', () => {
-      expect('invalid.model').not.toMatch(/^(xai|meta|cohere|google)\./);
+      expect(isValidModelId('invalid.model')).toBe(false);
     });
   });
 
   describe('getModelMetadata', () => {
     it('should return Grok 4 Maverick metadata', () => {
-      const expected = {
-        id: 'xai.grok-4-maverick',
-        family: 'grok',
-        capabilities: { streaming: true, tools: true, vision: false },
-        contextWindow: 131072,
-        speed: 'very-fast',
-      };
-      expect(expected.family).toBe('grok');
+      const metadata = getModelMetadata('xai.grok-4-maverick');
+      expect(metadata).toBeDefined();
+      expect(metadata?.family).toBe('grok');
+      expect(metadata?.capabilities.streaming).toBe(true);
+      expect(metadata?.capabilities.tools).toBe(true);
+      expect(metadata?.contextWindow).toBe(131072);
+      expect(metadata?.speed).toBe('very-fast');
     });
 
     it('should return Gemini Flash with vision capability', () => {
-      const expected = {
-        id: 'google.gemini-2.5-flash',
-        capabilities: { vision: true },
-        contextWindow: 1048576,
-      };
-      expect(expected.capabilities.vision).toBe(true);
+      const metadata = getModelMetadata('google.gemini-2.5-flash');
+      expect(metadata?.capabilities.vision).toBe(true);
+      expect(metadata?.contextWindow).toBe(1048576);
     });
 
     it('should return Llama Vision metadata', () => {
-      const expected = {
-        id: 'meta.llama-3.2-vision-90b-instruct',
-        capabilities: { vision: true },
-      };
-      expect(expected.capabilities.vision).toBe(true);
+      const metadata = getModelMetadata('meta.llama-3.2-vision-90b-instruct');
+      expect(metadata?.capabilities.vision).toBe(true);
     });
 
     it('should return undefined for invalid model', () => {
-      const result = undefined;
+      const result = getModelMetadata('invalid.model');
       expect(result).toBeUndefined();
     });
 
     it('should include all required metadata fields', () => {
-      const metadata = {
-        id: 'cohere.command-r-plus',
-        name: 'Command R+',
-        family: 'cohere',
-        capabilities: { streaming: true, tools: true, vision: false },
-        contextWindow: 131072,
-        speed: 'fast',
-      };
-
+      const metadata = getModelMetadata('cohere.command-r-plus');
       expect(metadata).toHaveProperty('id');
       expect(metadata).toHaveProperty('name');
       expect(metadata).toHaveProperty('family');
@@ -130,39 +116,48 @@ describe('Model Registry', () => {
 
   describe('getAllModels', () => {
     it('should return all models (16+ models)', () => {
-      const expectedCount = 16; // Minimum expected
-      expect(expectedCount).toBeGreaterThanOrEqual(16);
+      const models = getAllModels();
+      expect(models.length).toBeGreaterThanOrEqual(16);
     });
 
     it('should include models from all families', () => {
-      const families = ['grok', 'llama', 'cohere', 'gemini'];
-      expect(families).toHaveLength(4);
+      const models = getAllModels();
+      const families = new Set(models.map((m) => m.family));
+      expect(families.has('grok')).toBe(true);
+      expect(families.has('llama')).toBe(true);
+      expect(families.has('cohere')).toBe(true);
+      expect(families.has('gemini')).toBe(true);
     });
   });
 
   describe('getModelsByFamily', () => {
     it('should return Grok models', () => {
-      const expectedCount = 4; // grok-4-maverick, scout, 3, 3-mini
-      expect(expectedCount).toBeGreaterThanOrEqual(3);
+      const grokModels = getModelsByFamily('grok');
+      expect(grokModels.length).toBeGreaterThanOrEqual(3);
+      grokModels.forEach((m) => expect(m.family).toBe('grok'));
     });
 
     it('should return Llama models', () => {
-      const family = 'llama';
-      expect(family).toBe('llama');
+      const llamaModels = getModelsByFamily('llama');
+      expect(llamaModels.length).toBeGreaterThanOrEqual(3);
+      llamaModels.forEach((m) => expect(m.family).toBe('llama'));
     });
 
     it('should return Cohere models', () => {
-      const family = 'cohere';
-      expect(family).toBe('cohere');
+      const cohereModels = getModelsByFamily('cohere');
+      expect(cohereModels.length).toBeGreaterThanOrEqual(3);
+      cohereModels.forEach((m) => expect(m.family).toBe('cohere'));
     });
 
     it('should return Gemini models', () => {
-      const expectedCount = 3; // pro, flash, flash-lite
-      expect(expectedCount).toBe(3);
+      const geminiModels = getModelsByFamily('gemini');
+      expect(geminiModels.length).toBe(3);
+      geminiModels.forEach((m) => expect(m.family).toBe('gemini'));
     });
 
     it('should return empty array for unknown family', () => {
-      const result: unknown[] = [];
+      // @ts-expect-error - Testing invalid family
+      const result = getModelsByFamily('unknown');
       expect(result).toHaveLength(0);
     });
   });
