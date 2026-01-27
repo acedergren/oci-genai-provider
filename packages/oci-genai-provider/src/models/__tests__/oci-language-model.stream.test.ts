@@ -134,11 +134,11 @@ describe('OCILanguageModel.doStream', () => {
 
     // Should have finish part
     const finishPart = parts.find(
-      (p): p is { type: 'finish'; finishReason: string } =>
+      (p): p is { type: 'finish'; finishReason: { unified: string; raw: string } } =>
         (p as { type: string }).type === 'finish'
     );
     expect(finishPart).toBeDefined();
-    expect(finishPart?.finishReason).toBe('stop');
+    expect(finishPart?.finishReason).toEqual({ unified: 'stop', raw: 'STOP' });
   });
 
   it('should set isStream flag in request', () => {
