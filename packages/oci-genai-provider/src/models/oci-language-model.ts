@@ -11,6 +11,7 @@ import type { OCIConfig } from '../types';
 import { isValidModelId } from './registry';
 import { convertToOCIMessages } from '../converters/messages';
 import { mapFinishReason, parseSSEStream } from '../streaming/sse-parser';
+import { createAuthProvider, getRegion } from '../auth/index.js';
 
 interface OCIChatChoice {
   message?: {
@@ -34,7 +35,7 @@ export class OCILanguageModel implements LanguageModelV3 {
   readonly provider = 'oci-genai';
   readonly defaultObjectGenerationMode = 'tool';
   readonly supportedUrls: Record<string, RegExp[]> = {};
-  private client: GenerativeAiInferenceClient;
+  private _client?: GenerativeAiInferenceClient;
 
   constructor(
     public readonly modelId: string,
@@ -43,15 +44,30 @@ export class OCILanguageModel implements LanguageModelV3 {
     if (!isValidModelId(modelId)) {
       throw new Error(`Invalid model ID: ${modelId}`);
     }
-    this.client = new GenerativeAiInferenceClient({
-      authenticationDetailsProvider: {} as never,
-    });
+    // Client initialization moved to getClient()
+  }
+
+  private async getClient(): Promise<GenerativeAiInferenceClient> {
+    if (!this._client) {
+      const authProvider = await createAuthProvider(this.config);
+      const region = getRegion(this.config);
+
+      this._client = new GenerativeAiInferenceClient({
+        authenticationDetailsProvider: authProvider,
+      });
+
+      // Set region on the client
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      (this._client as any).region = region;
+    }
+    return this._client;
   }
 
   async doGenerate(options: LanguageModelV3CallOptions): Promise<LanguageModelV3GenerateResult> {
     const messages = convertToOCIMessages(options.prompt);
+    const client = await this.getClient();
 
-    const response = (await this.client.chat({
+    const response = (await client.chat({
       chatDetails: {
         compartmentId: this.config.compartmentId ?? '',
         servingMode: {
@@ -98,8 +114,9 @@ export class OCILanguageModel implements LanguageModelV3 {
 
   async doStream(options: LanguageModelV3CallOptions): Promise<LanguageModelV3StreamResult> {
     const messages = convertToOCIMessages(options.prompt);
+    const client = await this.getClient();
 
-    const response = (await this.client.chat({
+    const response = (await client.chat({
       chatDetails: {
         compartmentId: this.config.compartmentId ?? '',
         servingMode: {
@@ -119,7 +136,7 @@ export class OCILanguageModel implements LanguageModelV3 {
     let textPartId = 0;
 
     const v3Stream = new ReadableStream<LanguageModelV3StreamPart>({
-      async start(controller) {
+      async start(controller): Promise<void> {
         try {
           for await (const part of sseStream) {
             if (part.type === 'text-delta') {
