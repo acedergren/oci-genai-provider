@@ -20,9 +20,11 @@ const mockGetCompartmentId = jest.fn<(config: OCIConfig) => string>(
 
 // Mock auth module
 jest.mock('../../auth/index.js', () => ({
-  createAuthProvider: (config: OCIConfig) => mockCreateAuthProvider(config),
-  getRegion: (config: OCIConfig) => mockGetRegion(config),
-  getCompartmentId: (config: OCIConfig) => mockGetCompartmentId(config),
+  createAuthProvider: (config: OCIConfig): ReturnType<typeof mockCreateAuthProvider> =>
+    mockCreateAuthProvider(config),
+  getRegion: (config: OCIConfig): ReturnType<typeof mockGetRegion> => mockGetRegion(config),
+  getCompartmentId: (config: OCIConfig): ReturnType<typeof mockGetCompartmentId> =>
+    mockGetCompartmentId(config),
 }));
 
 // Mock oci-common Region
@@ -37,7 +39,7 @@ jest.mock('oci-generativeaiinference', () => ({
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   GenerativeAiInferenceClient: jest.fn().mockImplementation(() => ({
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    chat: jest.fn().mockImplementation(() => {
+    chat: jest.fn().mockImplementation((): Promise<Response> => {
       // Create a mock streaming response
       const encoder = new TextEncoder();
       const sseData = `event: message
@@ -51,7 +53,7 @@ data: {"chatResponse":{"chatChoice":[{"finishReason":"STOP"}],"usage":{"promptTo
 
 `;
       const stream = new ReadableStream({
-        start(controller) {
+        start(controller): void {
           controller.enqueue(encoder.encode(sseData));
           controller.close();
         },
