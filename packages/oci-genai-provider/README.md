@@ -25,6 +25,9 @@ This provider implements the Vercel AI SDK's `LanguageModelV1` interface, which 
 - ✅ **Multiple Auth Methods** - Config file, instance principal, resource principal
 - ✅ **Regional Support** - Frankfurt, Stockholm, Ashburn, and more
 - ✅ **Type Safe** - Full TypeScript support
+- ✅ **Built-in Retry** - Automatic retry with exponential backoff
+- ✅ **Timeout Control** - Configurable request timeouts
+- ✅ **Rich Errors** - Specific error types for different failures
 
 ## Why Use OCI GenAI?
 
@@ -240,20 +243,36 @@ OCI_CLI_AUTH=api_key
 
 ## Error Handling
 
-All OCI API errors are wrapped with `OCIGenAIError` providing contextual help:
+The provider includes specific error classes for different failure scenarios:
 
 ```typescript
-import { OCIGenAIError } from '@acedergren/oci-genai-provider';
+import {
+  OCIGenAIError,
+  NetworkError,
+  RateLimitError,
+  AuthenticationError,
+  ModelNotFoundError,
+} from '@acedergren/oci-genai-provider';
 
 try {
   const result = await generateText({ model, prompt: 'Hello!' });
 } catch (error) {
-  if (error instanceof OCIGenAIError) {
-    console.error(error.message); // User-friendly message
-    console.error(error.context); // Additional context
-
+  if (error instanceof RateLimitError) {
+    // Rate limited - retry after delay
+    console.log(`Retry after ${error.retryAfterMs}ms`);
+  } else if (error instanceof NetworkError) {
+    // Network issue - retryable
+    console.log(`Network error: ${error.code}`);
+  } else if (error instanceof AuthenticationError) {
+    // Auth failed - check credentials
+    console.log(`Auth type: ${error.authType}`);
+  } else if (error instanceof ModelNotFoundError) {
+    // Invalid model ID
+    console.log(`Model: ${error.modelId}`);
+  } else if (error instanceof OCIGenAIError) {
+    // Generic OCI error
     if (error.retryable) {
-      // Implement retry logic for 429, 500+ errors
+      // Safe to retry
     }
   }
 }
@@ -261,11 +280,53 @@ try {
 
 **Error Types:**
 
-- `401 Unauthorized`: Check authentication configuration
-- `403 Forbidden`: Check IAM policies and compartment access
-- `404 Not Found`: Verify model ID and region
-- `429 Rate Limit`: Implement exponential backoff
-- `500+ Server Error`: Retryable, implement retry logic
+| Error Class           | Retryable | When Thrown                           |
+| --------------------- | --------- | ------------------------------------- |
+| `NetworkError`        | Yes       | Connection failures, timeouts, DNS    |
+| `RateLimitError`      | Yes       | 429 Too Many Requests                 |
+| `AuthenticationError` | No        | 401 Unauthorized, invalid credentials |
+| `ModelNotFoundError`  | No        | 404 Not Found, invalid model ID       |
+| `OCIGenAIError`       | Varies    | Other OCI API errors                  |
+
+## Retry and Timeout
+
+The provider includes utilities for handling transient failures:
+
+### Automatic Retry
+
+```typescript
+import { withRetry } from '@acedergren/oci-genai-provider';
+
+const result = await withRetry(() => generateText({ model, prompt: 'Hello!' }), {
+  maxRetries: 3, // Default: 3
+  baseDelayMs: 100, // Default: 100ms
+  maxDelayMs: 10000, // Default: 10s
+});
+```
+
+Retries automatically on:
+
+- HTTP 429 (rate limit)
+- HTTP 5xx (server errors)
+- Network errors (ECONNRESET, ETIMEDOUT, etc.)
+
+### Request Timeout
+
+```typescript
+import { withTimeout, TimeoutError } from '@acedergren/oci-genai-provider';
+
+try {
+  const result = await withTimeout(
+    generateText({ model, prompt: 'Hello!' }),
+    30000, // 30 second timeout
+    'OCI GenAI request'
+  );
+} catch (error) {
+  if (error instanceof TimeoutError) {
+    console.log(`Timed out after ${error.timeoutMs}ms`);
+  }
+}
+```
 
 ## TypeScript
 
@@ -327,7 +388,7 @@ MIT
 ## Links
 
 - [Documentation](https://github.com/acedergren/oci-genai-provider/tree/main/docs)
+- [Examples](https://github.com/acedergren/oci-genai-provider/tree/main/examples) - SvelteKit, Next.js, CLI demos
+- [Troubleshooting Guide](https://github.com/acedergren/oci-genai-provider/tree/main/docs/guides/troubleshooting.md)
 - [Testing Guide](https://github.com/acedergren/oci-genai-provider/tree/main/docs/testing)
-- [TDD Plan](https://github.com/acedergren/oci-genai-provider/tree/main/docs/plans/2026-01-27-core-provider-tdd-implementation.md)
-- [Examples](https://github.com/acedergren/oci-genai-provider/tree/main/packages/examples)
 - [Issues](https://github.com/acedergren/oci-genai-provider/issues)
