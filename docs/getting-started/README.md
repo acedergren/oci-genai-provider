@@ -93,11 +93,13 @@ You should see a response about Oracle Cloud Infrastructure!
 
 Now that you have the basics working:
 
+- **[Run the Examples](../../examples/)** - Try the SvelteKit, Next.js, or CLI examples
 - **[Configure Authentication](../guides/authentication/)** - Learn about different auth methods
 - **[Explore Models](../reference/oci-genai-models/)** - See all available models
 - **[Try Streaming](../tutorials/02-streaming-responses.md)** - Implement real-time responses
 - **[Add Tool Calling](../tutorials/03-tool-calling.md)** - Integrate function calling
 - **[Integrate with OpenCode](../tutorials/04-opencode-integration.md)** - Use with OpenCode
+- **[Troubleshooting](../guides/troubleshooting.md)** - Solve common issues
 
 ## Common Issues
 
@@ -121,7 +123,8 @@ Ensure the model you're requesting is:
 
 OCI GenAI has rate limits. If you hit them:
 
-- Implement exponential backoff (built into the provider)
+- The provider has **built-in retry** with exponential backoff
+- `RateLimitError` includes `retryAfterMs` when available
 - Consider using dedicated AI clusters for higher throughput
 - Review your usage patterns
 

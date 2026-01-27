@@ -2,7 +2,7 @@
 
 > 🚀 **Official Oracle Cloud Infrastructure provider for the Vercel AI SDK** — Use xAI Grok, Meta Llama, Cohere, and Google Gemini models in your AI-powered applications.
 
-[![Tests](https://img.shields.io/badge/tests-117%20passing-green)](https://github.com/acedergren/oci-genai-provider)
+[![Tests](https://img.shields.io/badge/tests-121%20passing-green)](https://github.com/acedergren/oci-genai-provider)
 [![Coverage](https://img.shields.io/badge/coverage-80%25%2B-brightgreen)](https://github.com/acedergren/oci-genai-provider)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
 
@@ -58,18 +58,35 @@ npm install @acedergren/opencode-oci-genai
 
 **Documentation**: [OpenCode Integration Guide](./docs/guides/opencode-integration/README.md)
 
-## Live Demo
+## Examples
 
-Try the [SvelteKit Chatbot Demo](./examples/chatbot-demo) to see the OCI GenAI Provider in action.
+Ready-to-run examples demonstrating the OCI GenAI Provider:
 
-Features:
+### [SvelteKit Chatbot](./examples/chatbot-demo/)
 
-- Real-time streaming responses
-- Multiple model support (Cohere, Llama)
-- Beautiful bioluminescence design
-- Mobile responsive
+Beautiful chatbot with bioluminescence design.
 
-[View Demo Source →](./examples/chatbot-demo)
+```bash
+cd examples/chatbot-demo && pnpm install && pnpm dev
+```
+
+### [Next.js Chatbot](./examples/nextjs-chatbot/)
+
+Minimal chatbot using Next.js 15 App Router.
+
+```bash
+cd examples/nextjs-chatbot && pnpm install && pnpm dev
+```
+
+### [CLI Tool](./examples/cli-tool/)
+
+Command-line interface for terminal usage.
+
+```bash
+cd examples/cli-tool && pnpm install && pnpm dev "Hello!"
+```
+
+[View all examples →](./examples/)
 
 ## Features
 
@@ -79,7 +96,10 @@ Features:
 - **Multiple Auth**: Config file, instance principal, resource principal
 - **Regional**: EU Frankfurt, Stockholm, US Ashburn, and more
 - **Type Safe**: Full TypeScript with AI SDK v3
-- **Well Tested**: 117 tests, 80%+ coverage, TDD workflow
+- **Built-in Retry**: Automatic retry with exponential backoff for transient failures
+- **Timeout Control**: Configurable request timeouts
+- **Rich Errors**: Specific error types (NetworkError, RateLimitError, AuthenticationError)
+- **Well Tested**: 121 tests, 80%+ coverage, TDD workflow
 
 ## Quick Start
 
@@ -144,8 +164,11 @@ for await (const chunk of stream.textStream) {
 ## Documentation
 
 - **[Core Provider Documentation](./packages/oci-genai-provider/README.md)** - Main provider API reference
+- **[Getting Started](./docs/getting-started/README.md)** - Quick start guide
+- **[Examples](./examples/)** - Ready-to-run example applications
 - **[OpenCode Integration Guide](./docs/guides/opencode-integration/README.md)** - Using with OpenCode
 - **[Authentication Guide](./docs/guides/authentication/README.md)** - OCI authentication setup
+- **[Troubleshooting Guide](./docs/guides/troubleshooting.md)** - Common issues and solutions
 - **[Streaming Guide](./docs/guides/streaming/README.md)** - Streaming responses
 - **[Tool Calling Guide](./docs/guides/tool-calling/README.md)** - Function calling
 - **[API Reference](./docs/api-reference/)** - Complete API documentation
@@ -162,7 +185,7 @@ pnpm install
 # Build all packages
 pnpm build
 
-# Run all tests (117 tests)
+# Run all tests (121 tests)
 pnpm test
 
 # Run tests with coverage (80%+ target)
