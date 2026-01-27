@@ -2,19 +2,43 @@
 
 > Vercel AI SDK v3 provider for Oracle Cloud Infrastructure Generative AI
 
-This project implements a custom language model provider for the Vercel AI SDK, enabling developers to use OCI Generative AI models (Grok, Llama, Cohere, Gemini) through the standard AI SDK interface.
+This monorepo project implements a custom language model provider for the Vercel AI SDK, enabling developers to use OCI Generative AI models (Grok, Llama, Cohere, Gemini) through the standard AI SDK interface.
 
 ## Info
 
 - **Region**: eu-frankfurt-1 (primary)
-- **Version**: docs-v1.0.0
-- **Package**: @acedergren/oci-genai-provider
-- **License**: To be determined
-- **Status**: Documentation phase complete, implementation pending
+- **Version**: 0.1.0 (in development)
+- **Architecture**: pnpm workspace monorepo (3 packages)
+- **Core Package**: @acedergren/oci-genai-provider
+- **OpenCode Package**: @acedergren/opencode-oci-genai
+- **Test Utils**: @acedergren/test-utils (private)
+- **License**: MIT
+- **Status**: Implementation in progress (TDD workflow)
+
+## Monorepo Packages
+
+This project is organized as a monorepo with three packages:
+
+1. **@acedergren/oci-genai-provider** - Core provider (standalone, works with any Vercel AI SDK project)
+   - Path: /packages/oci-genai-provider/
+   - 121 comprehensive tests (80%+ coverage target)
+   - Published to npm
+
+2. **@acedergren/opencode-oci-genai** - OpenCode-specific integration
+   - Path: /packages/opencode-integration/
+   - Re-exports core provider + OpenCode utilities
+   - Published to npm
+
+3. **@acedergren/test-utils** - Shared test infrastructure
+   - Path: /packages/test-utils/
+   - OCI SDK mocks and fixtures
+   - Private package (not published)
 
 ## Quick Reference
 
 - Getting Started: /docs/getting-started/README.md
+- Testing Guide: /docs/testing/README.md
+- TDD Plan: /docs/plans/2026-01-27-core-provider-tdd-implementation.md
 - Authentication: /docs/guides/authentication/README.md
 - IAM Policies: /docs/guides/iam-policies/README.md
 - Model Catalog: /docs/reference/oci-genai-models/README.md
@@ -28,6 +52,33 @@ For focused documentation, see these topic-specific llms.txt files:
 - Model Selection: llms-models.txt
 - Use Cases & Tutorials: llms-use-cases.txt
 - Architecture & Security: llms-architecture.txt
+
+## Testing & Development
+
+**Test-Driven Development (TDD)**:
+- 121 comprehensive tests across 14 test files
+- RED-GREEN-REFACTOR cycle with atomic commits
+- 80%+ code coverage target (branches, functions, lines, statements)
+- Shared test utilities (@acedergren/test-utils)
+
+**Test Categories**:
+- Type definitions (3 tests)
+- Authentication (4 tests)
+- Model registry (28 tests)
+- Message conversion (9 tests)
+- Language model doGenerate (22 tests)
+- Streaming (SSE parser: 11 tests, doStream: 8 tests)
+- Provider factory (16 tests)
+- Error handling (20 tests)
+
+**Workspace Commands**:
+```bash
+pnpm install              # Install all dependencies
+pnpm build                # Build all packages
+pnpm test                 # Run all tests
+pnpm test:coverage        # Run tests with coverage
+pnpm type-check          # TypeScript type checking
+```
 
 ## Core Concepts
 

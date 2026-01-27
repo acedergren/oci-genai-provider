@@ -8,25 +8,63 @@ This file contains architectural decisions, security guidelines, and development
 
 - **Focus**: Architecture, security, and code quality
 - **Audience**: Contributors and maintainers
-- **Standards**: TypeScript, ESM modules, Vercel AI SDK v3
+- **Architecture**: pnpm workspace monorepo (3 packages)
+- **Standards**: TypeScript 5.3, ESM modules, Vercel AI SDK v3
+- **Testing**: 121 tests, 80%+ coverage, TDD workflow
 
-## Architecture Overview
+## Monorepo Architecture
 
 **Main Documentation**: /docs/architecture/README.md
 
-**Project Structure**:
+**Workspace Structure**:
 ```
 opencode-oci-genai/
-├── src/
-│   ├── index.ts              # Main exports
-│   ├── provider.ts           # LanguageModelV3 implementation
-│   ├── models/               # Model definitions
-│   ├── auth/                 # Authentication
-│   ├── streaming/            # SSE handling
-│   └── utils/                # Utilities
-├── docs/                     # Documentation (27 files)
-├── tests/                    # Test suite
-└── examples/                 # Usage examples
+├── packages/
+│   ├── oci-genai-provider/          # @acedergren/oci-genai-provider
+│   │   ├── src/
+│   │   │   ├── index.ts             # Public API exports
+│   │   │   ├── types.ts             # Type definitions
+│   │   │   ├── auth/                # Authentication providers
+│   │   │   ├── models/              # Registry & LanguageModelV3
+│   │   │   │   ├── registry.ts      # Model catalog
+│   │   │   │   └── oci-language-model.ts  # Model implementation
+│   │   │   ├── converters/          # Message conversion
+│   │   │   ├── streaming/           # SSE parsing
+│   │   │   │   ├── types.ts         # Stream types
+│   │   │   │   └── sse-parser.ts    # SSE → AsyncGenerator
+│   │   │   └── errors/              # Error handling
+│   │   ├── __tests__/               # 121 tests (14 files)
+│   │   ├── package.json             # Published to npm
+│   │   └── tsup.config.ts           # CJS + ESM builds
+│   │
+│   ├── opencode-integration/        # @acedergren/opencode-oci-genai
+│   │   ├── src/
+│   │   │   ├── index.ts             # Re-exports core + OpenCode utils
+│   │   │   ├── types.ts             # OpenCode config types
+│   │   │   ├── register.ts          # Provider registration
+│   │   │   └── config.ts            # Config helpers
+│   │   └── package.json             # Published to npm
+│   │
+│   └── test-utils/                  # @acedergren/test-utils (private)
+│       ├── src/
+│       │   ├── index.ts             # Test fixtures
+│       │   ├── oci-common.ts        # Auth mocks
+│       │   └── oci-generativeaiinference.ts  # GenAI mocks
+│       └── package.json             # Not published
+│
+├── docs/                            # Documentation (35+ files)
+│   ├── testing/                     # Testing guide
+│   ├── plans/                       # Implementation plans
+│   └── architecture/                # Architecture docs
+├── pnpm-workspace.yaml              # Workspace definition
+└── package.json                     # Workspace root
+```
+
+**Package Dependency Graph**:
+```
+@acedergren/opencode-oci-genai (OpenCode wrapper)
+    └─ workspace:* → @acedergren/oci-genai-provider (core)
+                         └─ devDependencies → @acedergren/test-utils (mocks)
 ```
 
 ## Design Decisions
@@ -338,35 +376,98 @@ function sanitizeLog(data: any): any {
 
 ## Testing Strategy
 
-**Unit Tests**:
-- All public methods
-- Error conditions
-- Edge cases
-- Mock OCI API responses
+**Main Documentation**: /docs/testing/README.md
 
-**Integration Tests**:
-- Real OCI API calls (dev environment)
-- Authentication flows
-- Streaming functionality
-- Tool calling
+**Test-Driven Development (TDD)**:
+- **121 comprehensive tests** across 14 test files
+- **RED-GREEN-REFACTOR** cycles with atomic commits
+- **80%+ coverage** target (branches, functions, lines, statements)
+- Implementation plan: /docs/plans/2026-01-27-core-provider-tdd-implementation.md
 
-**Test Coverage Target**: 80%+
+**Test Suite Breakdown**:
+- Type definitions: 3 tests
+- Authentication: 4 tests
+- Model registry: 28 tests (16+ models)
+- Message conversion: 9 tests
+- Language model doGenerate: 22 tests
+- SSE parser: 11 tests
+- doStream: 8 tests
+- Provider factory: 16 tests
+- Error handling: 20 tests
 
-**Example Test**:
+**Test Organization**:
+```
+packages/oci-genai-provider/
+├── src/
+│   ├── __tests__/
+│   │   ├── setup.ts              # Global test setup
+│   │   ├── types.test.ts         # Type validation
+│   │   ├── errors.test.ts        # Error handling
+│   │   └── provider.test.ts      # Factory tests
+│   ├── auth/__tests__/
+│   │   └── auth.test.ts          # Auth providers
+│   ├── models/__tests__/
+│   │   ├── registry.test.ts      # Model catalog
+│   │   ├── oci-language-model.test.ts       # doGenerate
+│   │   └── oci-language-model.stream.test.ts # doStream
+│   ├── converters/__tests__/
+│   │   └── messages.test.ts      # Message conversion
+│   └── streaming/__tests__/
+│       └── sse-parser.test.ts    # SSE parsing
+```
+
+**Shared Test Utilities** (@acedergren/test-utils):
 ```typescript
-import { describe, it, expect } from 'vitest';
-import { createOCI } from '../src/index.js';
+import { TEST_CONFIG, TEST_MODEL_IDS, TEST_OCIDS } from '@acedergren/test-utils';
 
-describe('OCIProvider', () => {
+// OCI SDK mocks automatically available
+jest.mock('oci-common');
+jest.mock('oci-generativeaiinference');
+
+const model = oci(TEST_MODEL_IDS.cohere, TEST_CONFIG);
+```
+
+**Running Tests**:
+```bash
+# All packages
+pnpm test
+
+# Specific package
+pnpm --filter @acedergren/oci-genai-provider test
+
+# Watch mode
+pnpm --filter @acedergren/oci-genai-provider test -- --watch
+
+# Coverage report
+pnpm test:coverage
+```
+
+**TDD Workflow**:
+```
+1. RED:    Write failing test → pnpm test (FAIL)
+2. GREEN:  Write minimal code → pnpm test (PASS)
+3. REFACTOR: Improve code   → pnpm test (PASS)
+4. COMMIT: Atomic commit with passing tests
+```
+
+**Example Test** (Jest with TypeScript):
+```typescript
+import { describe, it, expect } from '@jest/globals';
+import { createOCI } from '../index';
+import { TEST_CONFIG, TEST_MODEL_IDS } from '@acedergren/test-utils';
+
+describe('createOCI Provider Factory', () => {
   it('should create provider with default config', () => {
-    const oci = createOCI();
-    expect(oci.provider).toBe('oci-genai');
+    const provider = createOCI();
+    expect(provider.provider).toBe('oci-genai');
+    expect(typeof provider.model).toBe('function');
   });
 
-  it('should override region from constructor', () => {
-    const oci = createOCI({ region: 'eu-frankfurt-1' });
-    const model = oci('cohere.command-r-plus');
-    expect(model.region).toBe('eu-frankfurt-1');
+  it('should create model with config', () => {
+    const provider = createOCI(TEST_CONFIG);
+    const model = provider.model(TEST_MODEL_IDS.cohere);
+    expect(model.modelId).toBe('cohere.command-r-plus');
+    expect(model.provider).toBe('oci-genai');
   });
 });
 ```
