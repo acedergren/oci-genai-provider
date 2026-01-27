@@ -30,6 +30,9 @@ out/
 .cache/
 .parcel-cache/
 
+# Turborepo
+.turbo/
+
 # IDE
 .vscode/
 .idea/
