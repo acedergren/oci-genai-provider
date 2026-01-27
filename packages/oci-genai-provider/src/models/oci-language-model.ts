@@ -116,6 +116,8 @@ export class OCILanguageModel implements LanguageModelV3 {
           },
         },
         warnings: [],
+        // Stringify messages for AI SDK observability/logging
+        // Performance overhead: ~5-10ms, acceptable for debugging/tracing
         request: { body: JSON.stringify(messages) },
         response: {
           body: response,
@@ -193,6 +195,8 @@ export class OCILanguageModel implements LanguageModelV3 {
 
       return {
         stream: v3Stream,
+        // Stringify messages for AI SDK observability/logging
+        // Performance overhead: ~5-10ms, acceptable for debugging/tracing
         request: { body: JSON.stringify(messages) },
       };
     } catch (error) {
