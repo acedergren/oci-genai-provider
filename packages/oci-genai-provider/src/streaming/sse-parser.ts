@@ -1,17 +1,35 @@
 import { createParser, type EventSourceMessage } from 'eventsource-parser';
-import type { StreamPart } from './types';
+import type { LanguageModelV3FinishReason } from '@ai-sdk/provider';
+import type { StreamPart, UnifiedFinishReason } from './types';
 
-export function mapFinishReason(reason: string): 'stop' | 'length' | 'content-filter' | 'other' {
-  switch (reason) {
-    case 'STOP':
-      return 'stop';
-    case 'LENGTH':
-      return 'length';
-    case 'CONTENT_FILTER':
-      return 'content-filter';
-    default:
-      return 'other';
-  }
+/**
+ * Maps OCI GenAI finish reasons to AI SDK v3 LanguageModelV3FinishReason structure.
+ *
+ * @param reason - The raw finish reason from OCI GenAI API
+ * @returns A properly structured LanguageModelV3FinishReason object with unified and raw fields
+ */
+export function mapFinishReason(reason: string): LanguageModelV3FinishReason {
+  const unified: UnifiedFinishReason = ((): UnifiedFinishReason => {
+    switch (reason) {
+      case 'STOP':
+        return 'stop';
+      case 'LENGTH':
+        return 'length';
+      case 'CONTENT_FILTER':
+        return 'content-filter';
+      case 'TOOL_CALLS':
+        return 'tool-calls';
+      case 'ERROR':
+        return 'error';
+      default:
+        return 'other';
+    }
+  })();
+
+  return {
+    unified,
+    raw: reason,
+  };
 }
 
 interface OCIChatResponse {
