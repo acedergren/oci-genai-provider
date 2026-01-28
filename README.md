@@ -60,6 +60,37 @@ npm install @acedergren/opencode-oci-genai
 
 **Documentation**: [OpenCode Integration Guide](./docs/guides/opencode-integration/README.md)
 
+### [@acedergren/oci-openai-compatible](./packages/oci-openai-compatible)
+
+**OpenAI-compatible wrapper** — For teams migrating from OpenAI with minimal code changes.
+
+```bash
+npm install @acedergren/oci-openai-compatible
+```
+
+```typescript
+import { createOCIOpenAI } from '@acedergren/oci-openai-compatible';
+
+const client = createOCIOpenAI({
+  region: 'us-ashburn-1',
+  apiKey: process.env.OCI_API_KEY,
+  compartmentId: process.env.OCI_COMPARTMENT_ID,
+});
+
+const response = await client.chat.completions.create({
+  model: 'meta.llama-3.3-70b-instruct',
+  messages: [{ role: 'user', content: 'Hello!' }],
+});
+```
+
+**Use this if:**
+- You're migrating from OpenAI to OCI
+- You want a lightweight, minimal-dependency package
+- You prefer OpenAI SDK patterns
+- You only need chat completions
+
+**Documentation**: [OpenAI-Compatible README](./packages/oci-openai-compatible/README.md)
+
 ## Examples
 
 Ready-to-run examples demonstrating the OCI GenAI Provider:
