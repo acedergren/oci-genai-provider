@@ -55,11 +55,13 @@ jest.mock('oci-common', () => ({
 const mockUploadAudioToObjectStorage = jest.fn<any>();
 const mockDeleteFromObjectStorage = jest.fn<any>();
 const mockGenerateAudioObjectName = jest.fn<any>();
+const mockDownloadTranscriptionResult = jest.fn<any>();
 
 jest.mock('../../shared/storage/object-storage', () => ({
   uploadAudioToObjectStorage: mockUploadAudioToObjectStorage,
   deleteFromObjectStorage: mockDeleteFromObjectStorage,
   generateAudioObjectName: mockGenerateAudioObjectName,
+  downloadTranscriptionResult: mockDownloadTranscriptionResult,
 }));
 
 // Import after mocks
@@ -94,18 +96,50 @@ describe('OCITranscriptionModel', () => {
     mockGetTranscriptionTask.mockResolvedValue({
       transcriptionTask: {
         id: 'test-task-id',
+        outputLocation: 'results-12345/test-audio.json',
       },
+    });
+    mockDownloadTranscriptionResult.mockResolvedValue({
+      text: 'This is a test transcription',
+      segments: [
+        {
+          text: 'This',
+          startSecond: 0,
+          endSecond: 0.5,
+        },
+        {
+          text: 'is a test transcription',
+          startSecond: 0.5,
+          endSecond: 2.0,
+        },
+      ],
+      confidence: 0.95,
+      languageCode: 'en-US',
     });
   });
 
   it('should have correct specification version and provider', () => {
-    const model = new OCITranscriptionModel('oci.speech.standard', {
+    const model = new OCITranscriptionModel('ORACLE', {
       compartmentId: 'ocid1.compartment.test',
     });
 
     expect(model.specificationVersion).toBe('v3');
     expect(model.provider).toBe('oci-genai');
-    expect(model.modelId).toBe('oci.speech.standard');
+    expect(model.modelId).toBe('ORACLE');
+  });
+
+  it('should accept WHISPER_MEDIUM model ID', () => {
+    const model = new OCITranscriptionModel('WHISPER_MEDIUM', {
+      compartmentId: 'ocid1.compartment.test',
+    });
+    expect(model.modelId).toBe('WHISPER_MEDIUM');
+  });
+
+  it('should accept WHISPER_LARGE_V2 model ID', () => {
+    const model = new OCITranscriptionModel('WHISPER_LARGE_V2', {
+      compartmentId: 'ocid1.compartment.test',
+    });
+    expect(model.modelId).toBe('WHISPER_LARGE_V2');
   });
 
   it('should throw error for invalid model ID', () => {
@@ -114,8 +148,14 @@ describe('OCITranscriptionModel', () => {
     }).toThrow('Invalid transcription model ID');
   });
 
+  it('should reject old-style model IDs', () => {
+    expect(() => {
+      new OCITranscriptionModel('oci.speech.standard', {});
+    }).toThrow('Invalid transcription model ID');
+  });
+
   it('should accept language setting', () => {
-    const model = new OCITranscriptionModel('oci.speech.standard', {
+    const model = new OCITranscriptionModel('ORACLE', {
       language: 'en-US',
       compartmentId: 'test',
     });
@@ -123,8 +163,8 @@ describe('OCITranscriptionModel', () => {
     expect(model).toBeDefined();
   });
 
-  it('should accept custom vocabulary for standard model', () => {
-    const model = new OCITranscriptionModel('oci.speech.standard', {
+  it('should accept custom vocabulary for Oracle model', () => {
+    const model = new OCITranscriptionModel('ORACLE', {
       vocabulary: ['OpenCode', 'GenAI', 'OCI'],
       compartmentId: 'test',
     });
@@ -134,18 +174,17 @@ describe('OCITranscriptionModel', () => {
 
   it('should warn about vocabulary for Whisper model', () => {
     // Whisper does not support custom vocabulary
-    const model = new OCITranscriptionModel('oci.speech.whisper', {
+    const model = new OCITranscriptionModel('WHISPER_MEDIUM', {
       vocabulary: ['test'],
       compartmentId: 'test',
     });
 
     expect(model).toBeDefined();
-    // Note: Implementation should log warning, not throw
   });
 
   describe('audio validation', () => {
     it('should throw error when audio exceeds 2GB limit', async () => {
-      const model = new OCITranscriptionModel('oci.speech.standard', {
+      const model = new OCITranscriptionModel('ORACLE', {
         compartmentId: 'test',
       });
       // Create a small array but mock the byteLength to simulate 3GB
@@ -153,13 +192,13 @@ describe('OCITranscriptionModel', () => {
       Object.defineProperty(largeAudio, 'byteLength', {
         value: 3 * 1024 * 1024 * 1024,
       });
-      await expect(
-        model.doGenerate({ audio: largeAudio, mediaType: 'audio/wav' })
-      ).rejects.toThrow('Audio file size');
+      await expect(model.doGenerate({ audio: largeAudio, mediaType: 'audio/wav' })).rejects.toThrow(
+        'Audio file size'
+      );
     });
 
     it('should accept audio under 2GB limit', async () => {
-      const model = new OCITranscriptionModel('oci.speech.standard', {
+      const model = new OCITranscriptionModel('ORACLE', {
         compartmentId: 'test',
       });
       const result = await model.doGenerate({
@@ -172,7 +211,7 @@ describe('OCITranscriptionModel', () => {
 
   describe('response structure', () => {
     it('should return all required TranscriptionOutput properties', async () => {
-      const model = new OCITranscriptionModel('oci.speech.standard', {
+      const model = new OCITranscriptionModel('ORACLE', {
         compartmentId: 'test',
       });
       const result = await model.doGenerate({ audio: new Uint8Array(100), mediaType: 'audio/wav' });
@@ -182,13 +221,13 @@ describe('OCITranscriptionModel', () => {
       expect(result.warnings).toBeInstanceOf(Array);
       expect(result.response).toBeDefined();
       expect(result.response.timestamp).toBeInstanceOf(Date);
-      expect(result.response.modelId).toBe('oci.speech.standard');
+      expect(result.response.modelId).toBe('ORACLE');
       expect('language' in result).toBe(true);
       expect('durationInSeconds' in result).toBe(true);
     });
 
     it('should include providerMetadata with jobId', async () => {
-      const model = new OCITranscriptionModel('oci.speech.standard', {
+      const model = new OCITranscriptionModel('ORACLE', {
         compartmentId: 'test',
       });
       const result = await model.doGenerate({ audio: new Uint8Array(100), mediaType: 'audio/wav' });
@@ -200,7 +239,7 @@ describe('OCITranscriptionModel', () => {
 
   describe('warnings', () => {
     it('should add warning when using vocabulary with Whisper model', async () => {
-      const model = new OCITranscriptionModel('oci.speech.whisper', {
+      const model = new OCITranscriptionModel('WHISPER_MEDIUM', {
         compartmentId: 'test',
         vocabulary: ['custom', 'terms'],
       });
@@ -210,7 +249,7 @@ describe('OCITranscriptionModel', () => {
     });
 
     it('should have empty warnings when vocabulary not used', async () => {
-      const model = new OCITranscriptionModel('oci.speech.standard', {
+      const model = new OCITranscriptionModel('ORACLE', {
         compartmentId: 'test',
       });
       const result = await model.doGenerate({ audio: new Uint8Array(100), mediaType: 'audio/wav' });
@@ -220,7 +259,7 @@ describe('OCITranscriptionModel', () => {
 
   describe('language handling', () => {
     it('should return configured language', async () => {
-      const model = new OCITranscriptionModel('oci.speech.standard', {
+      const model = new OCITranscriptionModel('ORACLE', {
         compartmentId: 'test',
         language: 'es-ES',
       });
@@ -229,7 +268,7 @@ describe('OCITranscriptionModel', () => {
     });
 
     it('should return undefined when language not configured', async () => {
-      const model = new OCITranscriptionModel('oci.speech.standard', {
+      const model = new OCITranscriptionModel('ORACLE', {
         compartmentId: 'test',
       });
       const result = await model.doGenerate({ audio: new Uint8Array(100), mediaType: 'audio/wav' });
@@ -239,7 +278,7 @@ describe('OCITranscriptionModel', () => {
 
   describe('Object Storage integration', () => {
     it('should use custom bucket when configured', async () => {
-      const model = new OCITranscriptionModel('oci.speech.standard', {
+      const model = new OCITranscriptionModel('ORACLE', {
         compartmentId: 'test',
         transcriptionBucket: 'my-custom-bucket',
       });
@@ -255,7 +294,7 @@ describe('OCITranscriptionModel', () => {
     });
 
     it('should cleanup uploaded file after transcription', async () => {
-      const model = new OCITranscriptionModel('oci.speech.standard', {
+      const model = new OCITranscriptionModel('ORACLE', {
         compartmentId: 'test',
       });
 

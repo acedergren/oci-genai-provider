@@ -281,6 +281,7 @@ export class OCITranscriptionModel implements TranscriptionModelV3 {
         let taskDetails;
         try {
           const taskResponse = await client.getTranscriptionTask({
+            transcriptionJobId: jobId,
             transcriptionTaskId: firstTask.id,
           });
           taskDetails = taskResponse.transcriptionTask;
@@ -294,15 +295,17 @@ export class OCITranscriptionModel implements TranscriptionModelV3 {
         let outputFileName: string;
 
         // If task has outputLocation, use it; otherwise use fallback naming
-        if (taskDetails.outputLocation) {
-          // outputLocation typically contains the prefix and actual filename
+        const taskOutputLocation = (taskDetails as { outputLocation?: string }).outputLocation;
+        if (taskOutputLocation) {
+          // outputLocation is typically a string containing the full path
           // Format is usually "{prefix}/{input_filename}.json"
-          outputFileName = taskDetails.outputLocation;
+          outputFileName = taskOutputLocation;
         } else {
           // Fallback: construct filename from prefix and task input
-          // Assuming input object name is available in task details
-          const inputName =
-            taskDetails.inputLocation?.objectName || `task-${firstTask.id}`;
+          // Get the input object names from the input location
+          const inputObjectNames =
+            (taskDetails.inputLocation as { objectNames?: string[] })?.objectNames || [];
+          const inputName = inputObjectNames[0] || `task-${firstTask.id}`;
           const baseName = inputName.replace(/\.[^.]*$/, ''); // Remove extension
           outputFileName = `${outputPrefix}/${baseName}.json`;
         }
