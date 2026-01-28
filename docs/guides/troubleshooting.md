@@ -1,96 +1,100 @@
-# Troubleshooting Guide
+# Troubleshooting
 
-This guide covers common issues and solutions when using the OCI GenAI Provider.
+Solutions for common issues with the OCI GenAI Provider.
 
 ## Authentication Errors
 
-### "NotAuthenticated" or "401 Unauthorized"
+### "NotAuthenticated" or 401
 
 **Symptoms:**
+- Requests fail immediately
+- Error contains "NotAuthenticated" or status 401
 
-- Error message contains "NotAuthenticated" or status 401
-- Requests fail immediately without reaching the model
+**Solutions:**
 
-**Causes & Solutions:**
-
-1. **Missing or invalid OCI configuration**
-
+1. **Verify your OCI config exists and is formatted correctly:**
    ```bash
-   # Verify your OCI config exists
    cat ~/.oci/config
+   ```
 
-   # Check the profile you're using
+   Should look like:
+   ```ini
+   [DEFAULT]
+   user=ocid1.user.oc1..aaaa...
+   fingerprint=xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx
+   tenancy=ocid1.tenancy.oc1..aaaa...
+   region=eu-frankfurt-1
+   key_file=~/.oci/oci_api_key.pem
+   ```
+
+2. **Check your API key:**
+   - Verify the fingerprint matches what's in OCI Console
+   - Ensure the key file exists: `ls -la ~/.oci/oci_api_key.pem`
+   - Check file permissions: `chmod 600 ~/.oci/oci_api_key.pem`
+
+3. **Verify profile being used:**
+   ```bash
    export OCI_CONFIG_PROFILE=DEFAULT
    ```
 
-2. **Expired or invalid API key**
-   - Check your API key fingerprint matches what's in OCI Console
-   - Regenerate the API key if expired
-   - Ensure the private key file path in config is correct
-
-3. **Wrong compartment permissions**
-
+4. **Test with OCI CLI:**
    ```bash
-   # Verify compartment ID
-   oci iam compartment get --compartment-id $OCI_COMPARTMENT_ID
+   oci iam region list
    ```
 
-4. **Instance principal not configured** (for OCI compute instances)
-   - Ensure your instance has a dynamic group membership
-   - Verify IAM policies allow GenAI access
+   If this fails, the issue is with your OCI configuration, not the provider.
 
-### "AuthenticationError: Invalid credentials"
+### "NotAuthorizedOrNotFound" or 403
 
-**Solution:** Check that your OCI config file has the correct format:
+**Symptoms:**
+- Error with status 403
+- "User does not have permission" message
 
-```ini
-[DEFAULT]
-user=ocid1.user.oc1..aaaa...
-fingerprint=xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx
-tenancy=ocid1.tenancy.oc1..aaaa...
-region=eu-frankfurt-1
-key_file=~/.oci/oci_api_key.pem
+**Solutions:**
+
+Check your IAM policies. Your user needs:
+
 ```
+Allow group <your-group> to use generative-ai-family in compartment <your-compartment>
+```
+
+See [IAM Policies Guide](./iam-policies/README.md) for complete policy requirements.
 
 ---
 
 ## Model Errors
 
-### "ModelNotFoundError" or "Model not available"
+### Model Not Found
 
 **Symptoms:**
-
-- Error indicates model ID is not found
+- Error indicates model ID not found
 - Request returns 404
 
 **Solutions:**
 
-1. **Verify model ID spelling**
-
+1. **Verify model ID spelling (case-sensitive):**
    ```typescript
-   // Correct model IDs
-   'cohere.command-r-plus';
-   'cohere.command-r-08-2024';
-   'meta.llama-3.1-70b-instruct';
-   'meta.llama-3.1-405b-instruct';
+   // Correct
+   'cohere.command-r-plus'
+   'meta.llama-3.3-70b-instruct'
+
+   // Wrong
+   'cohere.Command-R-Plus'
+   'meta.llama-3.3'
    ```
 
-2. **Check regional availability**
-   - Not all models are available in all regions
-   - Command R+ is widely available
-   - Llama models may have regional restrictions
+2. **Check regional availability:**
+   Not all models are available in all regions. Command R+ is widely available; some Llama models have restrictions.
 
-3. **Verify GenAI service is enabled**
+3. **List available models:**
    ```bash
-   # List available models in your region
    oci generative-ai model list --compartment-id $OCI_COMPARTMENT_ID
    ```
 
-### "Model capacity exceeded" or throttling
+### Model Capacity Exceeded
 
 **Solutions:**
-
-- The provider has built-in retry logic (3 retries with exponential backoff)
+- The provider automatically retries (3 attempts with exponential backoff)
 - For persistent issues, contact OCI support to increase quotas
 - Consider using a different model as fallback
 
@@ -98,127 +102,105 @@ key_file=~/.oci/oci_api_key.pem
 
 ## Network Errors
 
-### "ECONNRESET" or "socket hang up"
+### Connection Reset or Socket Hang Up
 
 **Symptoms:**
-
 - Intermittent connection failures
-- Works sometimes, fails others
+- "ECONNRESET" or "socket hang up" errors
 
 **Solutions:**
 
-1. **Built-in retry handles most cases**
-   - The provider automatically retries on network errors
-   - Default: 3 retries with exponential backoff
+1. **Built-in retry handles most cases** — The provider automatically retries network errors.
 
-2. **Increase timeout for slow networks**
-
+2. **Increase timeout for slow networks:**
    ```typescript
    const model = oci('cohere.command-r-plus', {
      compartmentId: process.env.OCI_COMPARTMENT_ID!,
-     region: 'eu-frankfurt-1',
      requestOptions: {
        timeoutMs: 60000, // 60 seconds
      },
    });
    ```
 
-3. **Check firewall/proxy settings**
+3. **Check firewall/proxy:**
    - Ensure outbound HTTPS to `*.oraclecloud.com` is allowed
-   - Check corporate proxy configuration
+   - Verify corporate proxy configuration
 
-### "TimeoutError: Operation timed out"
+### Timeout Errors
 
 **Solutions:**
 
-1. **Increase timeout**
-
+1. **Increase timeout:**
    ```typescript
    requestOptions: {
      timeoutMs: 120000, // 2 minutes for long generations
    }
    ```
 
-2. **Use streaming for long responses**
-   - Streaming has separate timeout per chunk
-   - Better for long-form content generation
+2. **Use streaming for long responses:**
+   Streaming has separate timeout per chunk, making it better for long-form content.
 
 ---
 
 ## Rate Limiting
 
-### "RateLimitError" or 429 status
+### 429 Too Many Requests
 
 **Symptoms:**
-
 - Error with status code 429
 - "Too many requests" message
 
 **Solutions:**
 
-1. **Automatic retry**
-   - Provider automatically retries 429 errors
-   - Respects `Retry-After` header when present
+1. **Automatic retry** — The provider retries 429 errors and respects `Retry-After` headers.
 
-2. **Reduce request frequency**
-
+2. **Reduce request frequency:**
    ```typescript
-   // Add delay between requests
-   await new Promise((r) => setTimeout(r, 1000));
+   await new Promise(r => setTimeout(r, 1000));
    ```
 
-3. **Request quota increase**
-   - Contact OCI support for higher limits
-   - Consider dedicated capacity for production
+3. **Request quota increase** — Contact OCI support for higher limits.
 
 ---
 
 ## Streaming Issues
 
-### Stream stops mid-response
+### Stream Stops Mid-Response
 
-**Possible causes:**
+**Causes and solutions:**
 
-1. **Network interruption**
-   - Check network stability
-   - Provider will throw error, can be caught and retried
+1. **Network interruption** — Check stability; provider will throw error that can be caught.
 
-2. **Model finish reason**
-
+2. **Token limit reached:**
    ```typescript
    const result = await streamText({ model, prompt });
    for await (const chunk of result.textStream) {
      console.log(chunk);
    }
-   // Check why it stopped
-   const finalResult = await result;
-   console.log('Finish reason:', finalResult.finishReason);
+   const final = await result;
+   console.log('Finish reason:', final.finishReason);
    ```
 
-3. **Token limit reached**
-   - Model hit max output tokens
-   - Adjust `maxTokens` parameter if needed
+3. **Adjust max tokens if needed.**
 
-### No streaming output (hangs)
+### Stream Hangs
 
 **Solutions:**
 
-1. **Verify async iteration**
-
+1. **Verify async iteration:**
    ```typescript
-   // Correct: use for await
+   // Correct
    for await (const chunk of result.textStream) {
      process.stdout.write(chunk);
    }
 
-   // Wrong: missing await
-   for (const chunk of result.textStream) {
-   } // Won't work
+   // Wrong - missing await
+   for (const chunk of result.textStream) { }
    ```
 
-2. **Check response is being consumed**
-   - In web apps, ensure response is being read by client
-   - In Node.js, ensure stdout isn't buffered
+2. **Ensure response is consumed:**
+   - In web apps, verify client is reading the response
+   - In Node.js, check stdout isn't buffered
 
 ---
 
@@ -226,8 +208,7 @@ key_file=~/.oci/oci_api_key.pem
 
 ### "OCI_COMPARTMENT_ID is required"
 
-**Solution:** Set the environment variable:
-
+**Solution:**
 ```bash
 # Find your compartment ID
 oci iam compartment list --all
@@ -236,35 +217,29 @@ oci iam compartment list --all
 export OCI_COMPARTMENT_ID=ocid1.compartment.oc1..aaaa...
 ```
 
-### Wrong region
+### Wrong Region
 
 **Symptoms:**
-
 - "Service not available in region"
 - Unexpected latency
 
 **Solution:**
-
 ```bash
-# Available regions with GenAI
-# - us-chicago-1
-# - eu-frankfurt-1
-# - uk-london-1
-# - ap-melbourne-1
-
-export OCI_REGION=eu-frankfurt-1
+# Regions with GenAI service
+export OCI_REGION=us-ashburn-1   # US
+export OCI_REGION=eu-frankfurt-1 # EU
+export OCI_REGION=uk-london-1    # UK
 ```
 
 ---
 
 ## TypeScript Issues
 
-### Type errors with AI SDK
+### Type Errors with AI SDK
 
-**Problem:** Type mismatch between provider and AI SDK versions
+**Problem:** Version mismatch between provider and AI SDK
 
-**Solution:** Ensure compatible versions:
-
+**Solution:**
 ```json
 {
   "dependencies": {
@@ -274,54 +249,47 @@ export OCI_REGION=eu-frankfurt-1
 }
 ```
 
-### "Cannot find module" errors
+### "Cannot find module"
 
 **Solutions:**
 
-1. **Check package installation**
-
+1. **Check installation:**
    ```bash
    pnpm install @acedergren/oci-genai-provider
    ```
 
-2. **Configure npm for GitHub Packages**
-
+2. **Configure npm for GitHub Packages (if using):**
    ```bash
-   # Add to .npmrc
+   # .npmrc
    @acedergren:registry=https://npm.pkg.github.com
-   ```
-
-3. **Authenticate to GitHub Packages**
-   ```bash
-   npm login --registry=https://npm.pkg.github.com
-   # Use GitHub PAT with read:packages scope
    ```
 
 ---
 
 ## Debug Mode
 
-Enable debug logging to troubleshoot issues:
+Enable debug logging:
 
 ```bash
-# Enable all debug output
-DEBUG=oci-genai:* pnpm dev
+DEBUG=oci-genai:* node your-script.js
+```
 
-# Enable specific modules
-DEBUG=oci-genai:auth pnpm dev
-DEBUG=oci-genai:streaming pnpm dev
+For specific modules:
+```bash
+DEBUG=oci-genai:auth node your-script.js
+DEBUG=oci-genai:streaming node your-script.js
 ```
 
 ---
 
-## Getting Help
+## Still Stuck?
 
-If you're still stuck:
+1. **Check existing issues:** [GitHub Issues](https://github.com/acedergren/oci-genai-provider/issues)
 
-1. **Check existing issues**: [GitHub Issues](https://github.com/acedergren/oci-genai-provider/issues)
 2. **Open a new issue** with:
    - Error message and stack trace
    - Node.js version (`node -v`)
    - Package versions (`pnpm list`)
    - Minimal reproduction code
-3. **OCI Support**: For OCI-specific issues (quotas, access), contact Oracle support
+
+3. **OCI-specific issues:** Contact Oracle support for quota, access, or service problems.

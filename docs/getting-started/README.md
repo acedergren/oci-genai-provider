@@ -1,55 +1,38 @@
-# Getting Started with OCI GenAI Provider
+# Getting Started
 
-Get up and running with the OCI Generative AI provider for Vercel AI SDK in under 5 minutes.
-
-## Package Selection
-
-This project provides two packages:
-
-- **`@acedergren/oci-genai-provider`** - Core provider, works with any Vercel AI SDK project
-- **`@acedergren/oci-genai-provider`** - OpenCode-specific integration (includes core provider)
-
-Choose the package based on your use case:
-
-- Using with **Vercel AI SDK** directly? → Install `@acedergren/oci-genai-provider`
-- Using with **OpenCode**? → Install `@acedergren/oci-genai-provider`
+Get the OCI Generative AI provider running in your project.
 
 ## Prerequisites
 
 Before you begin, ensure you have:
 
 1. **Node.js 18+** installed
-2. **Oracle Cloud Infrastructure (OCI) account** with access to Generative AI services
-3. **OCI API credentials** configured (see [Authentication Guide](../guides/authentication/))
-4. **Required IAM policies** in place (see [IAM Policies Guide](../guides/iam-policies/))
+2. **OCI account** with Generative AI access
+3. **OCI credentials** configured (we'll cover this below)
+4. **Compartment ID** for your OCI resources
 
-## Quick Start
+## Installation
 
-### 1. Installation
-
-**For Vercel AI SDK projects:**
+Install the core provider and Vercel AI SDK:
 
 ```bash
 npm install @acedergren/oci-genai-provider ai
-# or
+```
+
+Or with other package managers:
+
+```bash
 pnpm add @acedergren/oci-genai-provider ai
-# or
 yarn add @acedergren/oci-genai-provider ai
 ```
 
-**For OpenCode projects:**
+## Configure OCI Credentials
 
-```bash
-npm install @acedergren/oci-genai-provider
-# or
-pnpm add @acedergren/oci-genai-provider
-# or
-yarn add @acedergren/oci-genai-provider
-```
+The provider uses your OCI configuration file for authentication.
 
-### 2. Configuration
+### Create the Config File
 
-Create or update your `~/.oci/config` file:
+Create `~/.oci/config` if it doesn't exist:
 
 ```ini
 [DEFAULT]
@@ -60,7 +43,23 @@ region=us-ashburn-1
 key_file=~/.oci/oci_api_key.pem
 ```
 
-### 3. First Chat
+**Where to find these values:**
+- **user**: OCI Console → Profile Icon → User Settings
+- **tenancy**: OCI Console → Profile Icon → Tenancy
+- **fingerprint**: Displayed when you upload your API key
+- **key_file**: Path to your private key
+
+### Set Your Compartment ID
+
+```bash
+export OCI_COMPARTMENT_ID="ocid1.compartment.oc1..your_compartment_id"
+```
+
+For detailed setup including API key generation, see the [Authentication Guide](../guides/authentication/README.md).
+
+## First Request
+
+Create a simple script to verify everything works:
 
 ```typescript
 import { createOCI } from '@acedergren/oci-genai-provider';
@@ -79,100 +78,83 @@ const { text } = await generateText({
 console.log(text);
 ```
 
-### 4. Verify It Works
-
-Run your script:
+Run it:
 
 ```bash
-node your-script.js
+npx tsx your-script.ts
 ```
 
-You should see a response about Oracle Cloud Infrastructure!
+If you see a response about OCI, you're set up correctly.
 
-## Next Steps
+## Streaming Responses
 
-Now that you have the basics working:
+For real-time output, use `streamText`:
 
-- **[Run the Examples](../../examples/)** - Try the SvelteKit, Next.js, or CLI examples
-- **[Configure Authentication](../guides/authentication/)** - Learn about different auth methods
-- **[Explore Models](../reference/oci-genai-models/)** - See all available models
-- **[Try Streaming](../tutorials/02-streaming-responses.md)** - Implement real-time responses
-- **[Add Tool Calling](../tutorials/03-tool-calling.md)** - Integrate function calling
-- **[Integrate with OpenCode](../tutorials/04-opencode-integration.md)** - Use with OpenCode
-- **[Troubleshooting](../guides/troubleshooting.md)** - Solve common issues
+```typescript
+import { createOCI } from '@acedergren/oci-genai-provider';
+import { streamText } from 'ai';
+
+const oci = createOCI();
+
+const stream = streamText({
+  model: oci('meta.llama-3.3-70b-instruct'),
+  prompt: 'Explain React hooks in detail',
+});
+
+for await (const chunk of stream.textStream) {
+  process.stdout.write(chunk);
+}
+```
 
 ## Common Issues
 
 ### Authentication Errors
 
-If you see authentication errors, verify:
+If you see authentication failures:
 
-- Your `~/.oci/config` file exists and is properly formatted
-- Your API key file exists at the path specified in `key_file`
-- Your user has the required IAM policies (see [IAM Policies Guide](../guides/iam-policies/))
+1. Verify `~/.oci/config` exists and is formatted correctly
+2. Check that your API key file exists at the specified path
+3. Confirm your fingerprint matches the key in OCI Console
+4. Ensure your user has required IAM policies
+
+See [Troubleshooting](../guides/troubleshooting.md) for detailed solutions.
 
 ### Model Not Found
 
-Ensure the model you're requesting is:
+If a model isn't found:
 
-- Available in your region (see [Model Availability](../reference/oci-genai-models/))
-- Spelled correctly (case-sensitive)
-- Accessible with your IAM policies
+1. Check the model ID spelling (case-sensitive)
+2. Verify the model is available in your region
+3. Confirm your IAM policies allow access
+
+See [Model Catalog](../reference/oci-genai-models/README.md) for available models.
 
 ### Rate Limiting
 
-OCI GenAI has rate limits. If you hit them:
+The provider automatically retries rate-limited requests with exponential backoff. For persistent issues:
 
-- The provider has **built-in retry** with exponential backoff
-- `RateLimitError` includes `retryAfterMs` when available
+- The `RateLimitError` includes `retryAfterMs` when available
 - Consider using dedicated AI clusters for higher throughput
-- Review your usage patterns
+- Contact OCI support for quota increases
 
-## Getting Help
+## Next Steps
 
-- 📖 [Full Documentation](../README.md)
-- 🐛 [Report Issues](https://github.com/acedergren/oci-genai-provider/issues)
-- 💬 [Discussions](https://github.com/acedergren/oci-genai-provider/discussions)
+- **[Authentication Guide](../guides/authentication/README.md)** — Detailed credential setup
+- **[Model Catalog](../reference/oci-genai-models/README.md)** — All available models
+- **[Streaming Guide](../guides/streaming/README.md)** — Real-time responses
+- **[Tool Calling](../guides/tool-calling/README.md)** — Function integration
+- **[Examples](../../examples/)** — Working applications
 
 ## For Contributors
 
-If you're contributing to this project:
-
-### Workspace Setup
+Setting up the development environment:
 
 ```bash
-# Clone repository
 git clone https://github.com/acedergren/oci-genai-provider.git
 cd oci-genai-provider
-
-# Install dependencies (requires pnpm 8+)
 pnpm install
-
-# Build all packages
 pnpm build
-
-# Run tests
 pnpm test
-
-# Type check
-pnpm type-check
 ```
 
-### Package Structure
-
-```
-packages/
-├── oci-genai-provider/     # Core provider (published to npm)
-├── opencode-integration/   # OpenCode wrapper (published to npm)
-└── test-utils/             # Shared test utilities (private)
-```
-
-### Development Workflow
-
-1. Follow [TDD Implementation Plan](../plans/2026-01-27-core-provider-tdd-implementation.md)
-2. Run tests in watch mode: `pnpm --filter @acedergren/oci-genai-provider test -- --watch`
-3. Review [Testing Guide](../testing/README.md) for best practices
-
----
-
-**Ready to build?** Continue to [First Chat Tutorial](first-chat.md) for a detailed walkthrough.
+See [DEVELOPMENT.md](../../DEVELOPMENT.md) for complete setup.
