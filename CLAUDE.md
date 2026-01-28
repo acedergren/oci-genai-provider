@@ -13,7 +13,7 @@ Enables OCI Generative AI capabilities within OpenCode.
 
 Detailed guides for project setup and configuration:
 
-- [Credentials & Secrets](.claude/credentials.md) — GitHub PAT, OCI API keys, vault locations
+- **Credentials & Secrets** — GitHub PAT, OCI API keys, vault locations (local file: `.claude/credentials.md` - not in git)
 - [OCI Configuration](.claude/oci-setup.md) — Tenancy, regions, profiles, environment variables
 - [CI/CD & Deployment](.claude/ci-cd.md) — Pre-commit hooks, GitHub Actions, deployment strategy
 - [Security Practices](.claude/security.md) — Best practices for credentials, secrets, and access control
