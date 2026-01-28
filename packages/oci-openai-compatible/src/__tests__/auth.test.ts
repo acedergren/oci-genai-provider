@@ -1,10 +1,16 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createOCIAuthHeaders, getCompartmentId } from '../auth';
 import type { OCIOpenAIConfig } from '../types';
 
 describe('createOCIAuthHeaders', () => {
+  const originalEnv = { ...process.env };
+
   beforeEach(() => {
     delete process.env.OCI_COMPARTMENT_ID;
+  });
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
   });
 
   it('should create headers with API key', () => {
@@ -56,8 +62,14 @@ describe('createOCIAuthHeaders', () => {
 });
 
 describe('getCompartmentId', () => {
+  const originalEnv = { ...process.env };
+
   beforeEach(() => {
     delete process.env.OCI_COMPARTMENT_ID;
+  });
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
   });
 
   it('should return config compartmentId if provided', () => {

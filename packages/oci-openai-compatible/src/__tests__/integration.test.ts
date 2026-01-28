@@ -1,9 +1,14 @@
-import { describe, it, expect, beforeAll } from '@jest/globals';
+import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 import { createOCIOpenAI } from '../client';
 import type { OCIOpenAIConfig } from '../types';
 
 describe('Integration: OCI OpenAI Client', () => {
   let client: ReturnType<typeof createOCIOpenAI>;
+  const originalEnv = { ...process.env };
+
+  afterAll(() => {
+    process.env = { ...originalEnv };
+  });
 
   beforeAll(() => {
     // Mock environment for tests
