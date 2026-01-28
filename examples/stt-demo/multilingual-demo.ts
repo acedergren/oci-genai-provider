@@ -1,6 +1,11 @@
 import { oci, getSupportedLanguages } from "@acedergren/oci-genai-provider";
 import { transcribe } from "ai";
 import { readFileSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 async function main() {
   console.log("🌍 Multilingual Speech-to-Text Demo
@@ -25,7 +30,7 @@ async function main() {
     try {
       console.log(`${example.name} (${example.lang}):`);
 
-      const audioData = readFileSync(example.file);
+      const audioData = readFileSync(join(__dirname, example.file));
 
       const model = oci.transcriptionModel("oci.speech.whisper", {
         language: example.lang,
