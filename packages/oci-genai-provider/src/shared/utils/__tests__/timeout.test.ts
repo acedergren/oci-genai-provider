@@ -10,7 +10,7 @@ describe('withTimeout', () => {
     jest.useRealTimers();
   });
 
-  it('should return result if function completes before timeout', async () => {
+  it('should return result if function completes before timeout', async (): Promise<void> => {
     const fn = jest.fn<() => Promise<string>>().mockResolvedValue('success');
 
     const promise = withTimeout(fn(), 5000);
@@ -20,8 +20,8 @@ describe('withTimeout', () => {
     expect(result).toBe('success');
   });
 
-  it('should throw TimeoutError if function exceeds timeout', async () => {
-    const fn = () => new Promise((resolve) => setTimeout(resolve, 10000));
+  it('should throw TimeoutError if function exceeds timeout', async (): Promise<void> => {
+    const fn = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 10000));
 
     const promise = withTimeout(fn(), 1000);
 
@@ -33,6 +33,7 @@ describe('withTimeout', () => {
   });
 
   it('should include custom message in TimeoutError', async () => {
+    /* eslint-disable-next-line @typescript-eslint/explicit-function-return-type */
     const fn = () => new Promise((resolve) => setTimeout(resolve, 10000));
 
     const promise = withTimeout(fn(), 500, 'API request');
@@ -68,8 +69,8 @@ describe('withTimeout', () => {
     await expect(withTimeout(fn, 5000)).rejects.toThrow('original error');
   });
 
-  it('should handle zero timeout (immediate timeout)', async () => {
-    const fn = () => new Promise((resolve) => setTimeout(resolve, 100));
+  it('should handle zero timeout (immediate timeout)', async (): Promise<void> => {
+    const fn = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 100));
 
     const promise = withTimeout(fn(), 0);
     jest.advanceTimersByTime(1);

@@ -1,7 +1,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { Readable } from 'stream';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-function-return-type */
 
 // Helper to create a mock readable stream
 function createMockAudioStream(
@@ -17,7 +17,7 @@ function createMockAudioStream(
 }
 
 // Mock oci-aispeech - needs to be at top level
-const mockSynthesizeSpeech = jest.fn<any>();
+const mockSynthesizeSpeech: jest.Mock<any> = jest.fn();
 
 jest.mock('oci-aispeech', () => ({
   AIServiceSpeechClient: jest.fn().mockImplementation(() => ({
