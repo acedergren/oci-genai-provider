@@ -49,6 +49,8 @@ export interface OCIOpenAIConfig {
   /**
    * Authentication method to use
    * @default 'api_key'
+   * @note Currently only 'api_key' is supported via this package.
+   * For instance_principal or resource_principal auth, use @acedergren/oci-genai-provider instead.
    */
   auth?: OCIAuthMethod;
 }
