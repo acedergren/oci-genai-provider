@@ -235,24 +235,44 @@ describe('OCIGenAIProvider (ProviderV3)', () => {
   });
 
   describe('embeddingModel()', () => {
-    it('should throw NoSuchModelError - not yet implemented', () => {
-      const provider = new OCIGenAIProvider();
+    it('should create embedding model instance', () => {
+      const provider = new OCIGenAIProvider({ region: 'eu-frankfurt-1' });
+      const model = provider.embeddingModel('cohere.embed-multilingual-v3.0');
 
-      expect(() => provider.embeddingModel('cohere.embed-multilingual-v3.0')).toThrow(
-        NoSuchModelError
-      );
+      expect(model).toBeDefined();
+      expect(model.provider).toBe('oci-genai');
+      expect(model.modelId).toBe('cohere.embed-multilingual-v3.0');
     });
 
-    it('should include helpful message in error', () => {
+    it('should create different embedding models', () => {
+      const provider = new OCIGenAIProvider({ region: 'eu-frankfurt-1' });
+
+      const multilingual = provider.embeddingModel('cohere.embed-multilingual-v3.0');
+      expect(multilingual.modelId).toContain('multilingual');
+
+      const english = provider.embeddingModel('cohere.embed-english-v3.0');
+      expect(english.modelId).toContain('english');
+
+      const light = provider.embeddingModel('cohere.embed-english-light-v3.0');
+      expect(light.modelId).toContain('light');
+    });
+
+    it('should merge provider config with embedding-specific settings', () => {
+      const provider = new OCIGenAIProvider({ region: 'eu-frankfurt-1' });
+      const model = provider.embeddingModel('cohere.embed-english-light-v3.0', {
+        dimensions: 384,
+        truncate: 'START',
+      });
+
+      expect(model).toBeDefined();
+    });
+
+    it('should throw error for invalid embedding model ID', () => {
       const provider = new OCIGenAIProvider();
 
-      try {
-        provider.embeddingModel('cohere.embed-multilingual-v3.0');
-        fail('Expected NoSuchModelError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(NoSuchModelError);
-        expect((error as NoSuchModelError).message).toContain('Plan 2');
-      }
+      expect(() => provider.embeddingModel('invalid-model')).toThrow(
+        'Invalid embedding model ID'
+      );
     });
   });
 
