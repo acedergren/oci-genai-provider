@@ -1,0 +1,67 @@
+{
+  "name": "@acedergren/oci-openai-compatible",
+  "version": "0.1.0",
+  "description": "OpenAI-compatible wrapper for OCI Generative AI Service",
+  "keywords": [
+    "oci",
+    "oracle",
+    "generative-ai",
+    "openai",
+    "ai-sdk",
+    "llm"
+  ],
+  "author": "Anders Cedergren",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/acedergren/opencode-oci-genai.git",
+    "directory": "packages/oci-openai-compatible"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/@acedergren",
+    "access": "public"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "jest --passWithNoTests",
+    "test:watch": "jest --watch",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "openai": "^4.77.3",
+    "oci-common": "^2.94.0"
+  },
+  "peerDependencies": {
+    "ai": "^5.0.0 || ^6.0.0"
+  },
+  "peerDependenciesMeta": {
+    "ai": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.10",
+    "tsup": "^8.3.7",
+    "@jest/globals": "^29.7.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.7.3"
+  }
+}

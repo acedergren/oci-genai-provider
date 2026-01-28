@@ -5,23 +5,18 @@ import { OCIGenAIProvider } from '../provider';
 
 // Mock OCI SDK
 jest.mock('oci-common', () => ({
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   ConfigFileAuthenticationDetailsProvider: jest.fn().mockImplementation(() => ({})),
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+
   InstancePrincipalsAuthenticationDetailsProviderBuilder: jest.fn().mockImplementation(() => ({
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     build: jest.fn().mockImplementation(() => Promise.resolve({})),
   })),
   ResourcePrincipalAuthenticationDetailsProvider: {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     builder: jest.fn().mockImplementation(() => ({})),
   },
 }));
 
 jest.mock('oci-generativeaiinference', () => ({
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   GenerativeAiInferenceClient: jest.fn().mockImplementation(() => ({
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     chat: jest.fn().mockImplementation(() =>
       Promise.resolve({
         chatResponse: {
@@ -243,9 +238,7 @@ describe('OCIGenAIProvider (ProviderV3)', () => {
     it('should throw error for invalid embedding model ID', () => {
       const provider = new OCIGenAIProvider();
 
-      expect(() => provider.embeddingModel('invalid-model')).toThrow(
-        'Invalid embedding model ID'
-      );
+      expect(() => provider.embeddingModel('invalid-model')).toThrow('Invalid embedding model ID');
     });
   });
 

@@ -1,7 +1,6 @@
 import { describe, it, expect } from '@jest/globals';
 import type {
   OCIConfig,
-  OCIBaseConfig,
   OCILanguageModelSettings,
   OCIEmbeddingSettings,
   OCISpeechSettings,
@@ -37,29 +36,8 @@ describe('OCIConfig', () => {
 // ProviderV3 Model-Specific Settings Tests
 // ============================================================================
 
-describe('OCIBaseConfig', () => {
-  it('should accept all optional configuration fields', () => {
-    const config: OCIBaseConfig = {
-      region: 'eu-frankfurt-1',
-      profile: 'FRANKFURT',
-      auth: 'config_file',
-      compartmentId: 'ocid1.compartment.oc1..test',
-      endpoint: 'https://test.com',
-      configPath: '/custom/path/config',
-    };
-
-    expect(config.region).toBe('eu-frankfurt-1');
-    expect(config.auth).toBe('config_file');
-  });
-
-  it('should allow empty config', () => {
-    const config: OCIBaseConfig = {};
-    expect(config).toBeDefined();
-  });
-});
-
 describe('OCILanguageModelSettings', () => {
-  it('should extend OCIBaseConfig with requestOptions', () => {
+  it('should support all OCIConfig fields plus requestOptions', () => {
     const settings: OCILanguageModelSettings = {
       region: 'eu-stockholm-1',
       requestOptions: {

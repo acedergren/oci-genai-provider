@@ -2,32 +2,20 @@ import { createParser, type EventSourceMessage } from 'eventsource-parser';
 import type { LanguageModelV3FinishReason } from '@ai-sdk/provider';
 import type { StreamPart, UnifiedFinishReason } from './types';
 
+const FINISH_REASON_MAP: Record<string, UnifiedFinishReason> = {
+  STOP: 'stop',
+  LENGTH: 'length',
+  CONTENT_FILTER: 'content-filter',
+  TOOL_CALLS: 'tool-calls',
+  ERROR: 'error',
+};
+
 /**
  * Maps OCI GenAI finish reasons to AI SDK v3 LanguageModelV3FinishReason structure.
- *
- * @param reason - The raw finish reason from OCI GenAI API
- * @returns A properly structured LanguageModelV3FinishReason object with unified and raw fields
  */
 export function mapFinishReason(reason: string): LanguageModelV3FinishReason {
-  const unified: UnifiedFinishReason = ((): UnifiedFinishReason => {
-    switch (reason) {
-      case 'STOP':
-        return 'stop';
-      case 'LENGTH':
-        return 'length';
-      case 'CONTENT_FILTER':
-        return 'content-filter';
-      case 'TOOL_CALLS':
-        return 'tool-calls';
-      case 'ERROR':
-        return 'error';
-      default:
-        return 'other';
-    }
-  })();
-
   return {
-    unified,
+    unified: FINISH_REASON_MAP[reason] ?? 'other',
     raw: reason,
   };
 }
@@ -95,12 +83,11 @@ export async function* parseSSEStream(response: Response): AsyncGenerator<Stream
   });
 
   while (true) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const result = await reader.read();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
     if (result.done) break;
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     parser.feed(decoder.decode(result.value, { stream: true }));
 
     // Yield any parts that were parsed (O(1) per yield)

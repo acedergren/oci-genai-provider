@@ -38,9 +38,7 @@ export function isValidEmbeddingModelId(modelId: string): boolean {
   return EMBEDDING_MODELS.some((m) => m.id === modelId);
 }
 
-export function getEmbeddingModelMetadata(
-  modelId: string
-): EmbeddingModelMetadata | undefined {
+export function getEmbeddingModelMetadata(modelId: string): EmbeddingModelMetadata | undefined {
   return EMBEDDING_MODELS.find((m) => m.id === modelId);
 }
 

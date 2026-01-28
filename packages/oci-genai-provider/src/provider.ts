@@ -9,7 +9,7 @@ import {
   NoSuchModelError,
 } from '@ai-sdk/provider';
 import { OCILanguageModel } from './language-models/oci-language-model';
-import { OCIEmbeddingModel } from './embedding-models/OCIEmbeddingModel';
+import { OCIEmbeddingModel } from './embedding-models/oci-embedding-model';
 import type {
   OCIConfig,
   OCILanguageModelSettings,
