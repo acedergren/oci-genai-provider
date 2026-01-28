@@ -69,3 +69,34 @@ pnpm-lock.yaml
 # Misc
 .claude/debug/
 .claude/file-history/
+.claude/plans/
+
+# SvelteKit
+.svelte-kit/
+
+# Test outputs
+.jest-cache/
+.vitest/
+
+# Security scanning
+.semgrep/
+.gitleaks-output/
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# Generated documentation
+CHANGELOG-auto.md
+.release-notes.txt
+
+# Local development artifacts
+.local/
+.dev/
+local-config.json
+
+# IDE personal settings (keep .vscode and .idea for repo standards)
+.vscode/settings.json.local
+.idea/workspace.xml
+.idea/tasks.xml
