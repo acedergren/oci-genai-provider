@@ -1,0 +1,23 @@
+# CODEOWNERS
+# This file defines who is automatically requested for review of PRs
+
+# Global owners - review all changes
+* @acedergren
+
+# Package-specific owners
+packages/oci-openai-compatible/ @acedergren
+packages/oci-genai-provider/ @acedergren
+packages/opencode-integration/ @acedergren
+packages/test-utils/ @acedergren
+
+# Documentation
+*.md @acedergren
+/docs/ @acedergren
+.github/ @acedergren
+
+# Configuration
+.github/ @acedergren
+tsconfig.json @acedergren
+pnpm-workspace.yaml @acedergren
+package.json @acedergren
+jest.config.js @acedergren
