@@ -66,25 +66,19 @@ const model = oci(MODEL_ID, {
 
 ### New API Pattern (After Plan 1)
 
-**Option 1: Using Default Instance** (Recommended for simple cases)
+**Using Default Instance**
 
 ```typescript
 import { oci } from '@acedergren/oci-genai-provider';
 
-// ✅ NEW - Explicit method (clearest)
+// Use explicit method
 const model = oci.languageModel('cohere.command-r-plus', {
-  compartmentId,
-  region: 'eu-frankfurt-1',
-});
-
-// OR still works as callable:
-const model = oci('cohere.command-r-plus', {
   compartmentId,
   region: 'eu-frankfurt-1',
 });
 ```
 
-**Option 2: Using Factory** (Recommended for shared config)
+**Using Factory Pattern** (Recommended for shared config)
 
 ```typescript
 import { createOCI } from '@acedergren/oci-genai-provider';

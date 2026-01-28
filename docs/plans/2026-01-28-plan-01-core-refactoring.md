@@ -636,7 +636,7 @@ export async function POST({ request }) {
   const { messages, modelId } = await request.json();
 
   const result = streamText({
-    model: oci.languageModel(modelId), // Updated: use explicit method
+    model: oci.languageModel(modelId),
     messages,
   });
 
@@ -656,7 +656,7 @@ export async function POST(req: Request) {
   const { messages, modelId } = await req.json();
 
   const result = streamText({
-    model: oci.languageModel(modelId), // Updated: use explicit method
+    model: oci.languageModel(modelId),
     messages,
   });
 

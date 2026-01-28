@@ -375,13 +375,13 @@ See [Migration Guide](./docs/migration.md) for detailed upgrade instructions.
 ### Quick Migration
 
 ```typescript
-// v1.x
+// v1.x (deprecated)
 import { oci } from '@acedergren/oci-genai-provider';
-const model = oci('cohere.command-r-plus');
+const model = oci('cohere.command-r-plus'); // ❌ No longer supported
 
-// v2.x
+// v2.x (ProviderV3)
 import { oci } from '@acedergren/oci-genai-provider';
-const model = oci.languageModel('cohere.command-r-plus');
+const model = oci.languageModel('cohere.command-r-plus'); // ✅ Use this
 ```
 
 ## Troubleshooting
@@ -1214,36 +1214,36 @@ v2.0 introduces breaking changes to align with Vercel AI SDK v4+ and ProviderV3 
 
 ### 1. Language Model Creation
 
-**v1.x:**
+**v1.x (deprecated):**
 ```typescript
 import { oci } from '@acedergren/oci-genai-provider';
 
-const model = oci('cohere.command-r-plus');
+const model = oci('cohere.command-r-plus'); // ❌ No longer supported
 ```
 
-**v2.0:**
+**v2.0 (ProviderV3):**
 ```typescript
 import { oci } from '@acedergren/oci-genai-provider';
 
-const model = oci.languageModel('cohere.command-r-plus');
+const model = oci.languageModel('cohere.command-r-plus'); // ✅ Required
 ```
 
 ### 2. Provider Factory
 
-**v1.x:**
+**v1.x (deprecated):**
 ```typescript
 import { createOCI } from '@acedergren/oci-genai-provider';
 
 const provider = createOCI(config);
-const model = provider(modelId);
+const model = provider(modelId); // ❌ No longer supported
 ```
 
-**v2.0:**
+**v2.0 (ProviderV3):**
 ```typescript
 import { createOCI } from '@acedergren/oci-genai-provider';
 
 const provider = createOCI(config);
-const model = provider.languageModel(modelId);
+const model = provider.languageModel(modelId); // ✅ Required
 ```
 
 ### 3. Configuration Structure
@@ -1320,13 +1320,13 @@ No changes needed for imports - they remain the same.
 Find and replace pattern:
 
 ```typescript
-// Before
-const model = oci('cohere.command-r-plus');
-const model = provider('model-id');
+// Before (v1.x - deprecated)
+const model = oci('cohere.command-r-plus'); // ❌ Remove
+const model = provider('model-id'); // ❌ Remove
 
-// After
-const model = oci.languageModel('cohere.command-r-plus');
-const model = provider.languageModel('model-id');
+// After (v2.0 - ProviderV3)
+const model = oci.languageModel('cohere.command-r-plus'); // ✅ Use
+const model = provider.languageModel('model-id'); // ✅ Use
 ```
 
 ### Step 4: Move Model Settings
@@ -1453,13 +1453,13 @@ const files = glob.sync('**/*.{ts,tsx,js,jsx}', {
 for (const file of files) {
   let content = readFileSync(file, 'utf-8');
 
-  // Replace oci('model-id') with oci.languageModel('model-id')
+  // Replace old v1.x callable pattern with ProviderV3 method
   content = content.replace(
     /oci\(['"`]([^'"`]+)['"`]\)/g,
     "oci.languageModel('$1')"
   );
 
-  // Replace provider('model-id') with provider.languageModel('model-id')
+  // Replace provider callable pattern with explicit method
   content = content.replace(
     /provider\(['"`]([^'"`]+)['"`]\)/g,
     "provider.languageModel('$1')"
