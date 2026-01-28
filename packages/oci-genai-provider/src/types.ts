@@ -145,11 +145,34 @@ export interface OCISpeechSettings extends OCIConfig {
 export interface OCITranscriptionSettings extends OCIConfig {
   /** Language code (e.g., 'en', 'es', 'de') */
   language?: string;
-  /** Transcription model to use */
-  model?: 'standard' | 'whisper';
+  /** Transcription model to use (maps to OCI TranscriptionModelDetails.modelType) */
+  model?: 'ORACLE' | 'WHISPER_MEDIUM' | 'WHISPER_LARGE_V2';
   /** Custom vocabulary words */
   vocabulary?: string[];
-  /** Object Storage bucket for audio uploads (required for transcription) */
+  /**
+   * Object Storage bucket for audio uploads and transcription results storage.
+   *
+   * REQUIRED for transcription operations. The OCI Speech service uses Object Storage
+   * to store both input audio files and the transcription result JSON files.
+   *
+   * @default 'oci-speech-transcription' if not specified
+   *
+   * @example
+   * ```typescript
+   * const settings = {
+   *   transcriptionBucket: 'my-transcription-bucket',
+   *   compartmentId: 'ocid1.compartment.oc1...',
+   * };
+   * const model = new OCITranscriptionModel('ORACLE', settings);
+   * ```
+   *
+   * The bucket must:
+   * - Already exist in your OCI Object Storage
+   * - Have appropriate permissions configured for the authenticating principal
+   * - Have sufficient space for audio files and result JSON files
+   *
+   * Result files are stored with prefix: `results-{timestamp}/{input_filename}.json`
+   */
   transcriptionBucket?: string;
 }
 
