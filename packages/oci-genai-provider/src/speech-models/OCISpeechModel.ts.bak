@@ -1,4 +1,4 @@
-import type { SharedV3Warning, SharedV2Headers } from "@ai-sdk/provider";
+import type { SharedV3Warning } from "@ai-sdk/provider";
 import { getRegion } from "../auth";
 import { getSpeechModelMetadata, isValidSpeechModelId } from "./registry";
 import type { OCISpeechSettings } from "../types";
@@ -8,20 +8,19 @@ export class OCISpeechModel implements SpeechModelV3 {
   readonly specificationVersion = "v3";
   readonly provider = "oci-genai";
 
-  constructor(readonly modelId: string, _config: OCISpeechSettings) {
-    if (!isValidSpeechModelId(modelId)) {
+  constructor(readonly modelId: string, private config: OCISpeechSettings) {
+    if (\!isValidSpeechModelId(modelId)) {
       throw new Error("Invalid speech model ID: " + modelId);
     }
-    const region = getRegion(_config);
-    if (region !== "us-phoenix-1") {
+    const region = getRegion(config);
+    if (region \!== "us-phoenix-1") {
       throw new Error("OCI Speech is only available in us-phoenix-1 region. Current region: " + region);
     }
   }
 
-  async doGenerate(options: SpeechModelV3CallOptions): Promise<{ audio: string | Uint8Array; warnings: SharedV3Warning[]; request?: { body?: unknown }; response: { timestamp: Date; modelId: string; headers?: SharedV2Headers; body?: unknown; }; providerMetadata?: Record<string, any>; }> {
+  async doGenerate(options: SpeechModelV3CallOptions): Promise<{ audio: string | Uint8Array; warnings: SharedV3Warning[]; request?: { body?: unknown }; response: { timestamp: Date; modelId: string; headers?: Record<string, string | string[]>; body?: unknown; }; providerMetadata?: Record<string, any>; }> {
     const { text } = options;
     const metadata = getSpeechModelMetadata(this.modelId);
-    if (!metadata) throw new Error("Invalid model metadata");
     if (text.length > metadata.maxTextLength) {
       throw new Error("Text length (" + text.length + ") exceeds maximum allowed (" + metadata.maxTextLength + ")");
     }
