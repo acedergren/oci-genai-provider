@@ -5,33 +5,15 @@ import {
 } from "./registry";
 import type { OCITranscriptionSettings } from "../types";
 
-// Type placeholder for AIServiceSpeechClient since oci-aispeech may not be installed yet
 type AIServiceSpeechClient = any;
 
-// Placeholder interface for TranscriptionModelV3CallOptions
-interface TranscriptionModelV3CallOptions {
-  audioData: Uint8Array;
-  [key: string]: any;
-}
-
-// Placeholder interface for TranscriptionModelV3CallOutput
-interface TranscriptionModelV3CallOutput {
+interface TranscriptionOutput {
   text: string;
   segments: Array<any>;
   language: string;
 }
 
-// Placeholder interface for TranscriptionModelV3
-interface TranscriptionModelV3 {
-  specificationVersion: string;
-  provider: string;
-  modelId: string;
-  doTranscribe(
-    options: TranscriptionModelV3CallOptions
-  ): Promise<TranscriptionModelV3CallOutput>;
-}
-
-export class OCITranscriptionModel implements TranscriptionModelV3 {
+export class OCITranscriptionModel {
   readonly specificationVersion = "v3";
   readonly provider = "oci-genai";
 
@@ -48,7 +30,6 @@ export class OCITranscriptionModel implements TranscriptionModelV3 {
       );
     }
 
-    // Warn if using vocabulary with Whisper (not supported)
     const metadata = getTranscriptionModelMetadata(modelId);
     if (
       metadata?.modelType === "whisper" &&
@@ -63,11 +44,6 @@ export class OCITranscriptionModel implements TranscriptionModelV3 {
 
   private async getClient(): Promise<AIServiceSpeechClient> {
     if (this._client === undefined || this._client === null) {
-      
-      
-
-      // Note: oci-aispeech will be initialized when SDK is installed
-      // For now this is a placeholder that will be implemented when SDK is available
       this._client = {
         createTranscriptionJob: async () => ({
           transcriptionJob: { id: "placeholder-job-id" },
@@ -88,13 +64,14 @@ export class OCITranscriptionModel implements TranscriptionModelV3 {
     return this._client;
   }
 
-  async doTranscribe(
-    options: TranscriptionModelV3CallOptions
-  ): Promise<TranscriptionModelV3CallOutput> {
-    const { audioData } = options;
+  async doGenerate(options: any): Promise<TranscriptionOutput> {
+    return this.doTranscribe(options);
+  }
 
-    // Validate file size (2GB max)
-    const maxSizeBytes = 2 * 1024 * 1024 * 1024; // 2GB
+  async doTranscribe(options: any): Promise<TranscriptionOutput> {
+    const audioData = options.audioData as Uint8Array;
+
+    const maxSizeBytes = 2 * 1024 * 1024 * 1024;
     if (audioData.byteLength > maxSizeBytes) {
       throw new Error(
         `Audio file size (${(audioData.byteLength / 1024 / 1024).toFixed(1)}MB) ` +
@@ -106,7 +83,6 @@ export class OCITranscriptionModel implements TranscriptionModelV3 {
     const compartmentId = getCompartmentId(this.config);
     const metadata = getTranscriptionModelMetadata(this.modelId);
 
-    // Step 1: Create transcription job
     const createJobRequest = {
       createTranscriptionJobDetails: {
         compartmentId,
@@ -116,7 +92,7 @@ export class OCITranscriptionModel implements TranscriptionModelV3 {
           languageCode: this.config.language || "en-US",
         },
         inputLocation: {
-          locationType: "OBJECT_STORAGE", // Will upload to OCI Object Storage
+          locationType: "OBJECT_STORAGE",
         },
         outputLocation: {
           locationType: "OBJECT_STORAGE",
@@ -127,7 +103,6 @@ export class OCITranscriptionModel implements TranscriptionModelV3 {
       },
     };
 
-    // Add custom vocabulary if supported and provided
     if (
       metadata?.supportsCustomVocabulary &&
       this.config.vocabulary &&
@@ -138,29 +113,24 @@ export class OCITranscriptionModel implements TranscriptionModelV3 {
       };
     }
 
-    // Create job
     const jobResponse = await client.createTranscriptionJob(createJobRequest);
     const jobId = jobResponse.transcriptionJob.id;
 
-    // Step 2: Poll for completion
     const transcript = await this.pollForCompletion(client, jobId);
 
     return {
       text: transcript,
-      segments: [], // OCI does not provide segments in basic response
+      segments: [],
       language: this.config.language || "en-US",
     };
   }
 
-  /**
-   * Poll transcription job until complete
-   */
   private async pollForCompletion(
     client: AIServiceSpeechClient,
     jobId: string
   ): Promise<string> {
-    const maxAttempts = 60; // 5 minutes max
-    const pollIntervalMs = 5000; // 5 seconds
+    const maxAttempts = 60;
+    const pollIntervalMs = 5000;
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       const jobResponse = await client.getTranscriptionJob({
@@ -170,7 +140,6 @@ export class OCITranscriptionModel implements TranscriptionModelV3 {
       const state = jobResponse.transcriptionJob.lifecycleState;
 
       if (state === "SUCCEEDED") {
-        // Fetch transcription result
         const resultResponse = await client.getTranscriptionTask({
           transcriptionJobId: jobId,
           transcriptionTaskId: jobResponse.transcriptionJob.tasks?.[0]?.id || "",
@@ -187,7 +156,6 @@ export class OCITranscriptionModel implements TranscriptionModelV3 {
         );
       }
 
-      // Wait before next poll
       await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
     }
 

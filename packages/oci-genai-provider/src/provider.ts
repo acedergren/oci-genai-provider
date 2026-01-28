@@ -10,7 +10,9 @@ import {
 } from '@ai-sdk/provider';
 import { OCILanguageModel } from './language-models/oci-language-model';
 import { OCIEmbeddingModel } from './embedding-models/oci-embedding-model';
+import { OCISpeechModel } from './speech-models/OCISpeechModel';
 import { OCIRerankingModel } from './reranking-models/OCIRerankingModel';
+import { OCITranscriptionModel } from "./transcription-models/OCITranscriptionModel";
 import type {
   OCIConfig,
   OCILanguageModelSettings,
@@ -89,25 +91,27 @@ export class OCIGenAIProvider implements ProviderV3 {
    *
    * @throws {NoSuchModelError} Not yet implemented - coming in Plan 4
    */
-  transcriptionModel(modelId: string, _settings?: OCITranscriptionSettings): TranscriptionModelV3 {
-    throw new NoSuchModelError({
-      modelId,
-      modelType: 'transcriptionModel',
-      message: 'Transcription models not yet implemented. Coming in Plan 4.',
-    });
+  transcriptionModel(modelId: string, settings?: OCITranscriptionSettings): TranscriptionModelV3 {
+    const mergedConfig: OCIConfig = { ...this.config, ...settings };
+    return new OCITranscriptionModel(modelId, mergedConfig);
   }
-
+  
   /**
    * Create a speech model instance (TTS).
    *
-   * @throws {NoSuchModelError} Not yet implemented - coming in Plan 3
+   * @param modelId - OCI speech model identifier (e.g., 'oci.tts-1-hd')
+   * @param settings - Optional model-specific settings that override provider config
+   * @returns Speech model instance
+   *
+   * @example
+   * ```typescript
+   * const provider = new OCIGenAIProvider({ region: 'us-phoenix-1' });
+   * const model = provider.speechModel('oci.tts-1-hd');
+   * ```
    */
-  speechModel(modelId: string, _settings?: OCISpeechSettings): SpeechModelV3 {
-    throw new NoSuchModelError({
-      modelId,
-      modelType: 'speechModel',
-      message: 'Speech models not yet implemented. Coming in Plan 3.',
-    });
+  speechModel(modelId: string, settings?: OCISpeechSettings): SpeechModelV3 {
+    const mergedConfig: OCIConfig = { ...this.config, ...settings };
+    return new OCISpeechModel(modelId, mergedConfig);
   }
 
   /**
