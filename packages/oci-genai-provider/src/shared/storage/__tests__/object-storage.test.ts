@@ -3,11 +3,17 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
 // Mock oci-objectstorage
 const mockGetObject = jest.fn<any>();
+const mockPutObject = jest.fn<any>();
+const mockGetNamespace = jest.fn<any>();
+const mockDeleteObject = jest.fn<any>();
 
 jest.mock('oci-objectstorage', () => ({
   ObjectStorageClient: jest.fn().mockImplementation(() => ({
     region: null,
     getObject: mockGetObject,
+    putObject: mockPutObject,
+    getNamespace: mockGetNamespace,
+    deleteObject: mockDeleteObject,
   })),
 }));
 
@@ -34,7 +40,12 @@ jest.mock('../../../auth', () => ({
 }));
 
 // Import after mocks
-import { downloadTranscriptionResult } from '../object-storage';
+import {
+  downloadTranscriptionResult,
+  uploadAudioToObjectStorage,
+  deleteFromObjectStorage,
+  generateAudioObjectName,
+} from '../object-storage';
 
 describe('downloadTranscriptionResult', () => {
   beforeEach(() => {
@@ -343,5 +354,72 @@ describe('downloadTranscriptionResult', () => {
 
     expect(result.segments).toHaveLength(1);
     expect(result.segments[0].text).toBe('Valid only');
+  });
+});
+
+describe('uploadAudioToObjectStorage', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetNamespace.mockResolvedValue({ value: 'test-namespace' });
+    mockPutObject.mockResolvedValue({});
+  });
+
+  it('should upload audio and return location details', async () => {
+    const config = { region: 'eu-frankfurt-1' };
+    const audioData = new Uint8Array([1, 2, 3, 4]);
+
+    const result = await uploadAudioToObjectStorage(
+      config as any,
+      'my-bucket',
+      'audio-123.wav',
+      audioData
+    );
+
+    expect(result).toEqual({
+      namespaceName: 'test-namespace',
+      bucketName: 'my-bucket',
+      objectName: 'audio-123.wav',
+    });
+    expect(mockGetNamespace).toHaveBeenCalledWith({});
+    expect(mockPutObject).toHaveBeenCalledWith({
+      namespaceName: 'test-namespace',
+      bucketName: 'my-bucket',
+      objectName: 'audio-123.wav',
+      putObjectBody: audioData,
+      contentLength: 4,
+      contentType: 'audio/wav',
+    });
+  });
+});
+
+describe('deleteFromObjectStorage', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockDeleteObject.mockResolvedValue({});
+  });
+
+  it('should delete an object from Object Storage', async () => {
+    const config = { region: 'eu-frankfurt-1' };
+
+    await deleteFromObjectStorage(config as any, 'test-namespace', 'my-bucket', 'audio-123.wav');
+
+    expect(mockDeleteObject).toHaveBeenCalledWith({
+      namespaceName: 'test-namespace',
+      bucketName: 'my-bucket',
+      objectName: 'audio-123.wav',
+    });
+  });
+});
+
+describe('generateAudioObjectName', () => {
+  it('should generate a name matching the audio-{timestamp}-{random}.wav pattern', () => {
+    const name = generateAudioObjectName();
+    expect(name).toMatch(/^audio-\d+-[a-z0-9]+\.wav$/);
+  });
+
+  it('should generate unique names on successive calls', () => {
+    const name1 = generateAudioObjectName();
+    const name2 = generateAudioObjectName();
+    expect(name1).not.toBe(name2);
   });
 });

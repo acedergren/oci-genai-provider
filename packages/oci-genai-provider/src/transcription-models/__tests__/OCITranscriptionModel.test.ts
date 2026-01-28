@@ -303,4 +303,174 @@ describe('OCITranscriptionModel', () => {
       expect(mockDeleteFromObjectStorage).toHaveBeenCalled();
     });
   });
+
+  describe('base64 audio input', () => {
+    it('should accept base64-encoded audio string', async () => {
+      const model = new OCITranscriptionModel('ORACLE', {
+        compartmentId: 'test',
+      });
+      // Pass a base64 string instead of Uint8Array
+      const base64Audio = Buffer.from([1, 2, 3, 4]).toString('base64');
+      const result = await model.doGenerate({ audio: base64Audio, mediaType: 'audio/wav' });
+
+      expect(result.text).toBeDefined();
+      expect(mockUploadAudioToObjectStorage).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.any(String),
+        expect.any(String),
+        expect.any(Uint8Array)
+      );
+    });
+  });
+
+  describe('custom endpoint', () => {
+    it('should set endpoint on client when configured', async () => {
+      const model = new OCITranscriptionModel('ORACLE', {
+        compartmentId: 'test',
+        endpoint: 'https://custom.endpoint.com',
+      });
+      const result = await model.doGenerate({ audio: new Uint8Array(100), mediaType: 'audio/wav' });
+      expect(result.text).toBeDefined();
+    });
+  });
+
+  describe('error paths', () => {
+    it('should throw wrapped error when upload fails', async () => {
+      mockUploadAudioToObjectStorage.mockRejectedValueOnce(new Error('Upload network error'));
+
+      const model = new OCITranscriptionModel('ORACLE', {
+        compartmentId: 'test',
+      });
+
+      await expect(
+        model.doGenerate({ audio: new Uint8Array(100), mediaType: 'audio/wav' })
+      ).rejects.toThrow('Failed to upload audio to Object Storage: Upload network error');
+    });
+
+    it('should throw when no transcription tasks found in job', async () => {
+      mockListTranscriptionTasks.mockResolvedValueOnce({
+        transcriptionTaskCollection: { items: [] },
+      });
+
+      const model = new OCITranscriptionModel('ORACLE', {
+        compartmentId: 'test',
+      });
+
+      await expect(
+        model.doGenerate({ audio: new Uint8Array(100), mediaType: 'audio/wav' })
+      ).rejects.toThrow('No transcription tasks found in job');
+    });
+
+    it('should throw wrapped error when getting task details fails', async () => {
+      mockGetTranscriptionTask.mockRejectedValueOnce(new Error('Task API error'));
+
+      const model = new OCITranscriptionModel('ORACLE', {
+        compartmentId: 'test',
+      });
+
+      await expect(
+        model.doGenerate({ audio: new Uint8Array(100), mediaType: 'audio/wav' })
+      ).rejects.toThrow('Failed to get transcription task details: Task API error');
+    });
+
+    it('should use fallback output filename when task has no outputLocation', async () => {
+      mockGetTranscriptionTask.mockResolvedValueOnce({
+        transcriptionTask: {
+          id: 'test-task-id',
+          // No outputLocation — triggers fallback path
+          inputLocation: {
+            objectNames: ['my-audio.wav'],
+          },
+        },
+      });
+
+      const model = new OCITranscriptionModel('ORACLE', {
+        compartmentId: 'test',
+      });
+      const result = await model.doGenerate({ audio: new Uint8Array(100), mediaType: 'audio/wav' });
+
+      // downloadTranscriptionResult should be called with a constructed filename
+      expect(mockDownloadTranscriptionResult).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.any(String),
+        expect.any(String),
+        expect.stringContaining('my-audio.json')
+      );
+      expect(result.text).toBeDefined();
+    });
+
+    it('should throw wrapped error when download result fails', async () => {
+      mockDownloadTranscriptionResult.mockRejectedValueOnce(new Error('Download failed'));
+
+      const model = new OCITranscriptionModel('ORACLE', {
+        compartmentId: 'test',
+      });
+
+      await expect(
+        model.doGenerate({ audio: new Uint8Array(100), mediaType: 'audio/wav' })
+      ).rejects.toThrow('Failed to download transcription result: Download failed');
+    });
+
+    it('should throw when transcription job enters FAILED state', async () => {
+      mockGetTranscriptionJob.mockResolvedValueOnce({
+        transcriptionJob: {
+          lifecycleState: 'FAILED',
+          lifecycleDetails: 'Unsupported audio format',
+        },
+      });
+
+      const model = new OCITranscriptionModel('ORACLE', {
+        compartmentId: 'test',
+      });
+
+      await expect(
+        model.doGenerate({ audio: new Uint8Array(100), mediaType: 'audio/wav' })
+      ).rejects.toThrow('Transcription job failed: Unsupported audio format');
+    });
+
+    it('should throw timeout after max poll attempts', async () => {
+      // Always return IN_PROGRESS — polling should eventually time out
+      mockGetTranscriptionJob.mockResolvedValue({
+        transcriptionJob: {
+          lifecycleState: 'IN_PROGRESS',
+          lifecycleDetails: null,
+        },
+      });
+
+      const model = new OCITranscriptionModel('ORACLE', {
+        compartmentId: 'test',
+      });
+
+      jest.useFakeTimers();
+
+      // Attach .catch() immediately so the rejection is handled
+      // before Node marks it as unhandled during timer advancement
+      const promise = model
+        .doGenerate({ audio: new Uint8Array(100), mediaType: 'audio/wav' })
+        .catch((e: unknown) => e);
+
+      // Advance through all 60 poll intervals (60 × 5000ms)
+      for (let i = 0; i < 60; i++) {
+        await jest.advanceTimersByTimeAsync(5000);
+      }
+
+      const result = await promise;
+      expect(result).toBeInstanceOf(Error);
+      expect((result as Error).message).toContain('Transcription job timed out after 5 minutes');
+
+      jest.useRealTimers();
+    });
+
+    it('should silently ignore cleanup errors after transcription', async () => {
+      mockDeleteFromObjectStorage.mockRejectedValueOnce(new Error('Delete failed'));
+
+      const model = new OCITranscriptionModel('ORACLE', {
+        compartmentId: 'test',
+      });
+
+      // Should succeed despite cleanup failure
+      const result = await model.doGenerate({ audio: new Uint8Array(100), mediaType: 'audio/wav' });
+      expect(result.text).toBeDefined();
+    });
+  });
 });
