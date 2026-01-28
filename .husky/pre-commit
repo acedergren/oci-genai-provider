@@ -1,3 +1,5 @@
+#!/usr/bin/env sh
+
 # Run lint-staged for automated fixes
 npx lint-staged
 
