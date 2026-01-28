@@ -88,3 +88,11 @@ export const REGION_ENDPOINTS: Record<OCIRegion, string> = {
  * API version for OCI OpenAI-compatible endpoints
  */
 export const OCI_OPENAI_API_VERSION = '20231130';
+
+/**
+ * Check if a string is a valid OCI region
+ */
+export function isValidRegion(region: string | undefined): region is OCIRegion {
+  if (!region) return false;
+  return region in REGION_ENDPOINTS;
+}

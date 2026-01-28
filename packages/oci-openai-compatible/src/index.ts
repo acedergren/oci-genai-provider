@@ -44,6 +44,27 @@ export { createOCIAuthHeaders, getCompartmentId } from './auth';
 
 // Re-export factory as named export for default instance
 import { createOCIOpenAI } from './client';
+import type { OCIRegion } from './types';
+import { isValidRegion } from './types';
+
+// Export validation helper
+export { isValidRegion } from './types';
+
+// Lazy getter for default instance - only throws when actually accessed
+let _defaultInstance: ReturnType<typeof createOCIOpenAI> | null = null;
+
+function getDefaultInstance(): ReturnType<typeof createOCIOpenAI> {
+  if (!_defaultInstance) {
+    _defaultInstance = createOCIOpenAI({
+      region: isValidRegion(process.env.OCI_REGION)
+        ? (process.env.OCI_REGION as OCIRegion)
+        : 'us-ashburn-1',
+      apiKey: process.env.OCI_API_KEY,
+      compartmentId: process.env.OCI_COMPARTMENT_ID,
+    });
+  }
+  return _defaultInstance;
+}
 
 /**
  * Default OCI OpenAI-compatible client instance
@@ -51,6 +72,8 @@ import { createOCIOpenAI } from './client';
  * - OCI_REGION (optional, defaults to us-ashburn-1)
  * - OCI_API_KEY (optional, for API key auth)
  * - OCI_COMPARTMENT_ID (required)
+ *
+ * Only throws when accessed, not on import.
  *
  * @example
  * ```typescript
@@ -62,10 +85,10 @@ import { createOCIOpenAI } from './client';
  * });
  * ```
  */
-export const ociOpenAI = createOCIOpenAI({
-  region: (process.env.OCI_REGION as any) || 'us-ashburn-1',
-  apiKey: process.env.OCI_API_KEY,
-  compartmentId: process.env.OCI_COMPARTMENT_ID,
+export const ociOpenAI = new Proxy({} as ReturnType<typeof createOCIOpenAI>, {
+  get(_, prop) {
+    return getDefaultInstance()[prop as keyof ReturnType<typeof createOCIOpenAI>];
+  },
 });
 
 /**
