@@ -9,6 +9,7 @@ import {
   NoSuchModelError,
 } from '@ai-sdk/provider';
 import { OCILanguageModel } from './language-models/oci-language-model';
+import { OCIEmbeddingModel } from './embedding-models/OCIEmbeddingModel';
 import type {
   OCIConfig,
   OCILanguageModelSettings,
@@ -54,14 +55,19 @@ export class OCIGenAIProvider implements ProviderV3 {
   /**
    * Create an embedding model instance.
    *
-   * @throws {NoSuchModelError} Not yet implemented - coming in Plan 2
+   * @param modelId - OCI embedding model identifier (e.g., 'cohere.embed-multilingual-v3.0')
+   * @param settings - Optional model-specific settings that override provider config
+   * @returns Embedding model instance
+   *
+   * @example
+   * ```typescript
+   * const provider = new OCIGenAIProvider({ region: 'eu-frankfurt-1' });
+   * const model = provider.embeddingModel('cohere.embed-multilingual-v3.0');
+   * ```
    */
-  embeddingModel(modelId: string, _settings?: OCIEmbeddingSettings): EmbeddingModelV3 {
-    throw new NoSuchModelError({
-      modelId,
-      modelType: 'embeddingModel',
-      message: 'Embedding models not yet implemented. Coming in Plan 2.',
-    });
+  embeddingModel(modelId: string, settings?: OCIEmbeddingSettings): EmbeddingModelV3 {
+    const mergedConfig: OCIConfig = { ...this.config, ...settings };
+    return new OCIEmbeddingModel(modelId, mergedConfig);
   }
 
   /**
