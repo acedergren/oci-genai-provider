@@ -20,6 +20,7 @@ This provider implements the Vercel AI SDK's `LanguageModelV1` interface, which 
 ## Features
 
 - ✅ **16+ Models** - Grok, Llama, Cohere, Gemini
+- ✅ **Embeddings** - Semantic search, RAG, clustering
 - ✅ **Streaming** - Server-Sent Events (SSE) support
 - ✅ **Tool Calling** - Function calling with AI SDK
 - ✅ **Multiple Auth Methods** - Config file, instance principal, resource principal
@@ -188,6 +189,80 @@ for await (const textPart of result.textStream) {
   process.stdout.write(textPart);
 }
 ```
+
+## Embeddings
+
+Generate text embeddings for semantic search, clustering, and RAG applications:
+
+```typescript
+import { oci } from '@acedergren/oci-genai-provider';
+import { embed, embedMany } from 'ai';
+
+// Single embedding
+const { embedding } = await embed({
+  model: oci.embeddingModel('cohere.embed-multilingual-v3.0'),
+  value: 'Hello world',
+});
+
+// Batch embeddings (up to 96 texts)
+const { embeddings } = await embedMany({
+  model: oci.embeddingModel('cohere.embed-multilingual-v3.0'),
+  values: ['Text 1', 'Text 2', 'Text 3'],
+});
+```
+
+### Available Embedding Models
+
+| Model ID | Dimensions | Max Batch | Best For |
+|----------|-----------|-----------|----------|
+| `cohere.embed-multilingual-v3.0` | 1024 | 96 | Multilingual semantic search |
+| `cohere.embed-english-v3.0` | 1024 | 96 | English semantic search |
+| `cohere.embed-english-light-v3.0` | 384 | 96 | Fast English embeddings |
+
+### Embedding Options
+
+```typescript
+oci.embeddingModel('cohere.embed-multilingual-v3.0', {
+  truncate: 'END',       // 'START' | 'END' | 'NONE'
+  inputType: 'DOCUMENT', // 'QUERY' | 'DOCUMENT'
+  dimensions: 1024,      // 384 | 1024 (model dependent)
+});
+```
+
+### Example: RAG Application
+
+```typescript
+import { oci } from '@acedergren/oci-genai-provider';
+import { embedMany, embed } from 'ai';
+
+// Index documents
+const documents = [
+  'The capital of France is Paris.',
+  'Python is a popular programming language.',
+  'The Pacific Ocean is the largest ocean.',
+];
+
+const { embeddings } = await embedMany({
+  model: oci.embeddingModel('cohere.embed-multilingual-v3.0'),
+  values: documents,
+});
+
+// Search: embed query and find most similar documents
+const query = 'What is the largest ocean?';
+const { embedding: queryEmbedding } = await embed({
+  model: oci.embeddingModel('cohere.embed-multilingual-v3.0'),
+  value: query,
+});
+
+// Calculate similarity and find best match
+const similarities = embeddings.map((docEmb) =>
+  cosineSimilarity(queryEmbedding, docEmb)
+);
+const bestMatchIndex = similarities.indexOf(Math.max(...similarities));
+console.log(`Best match: ${documents[bestMatchIndex]}`);
+```
+
+See [RAG Demo Example](../../examples/rag-demo) for a complete working example.
 
 ## Tool Calling
 
