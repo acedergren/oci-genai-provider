@@ -1,8 +1,13 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, afterEach } from '@jest/globals';
 import { createOCIOpenAI } from '../client';
 import type { OCIOpenAIConfig } from '../types';
 
 describe('createOCIOpenAI', () => {
+  const originalEnv = { ...process.env };
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
+  });
   it('should create OpenAI client with OCI configuration', () => {
     const config: OCIOpenAIConfig = {
       region: 'us-ashburn-1',

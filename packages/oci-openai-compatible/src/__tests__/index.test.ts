@@ -1,8 +1,13 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, afterEach } from '@jest/globals';
 import { createOCIOpenAI, ociOpenAI } from '../index';
 import type { OCIOpenAIConfig, OCIRegion, OCIModelId } from '../index';
 
 describe('Package exports', () => {
+  const originalEnv = { ...process.env };
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
+  });
   it('should export createOCIOpenAI factory function', () => {
     expect(typeof createOCIOpenAI).toBe('function');
   });
