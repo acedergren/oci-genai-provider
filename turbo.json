@@ -4,45 +4,58 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".svelte-kit/**", ".next/**", "build/**"],
+      "outputs": ["dist/**", ".svelte-kit/**", ".next/**", "build/**", "!.next/cache/**"],
+      "inputs": ["src/**", "package.json", "tsconfig.json", "tsup.config.ts", "vite.config.ts", "svelte.config.js"],
       "cache": true
     },
     "test": {
-      "dependsOn": ["build"],
+      // Removed build dependency - tests can run in parallel with build for faster iteration
+      "dependsOn": [],
       "cache": true,
-      "outputs": ["coverage/**"]
+      "outputs": ["coverage/**"],
+      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "vitest.config.ts", "package.json"]
     },
     "test:coverage": {
-      "dependsOn": ["build"],
+      // Removed build dependency - tests can run in parallel with build
+      "dependsOn": [],
       "cache": true,
-      "outputs": ["coverage/**"]
+      "outputs": ["coverage/**"],
+      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "vitest.config.ts", "package.json"]
     },
     "test:watch": {
       "cache": false,
       "persistent": true
     },
     "lint": {
-      "dependsOn": ["^build"],
+      // Removed ^build dependency - linting doesn't need built artifacts
+      "dependsOn": [],
       "cache": true,
-      "outputs": []
+      "outputs": [],
+      "inputs": ["src/**", ".eslintrc.js", ".eslintrc.json", ".eslintignore", "package.json"]
     },
     "lint:fix": {
-      "dependsOn": ["^build"],
+      // Removed ^build dependency - linting doesn't need built artifacts
+      "dependsOn": [],
       "cache": false,
-      "outputs": []
+      "outputs": [],
+      "inputs": ["src/**", ".eslintrc.js", ".eslintrc.json", ".eslintignore", "package.json"]
     },
     "type-check": {
+      // Keep ^build dependency - type-checking needs types from dependencies
       "dependsOn": ["^build"],
       "cache": true,
-      "outputs": []
+      "outputs": [],
+      "inputs": ["src/**", "tsconfig.json", "package.json"]
     },
     "format": {
       "cache": false,
-      "outputs": []
+      "outputs": [],
+      "inputs": ["src/**", ".prettierrc", ".prettierignore", "package.json"]
     },
     "format:check": {
       "cache": true,
-      "outputs": []
+      "outputs": [],
+      "inputs": ["src/**", ".prettierrc", ".prettierignore", "package.json"]
     },
     "dev": {
       "cache": false,
@@ -52,9 +65,12 @@
   "globalDependencies": [
     ".env",
     "tsconfig.json",
-    "turbo.json"
+    "turbo.json",
+    "package.json",
+    ".npmrc"
   ],
   "globalEnv": [
+    "CI",
     "NODE_ENV",
     "OCI_COMPARTMENT_ID",
     "OCI_REGION",
