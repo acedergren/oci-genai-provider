@@ -85,6 +85,7 @@ pnpm-lock.yaml
 # Backup files
 *.backup
 *.bak
+*.bak2
 *.old
 
 # Generated documentation
