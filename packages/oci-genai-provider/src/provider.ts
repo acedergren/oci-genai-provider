@@ -10,6 +10,7 @@ import {
 } from '@ai-sdk/provider';
 import { OCILanguageModel } from './language-models/oci-language-model';
 import { OCIEmbeddingModel } from './embedding-models/oci-embedding-model';
+import { OCIRerankingModel } from './reranking-models/OCIRerankingModel';
 import type {
   OCIConfig,
   OCILanguageModelSettings,
@@ -112,13 +113,18 @@ export class OCIGenAIProvider implements ProviderV3 {
   /**
    * Create a reranking model instance.
    *
-   * @throws {NoSuchModelError} Not yet implemented - coming in Plan 5
+   * @param modelId - OCI reranking model identifier (e.g., 'cohere.rerank-v3.5')
+   * @param settings - Optional model-specific settings that override provider config
+   * @returns Reranking model instance
+   *
+   * @example
+   * ```typescript
+   * const provider = new OCIGenAIProvider({ region: 'eu-frankfurt-1' });
+   * const model = provider.rerankingModel('cohere.rerank-v3.5');
+   * ```
    */
-  rerankingModel(modelId: string, _settings?: OCIRerankingSettings): RerankingModelV3 {
-    throw new NoSuchModelError({
-      modelId,
-      modelType: 'rerankingModel',
-      message: 'Reranking models not yet implemented. Coming in Plan 5.',
-    });
+  rerankingModel(modelId: string, settings?: OCIRerankingSettings): RerankingModelV3 {
+    const mergedConfig: OCIConfig = { ...this.config, ...settings };
+    return new OCIRerankingModel(modelId, mergedConfig);
   }
 }

@@ -8,6 +8,8 @@ module.exports = {
     '!src/**/*.test.ts',
     '!src/**/__tests__/**',
     '!src/**/__mocks__/**',
+    '!src/index.ts', // Barrel exports don't need coverage
+    '!src/types.ts', // Type definitions don't need coverage
   ],
   coverageThreshold: {
     global: {
@@ -17,15 +19,31 @@ module.exports = {
       statements: 80,
     },
   },
+  coverageReporters: [
+    'text',
+    'text-summary',
+    'html',
+    'lcov',
+    'json',
+  ],
+  coverageDirectory: '<rootDir>/coverage',
   moduleNameMapper: {
-    '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^(\.{1,2}/.*)\.js$': '$1',
   },
   transform: {
-    '^.+\\.tsx?$': [
+    '^.+\.tsx?$': [
       'ts-jest',
       {
         useESM: false,
       },
     ],
   },
+  // Fail fast on first test failure in CI
+  bail: process.env.CI ? 1 : 0,
+  // Show individual test results
+  verbose: true,
+  // Detect open handles that prevent Jest from exiting
+  detectOpenHandles: true,
+  // Force exit after tests complete (for OCI SDK cleanup)
+  forceExit: true,
 };

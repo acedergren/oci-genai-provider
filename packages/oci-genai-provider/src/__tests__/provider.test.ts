@@ -303,24 +303,31 @@ describe('OCIGenAIProvider (ProviderV3)', () => {
   });
 
   describe('rerankingModel()', () => {
-    it('should throw NoSuchModelError - not yet implemented', () => {
-      const provider = new OCIGenAIProvider();
+    it('should create reranking model', () => {
+      const provider = new OCIGenAIProvider({ region: 'eu-frankfurt-1' });
+      const model = provider.rerankingModel('cohere.rerank-v3.5');
 
-      expect(() => provider.rerankingModel('cohere.rerank-multilingual-v3.0')).toThrow(
-        NoSuchModelError
-      );
+      expect(model).toBeDefined();
+      expect(model.provider).toBe('oci-genai');
+      expect(model.modelId).toBe('cohere.rerank-v3.5');
     });
 
-    it('should include helpful message in error', () => {
+    it('should merge config with reranking-specific settings', () => {
+      const provider = new OCIGenAIProvider({ region: 'eu-frankfurt-1' });
+      const model = provider.rerankingModel('cohere.rerank-v3.5', {
+        topN: 5,
+        returnDocuments: true,
+      });
+
+      expect(model).toBeDefined();
+    });
+
+    it('should throw for invalid reranking model ID', () => {
       const provider = new OCIGenAIProvider();
 
-      try {
-        provider.rerankingModel('cohere.rerank-multilingual-v3.0');
-        fail('Expected NoSuchModelError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(NoSuchModelError);
-        expect((error as NoSuchModelError).message).toContain('Plan 5');
-      }
+      expect(() => {
+        provider.rerankingModel('invalid-model');
+      }).toThrow('Invalid reranking model ID');
     });
   });
 });
