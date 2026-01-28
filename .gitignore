@@ -70,6 +70,7 @@ pnpm-lock.yaml
 .claude/debug/
 .claude/file-history/
 .claude/plans/
+.claude/credentials.md     # Contains infrastructure references (OCIDs, fingerprints)
 
 # SvelteKit
 .svelte-kit/
