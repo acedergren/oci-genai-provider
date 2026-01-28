@@ -83,7 +83,7 @@ export type {
 // Language Model Exports
 // ============================================================================
 
-export { OCILanguageModel } from './language-models/oci-language-model';
+export { OCILanguageModel } from './language-models/OCILanguageModel';
 export {
   isValidModelId,
   getModelMetadata,
@@ -95,7 +95,7 @@ export {
 // Embedding Model Exports
 // ============================================================================
 
-export { OCIEmbeddingModel } from './embedding-models/oci-embedding-model';
+export { OCIEmbeddingModel } from './embedding-models/OCIEmbeddingModel';
 export {
   getEmbeddingModelMetadata,
   isValidEmbeddingModelId,

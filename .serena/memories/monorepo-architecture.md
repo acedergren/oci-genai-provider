@@ -6,7 +6,9 @@ This is a **pnpm workspace monorepo** with three packages implementing an OCI Ge
 
 ## Package Structure
 
-### 1. @acedergren/oci-genai-provider (Core Package)
+### Packages (packages/)
+
+#### 1. @acedergren/oci-genai-provider (Core Package)
 
 **Location**: `packages/oci-genai-provider/`
 **Purpose**: Standalone core provider that works with any Vercel AI SDK project
@@ -28,7 +30,7 @@ This is a **pnpm workspace monorepo** with three packages implementing an OCI Ge
 - tsup for CJS + ESM bundles
 - Outputs: dist/index.js (ESM), dist/index.cjs (CJS), dist/index.d.ts
 
-### 2. @acedergren/opencode-oci-genai (OpenCode Integration)
+#### 2. @acedergren/opencode-oci-genai (OpenCode Integration)
 
 **Location**: `packages/opencode-integration/`
 **Purpose**: OpenCode-specific wrapper and utilities
@@ -47,7 +49,7 @@ This is a **pnpm workspace monorepo** with three packages implementing an OCI Ge
 
 - `workspace:*` → @acedergren/oci-genai-provider
 
-### 3. @acedergren/test-utils (Test Infrastructure)
+#### 3. @acedergren/test-utils (Test Infrastructure)
 
 **Location**: `packages/test-utils/`
 **Purpose**: Shared test mocks and fixtures
@@ -63,12 +65,62 @@ This is a **pnpm workspace monorepo** with three packages implementing an OCI Ge
   - `TEST_MODEL_IDS` - Model IDs for each family (grok, llama, cohere, gemini)
   - `TEST_OCIDS` - Common OCI resource identifiers
 
+### Examples (examples/)
+
+Demonstration applications showcasing different use cases:
+
+#### 1. chatbot-demo (SvelteKit)
+**Location**: `examples/chatbot-demo/`
+**Tech**: SvelteKit + Vercel AI SDK
+**Purpose**: Interactive chatbot with streaming responses
+
+#### 2. nextjs-chatbot (Next.js)
+**Location**: `examples/nextjs-chatbot/`
+**Tech**: Next.js App Router + Vercel AI SDK
+**Purpose**: Next.js-based chatbot implementation
+
+#### 3. cli-tool (Node.js)
+**Location**: `examples/cli-tool/`
+**Tech**: Node.js terminal REPL
+**Purpose**: Command-line chat interface
+
+#### 4. rag-demo (Semantic Search)
+**Location**: `examples/rag-demo/`
+**Tech**: Document embeddings + semantic retrieval
+**Purpose**: RAG (Retrieval-Augmented Generation) demo
+
+#### 5. rag-reranking-demo
+**Location**: `examples/rag-reranking-demo/`
+**Tech**: RAG with reranking
+**Purpose**: Enhanced RAG with result reranking
+
+#### 6. stt-demo (Speech-to-Text)
+**Location**: `examples/stt-demo/`
+**Tech**: OCI Speech-to-Text API
+**Purpose**: Audio transcription demo
+
+### Configuration & Documentation (.claude/)
+
+**Location**: `.claude/`
+**Purpose**: AI agent instructions and project documentation
+
+**Key Files**:
+- `oci-setup.md` - OCI configuration guide
+- `ci-cd.md` - CI/CD and deployment
+- `security.md` - Security best practices
+- `code-standards.md` - Naming conventions and patterns
+- `credentials.md` - Credentials guide (local only, not in git)
+- `dependency-compatibility-matrix.md` - Dependency version tracking
+
 ## Dependency Graph
 
 ```
 opencode-integration (wrapper)
     └─ workspace:* → oci-genai-provider (core)
                          └─ devDependencies → test-utils (mocks)
+
+examples/* (demos)
+    └─ workspace:* → oci-genai-provider (core)
 ```
 
 ## Why Monorepo?
@@ -94,9 +146,20 @@ pnpm --filter @acedergren/oci-genai-provider test
 pnpm --filter @acedergren/oci-genai-provider build
 ```
 
+## Publishing
+
+- **Registry**: GitHub Packages (`@acedergren` scope)
+- **Published Packages**: 
+  - `@acedergren/oci-genai-provider` (core provider)
+  - `@acedergren/opencode-oci-genai` (OpenCode integration)
+- **Private Packages**:
+  - `@acedergren/test-utils` (internal test utilities)
+
 ## Key Files
 
 - `pnpm-workspace.yaml` - Workspace definition
 - `package.json` (root) - Workspace scripts
 - `packages/*/package.json` - Package definitions
 - `packages/*/tsup.config.ts` - Build configurations
+- `.claude/` - AI agent documentation and guides
+- `CLAUDE.md` - Main project instructions (root)
