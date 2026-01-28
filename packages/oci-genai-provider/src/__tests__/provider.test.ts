@@ -1,6 +1,6 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { NoSuchModelError } from '@ai-sdk/provider';
-import { createOCI, createOCILegacy, oci } from '../index';
+import { createOCI, oci } from '../index';
 import { OCIGenAIProvider } from '../provider';
 
 // Mock OCI SDK
@@ -144,33 +144,6 @@ describe('createOCI Provider Factory (ProviderV3)', () => {
       expect(model).toBeDefined();
       expect(model.modelId).toBe('cohere.command-r');
     });
-  });
-});
-
-describe('createOCILegacy (Backward Compatibility)', () => {
-  const originalEnv = process.env;
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    process.env = { ...originalEnv };
-    process.env.OCI_COMPARTMENT_ID = 'ocid1.compartment.oc1..test';
-  });
-
-  afterEach(() => {
-    process.env = originalEnv;
-  });
-
-  it('should create legacy provider with model() method', () => {
-    const provider = createOCILegacy();
-    expect(provider.provider).toBe('oci-genai');
-    expect(typeof provider.model).toBe('function');
-  });
-
-  it('should create models via model() method', () => {
-    const provider = createOCILegacy();
-    const model = provider.model('cohere.command-r-plus');
-    expect(model.modelId).toBe('cohere.command-r-plus');
-    expect(model.provider).toBe('oci-genai');
   });
 });
 

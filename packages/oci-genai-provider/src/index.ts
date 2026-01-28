@@ -20,7 +20,6 @@
  * ```
  */
 
-import type { LanguageModelV3 } from '@ai-sdk/provider';
 import { OCIGenAIProvider } from './provider';
 import type { OCIConfig } from './types';
 
@@ -63,31 +62,6 @@ export function createOCI(config: OCIConfig = {}): OCIGenAIProvider {
  * ```
  */
 export const oci = createOCI();
-
-// ============================================================================
-// Backward Compatibility - Legacy Interface
-// ============================================================================
-
-/**
- * Legacy provider interface for backward compatibility.
- * @deprecated Use OCIGenAIProvider class instead
- */
-export interface OCIProvider {
-  readonly provider: 'oci-genai';
-  model: (modelId: string) => LanguageModelV3;
-}
-
-/**
- * Create legacy-style provider for backward compatibility.
- * @deprecated Use createOCI() which returns OCIGenAIProvider
- */
-export function createOCILegacy(config: OCIConfig = {}): OCIProvider {
-  const provider = new OCIGenAIProvider(config);
-  return {
-    provider: 'oci-genai',
-    model: (modelId: string) => provider.languageModel(modelId),
-  };
-}
 
 // ============================================================================
 // Type Exports
