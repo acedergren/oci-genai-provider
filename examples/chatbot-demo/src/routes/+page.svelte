@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { useChat } from '@ai-sdk/svelte';
+  import { browser } from '$app/environment';
+  import { Chat } from '@ai-sdk/svelte';
+  import { DefaultChatTransport } from 'ai';
+  import type { UIMessage } from 'ai';
   import ChatContainer from '$lib/components/ChatContainer.svelte';
   import ChatInput from '$lib/components/ChatInput.svelte';
   import Select from '$lib/components/Select.svelte';
@@ -12,14 +15,32 @@
   ];
 
   let selectedModel = $state('cohere.command-r-plus');
+  let inputValue = $state('');
+  let chat = $state<Chat | null>(null);
 
-  const { messages, input, handleSubmit, isLoading } = useChat({
-    api: '/api/chat',
+  // Initialize chat only on client side
+  $effect(() => {
+    if (browser && !chat) {
+      chat = new Chat({
+        transport: new DefaultChatTransport({
+          api: '/api/chat',
+        }),
+      });
+    }
   });
 
-  // Wrap handleSubmit to include current model in request body
-  function onSubmit() {
-    handleSubmit(undefined, {
+  // Computed properties for reactive access
+  const messages = $derived<UIMessage[]>(chat?.messages ?? []);
+  const isLoading = $derived(chat?.status === 'streaming' || chat?.status === 'submitted');
+
+  // Submit handler that includes the current model
+  async function onSubmit() {
+    if (!chat) return;
+    const text = inputValue.trim();
+    if (!text) return;
+
+    inputValue = '';
+    await chat.sendMessage({ text }, {
       body: {
         model: selectedModel,
       },
@@ -46,15 +67,15 @@
 
   <!-- Chat Container -->
   <main class="flex-1 overflow-hidden max-w-4xl mx-auto w-full">
-    <ChatContainer messages={$messages} isLoading={$isLoading} />
+    <ChatContainer {messages} {isLoading} />
   </main>
 
   <!-- Input Area -->
   <footer class="p-4 max-w-4xl mx-auto w-full">
     <ChatInput
-      bind:value={$input}
-      onSubmit={onSubmit}
-      disabled={$isLoading}
+      bind:value={inputValue}
+      {onSubmit}
+      disabled={isLoading}
     />
   </footer>
 </div>

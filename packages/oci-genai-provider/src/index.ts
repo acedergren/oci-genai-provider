@@ -1,6 +1,6 @@
 import type { LanguageModelV3 } from '@ai-sdk/provider';
 import type { OCIConfig, OCIProvider } from './types';
-import { OCILanguageModel } from './models/oci-language-model';
+import { OCILanguageModel } from './language-models/oci-language-model';
 
 /**
  * Create OCI GenAI provider instance
@@ -31,7 +31,7 @@ export {
   getAllModels,
   getModelsByFamily,
   isValidModelId,
-} from './models/registry';
+} from './language-models/registry';
 
 // Re-export error types
 export {
@@ -42,13 +42,13 @@ export {
   ModelNotFoundError,
   isRetryableError,
   handleOCIError,
-} from './errors';
+} from './shared/errors';
 export type {
   OCIGenAIErrorOptions,
   NetworkErrorOptions,
   RateLimitErrorOptions,
   AuthenticationErrorOptions,
-} from './errors';
+} from './shared/errors';
 
 // Re-export utility functions
 export {
@@ -56,5 +56,5 @@ export {
   withTimeout,
   TimeoutError,
   isRetryableError as isRetryableNetworkError,
-} from './utils';
-export type { RetryOptions } from './utils';
+} from './shared/utils';
+export type { RetryOptions } from './shared/utils';

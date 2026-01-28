@@ -2,7 +2,7 @@
   import { cn } from '$lib/utils/cn';
 
   interface Props {
-    role: 'user' | 'assistant';
+    role: 'user' | 'assistant' | 'system';
     content: string;
     isStreaming?: boolean;
   }

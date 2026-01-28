@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { OCIGenAIError, isRetryableError, handleOCIError } from '../errors';
+import { OCIGenAIError, isRetryableError, handleOCIError } from '../shared/errors';
 
 describe('Error Handling', () => {
   describe('OCIGenAIError', () => {

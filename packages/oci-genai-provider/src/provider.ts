@@ -8,7 +8,7 @@ import {
   RerankingModelV3,
   NoSuchModelError,
 } from '@ai-sdk/provider';
-import { OCILanguageModel } from './models/oci-language-model';
+import { OCILanguageModel } from './language-models/oci-language-model';
 import type {
   OCIConfig,
   OCILanguageModelSettings,

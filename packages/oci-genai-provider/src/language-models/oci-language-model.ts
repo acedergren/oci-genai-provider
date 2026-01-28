@@ -9,11 +9,11 @@ import { GenerativeAiInferenceClient } from 'oci-generativeaiinference';
 import { Region } from 'oci-common';
 import type { OCIConfig, RequestOptions } from '../types';
 import { isValidModelId } from './registry';
-import { convertToOCIMessages } from '../converters/messages';
-import { mapFinishReason, parseSSEStream } from '../streaming/sse-parser';
+import { convertToOCIMessages } from './converters/messages';
+import { mapFinishReason, parseSSEStream } from '../shared/streaming/sse-parser';
 import { createAuthProvider, getRegion, getCompartmentId } from '../auth/index.js';
-import { handleOCIError } from '../errors/index.js';
-import { withRetry, withTimeout, isRetryableError } from '../utils/index.js';
+import { handleOCIError } from '../shared/errors/index.js';
+import { withRetry, withTimeout, isRetryableError } from '../shared/utils/index.js';
 
 /**
  * Default request options for retry and timeout behavior.
