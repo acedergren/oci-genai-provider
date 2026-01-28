@@ -1,5 +1,7 @@
 # Backend Requirements: RAG Demo
 
+> 📌 **See Also**: [Common Backend Questions](../BACKEND_QUESTIONS.md) — Shared questions across all demos to avoid duplication
+
 ## Context
 
 A **Retrieval-Augmented Generation (RAG) demo** that retrieves relevant documents from a collection based on semantic similarity. Users provide a query, the system finds the most relevant documents, and displays similarity scores. Simple, straightforward document retrieval for demonstration purposes.

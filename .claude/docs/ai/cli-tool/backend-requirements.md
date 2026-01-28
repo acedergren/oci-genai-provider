@@ -1,5 +1,7 @@
 # Backend Requirements: CLI Tool
 
+> 📌 **See Also**: [Common Backend Questions](../BACKEND_QUESTIONS.md) — Shared questions across all demos to avoid duplication
+
 ## Context
 
 A **command-line chat interface** for direct, programmatic access to OCI GenAI models. Users can interact in three modes:

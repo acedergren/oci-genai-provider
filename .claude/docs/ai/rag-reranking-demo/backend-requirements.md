@@ -1,5 +1,7 @@
 # Backend Requirements: RAG + Reranking Demo
 
+> 📌 **See Also**: [Common Backend Questions](../BACKEND_QUESTIONS.md) — Shared questions across all demos to avoid duplication
+
 ## Context
 
 An **advanced RAG demo** combining semantic similarity search with semantic reranking. Two-stage pipeline:

@@ -1,5 +1,7 @@
 # Backend Requirements: Speech-to-Text Demo
 
+> 📌 **See Also**: [Common Backend Questions](../BACKEND_QUESTIONS.md) — Shared questions across all demos to avoid duplication
+
 ## Context
 
 A **speech transcription demo** that converts audio files to text. Supports multiple audio formats and models, with optional language specification and custom vocabulary support. Designed to showcase OCI Speech service capabilities.

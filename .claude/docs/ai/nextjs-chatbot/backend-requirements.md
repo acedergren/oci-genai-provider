@@ -1,5 +1,7 @@
 # Backend Requirements: Next.js Chatbot
 
+> 📌 **See Also**: [Common Backend Questions](../BACKEND_QUESTIONS.md) — Shared questions across all demos to avoid duplication
+
 ## Context
 
 A **minimal Next.js chatbot** that mirrors the SvelteKit demo but using React hooks and Next.js App Router. Focus is on simplicity and demonstrating OpenCode integration with a modern React stack. Stateless, no persistence, no user accounts.

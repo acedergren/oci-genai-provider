@@ -1,5 +1,7 @@
 # Backend Requirements: Chat Demo
 
+> 📌 **See Also**: [Common Backend Questions](../BACKEND_QUESTIONS.md) — Shared questions across all demos to avoid duplication
+
 ## Context
 
 Building a **simple, stateless OCI GenAI chatbot demo** for OpenCode. Users can select from available AI models and stream chat responses in real-time. No persistence, no user accounts—just a clean UI showcasing OCI GenAI capabilities.
