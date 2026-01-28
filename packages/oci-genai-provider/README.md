@@ -2,9 +2,11 @@
 
 Oracle Cloud Infrastructure (OCI) Generative AI provider for the [Vercel AI SDK](https://sdk.vercel.ai/docs).
 
+Complete ProviderV3 implementation supporting language models, embeddings, speech synthesis, transcription, and reranking.
+
 ## Works with Any Vercel AI SDK Application
 
-This provider implements the Vercel AI SDK's `LanguageModelV1` interface, which means it works with:
+This provider implements the Vercel AI SDK's `ProviderV3` interface, which means it works with:
 
 - ✅ **Next.js** - App Router and Pages Router
 - ✅ **Remix** - Streaming and non-streaming
@@ -19,17 +21,15 @@ This provider implements the Vercel AI SDK's `LanguageModelV1` interface, which 
 
 ## Features
 
-- ✅ **16+ Models** - Grok, Llama, Cohere, Gemini
-- ✅ **Embeddings** - Semantic search, RAG, clustering
-- ✅ **Streaming** - Server-Sent Events (SSE) support
-- ✅ **Tool Calling** - Function calling with AI SDK
-- ✅ **Multiple Auth Methods** - Config file, instance principal, resource principal
-- ✅ **Regional Support** - Frankfurt, Stockholm, Ashburn, and more
-- ✅ **Type Safe** - Full TypeScript support
-- ✅ **Built-in Retry** - Automatic retry with exponential backoff
-- ✅ **Timeout Control** - Configurable request timeouts
-- ✅ **Rich Errors** - Specific error types for different failures
-
+- **5+ Model Types** - Language models, embeddings, speech, transcription, reranking
+- **16+ Language Models** - Cohere Command, Meta Llama, Anthropic Claude, Mistral, Grok
+- **3 Embedding Models** - Multilingual and English semantic search
+- **Speech Models (TTS)** - OCI Speech Synthesis in Phoenix region
+- **Transcription Models (STT)** - OCI Speech to Text services
+- **Reranking Models** - Cohere Rerank for search optimization
+- **Streaming Support** - Full streaming for language models
+- **Type Safety** - Complete TypeScript definitions
+- **Auth Flexibility** - Config file, instance principal, resource principal
 ## Why Use OCI GenAI?
 
 | Feature                | OCI GenAI               | Other Providers |
@@ -52,6 +52,12 @@ Or with pnpm:
 pnpm add @acedergren/oci-genai-provider ai
 ```
 
+Or with yarn:
+
+```bash
+yarn add @acedergren/oci-genai-provider ai
+```
+
 ## Quick Start
 
 ```typescript
@@ -59,140 +65,113 @@ import { oci } from '@acedergren/oci-genai-provider';
 import { generateText } from 'ai';
 
 const result = await generateText({
-  model: oci('cohere.command-r-plus', {
-    region: 'eu-frankfurt-1',
-    compartmentId: process.env.OCI_COMPARTMENT_ID,
-  }),
+  model: oci.languageModel('cohere.command-r-plus'),
   prompt: 'Explain quantum computing in simple terms',
 });
 
 console.log(result.text);
 ```
 
-## Available Models
-
-### Grok (xAI)
-
-- `xai.grok-4-maverick` - Most capable, 131K context
-- `xai.grok-4-scout` - Fast, efficient
-- `xai.grok-3` - Previous generation
-- `xai.grok-3-mini` - Lightweight
-
-### Llama (Meta)
-
-- `meta.llama-3.3-70b-instruct` - Latest, 128K context
-- `meta.llama-3.2-vision-90b-instruct` - Vision support
-- `meta.llama-3.1-405b-instruct` - Largest model
-
-### Cohere
-
-- `cohere.command-r-plus` - Best for RAG
-- `cohere.command-a` - Agentic workflows
-- `cohere.command-a-reasoning` - Chain-of-thought
-- `cohere.command-a-vision` - Vision support
-
-### Gemini (Google)
-
-- `google.gemini-2.5-pro` - Most capable, 1M context
-- `google.gemini-2.5-flash` - Fast, efficient
-- `google.gemini-2.5-flash-lite` - Lightweight
-
 ## Authentication
 
-The provider uses lazy initialization for OCI authentication. The auth provider is created on the first API call using your configuration:
+### Option 1: OCI Config File (Recommended)
+
+Create `~/.oci/config`:
+
+```ini
+[DEFAULT]
+user=ocid1.user.oc1..aaa...
+fingerprint=12:34:56:78:...
+key_file=~/.oci/oci_api_key.pem
+tenancy=ocid1.tenancy.oc1..aaa...
+region=us-phoenix-1
+```
+
+Set environment variables:
+
+```bash
+export OCI_CONFIG_PROFILE=DEFAULT
+export OCI_COMPARTMENT_ID=ocid1.compartment.oc1..aaa...
+```
+
+### Option 2: Explicit Configuration
 
 ```typescript
 import { createOCI } from '@acedergren/oci-genai-provider';
 
 const provider = createOCI({
-  authMethod: 'config_file', // or 'instance_principal', 'resource_principal'
-  configFilePath: '~/.oci/config',
-  compartmentId: process.env.OCI_COMPARTMENT_ID,
-  region: 'us-ashburn-1',
+  region: 'us-phoenix-1',
+  compartmentId: 'ocid1.compartment.oc1..aaa...',
+  profile: 'DEFAULT',
 });
 
-const model = provider.model('cohere.command-r-plus');
-// Auth provider created on first API call
-const result = await generateText({ model, prompt: 'Hello!' });
+const model = provider.languageModel('cohere.command-r-plus');
 ```
 
-**Authentication Methods:**
-
-- `config_file` (default): Uses `~/.oci/config` file
-- `instance_principal`: For OCI compute instances
-- `resource_principal`: For OCI Functions
-
-**Required Configuration:**
-
-- `compartmentId`: Always required (from config or `OCI_COMPARTMENT_ID` env var)
-- `region`: Optional, defaults to `eu-frankfurt-1`
-
-### Config File (Default)
-
-Uses `~/.oci/config`:
+### Option 3: Instance Principal (OCI Compute)
 
 ```typescript
-import { oci } from '@acedergren/oci-genai-provider';
-
-const model = oci('cohere.command-r-plus', {
-  region: 'eu-frankfurt-1',
-  compartmentId: process.env.OCI_COMPARTMENT_ID,
-});
-```
-
-### Custom Profile
-
-```typescript
-const model = oci('xai.grok-4-maverick', {
-  region: 'eu-frankfurt-1',
-  profile: 'FRANKFURT',
-  compartmentId: process.env.OCI_COMPARTMENT_ID,
-});
-```
-
-### Instance Principal
-
-For OCI compute instances:
-
-```typescript
-const model = oci('meta.llama-3.3-70b-instruct', {
-  region: 'eu-frankfurt-1',
+const provider = createOCI({
   auth: 'instance_principal',
-  compartmentId: process.env.OCI_COMPARTMENT_ID,
+  region: 'us-phoenix-1',
 });
 ```
 
-### Resource Principal
+See [Configuration Guide](./docs/configuration.md) for complete authentication documentation.
 
-For OCI Functions:
+## Language Models
 
-```typescript
-const model = oci('google.gemini-2.5-flash', {
-  region: 'eu-frankfurt-1',
-  auth: 'resource_principal',
-  compartmentId: process.env.OCI_COMPARTMENT_ID,
-});
-```
+Generate text using powerful language models from multiple providers.
 
-## Streaming
+### Available Models
+
+| Model ID | Family | Context | Best For |
+|----------|--------|---------|----------|
+| `cohere.command-r-plus` | Cohere | 128K | Long context, RAG |
+| `cohere.command-r` | Cohere | 128K | General purpose |
+| `meta.llama-3.3-70b-instruct` | Meta | 8K | Instruction following |
+| `meta.llama-3.1-405b-instruct` | Meta | 128K | Most capable |
+| `anthropic.claude-3-5-sonnet-v2` | Anthropic | 200K | Analysis, coding |
+| `mistral.mistral-large-2` | Mistral | 128K | Multilingual |
+| `xai.grok-4-maverick` | xAI | 131K | Most capable |
+
+[See full model list in API Reference](./docs/api-reference.md)
+
+### Usage
 
 ```typescript
 import { oci } from '@acedergren/oci-genai-provider';
 import { streamText } from 'ai';
 
 const result = streamText({
-  model: oci('cohere.command-r-plus'),
-  prompt: 'Write a haiku about TypeScript',
+  model: oci.languageModel('cohere.command-r-plus'),
+  messages: [
+    { role: 'user', content: 'Write a poem about clouds' }
+  ],
+  temperature: 0.7,
+  maxTokens: 500,
 });
 
-for await (const textPart of result.textStream) {
-  process.stdout.write(textPart);
+for await (const chunk of result.textStream) {
+  process.stdout.write(chunk);
 }
 ```
 
+See [Language Models Documentation](./docs/language-models.md) for complete reference.
+
 ## Embeddings
 
-Generate text embeddings for semantic search, clustering, and RAG applications:
+Generate text embeddings for semantic search, clustering, and RAG applications.
+
+### Available Embedding Models
+
+| Model ID | Dimensions | Max Batch | Use Case |
+|----------|-----------|-----------|----------|
+| `cohere.embed-multilingual-v3.0` | 1024 | 96 | Multilingual semantic search |
+| `cohere.embed-english-v3.0` | 1024 | 96 | English semantic search |
+| `cohere.embed-english-light-v3.0` | 384 | 96 | Fast English embeddings |
+
+### Usage
 
 ```typescript
 import { oci } from '@acedergren/oci-genai-provider';
@@ -211,110 +190,99 @@ const { embeddings } = await embedMany({
 });
 ```
 
-### Available Embedding Models
+See [Embeddings Documentation](./docs/embeddings.md) for complete reference.
 
-| Model ID | Dimensions | Max Batch | Best For |
-|----------|-----------|-----------|----------|
-| `cohere.embed-multilingual-v3.0` | 1024 | 96 | Multilingual semantic search |
-| `cohere.embed-english-v3.0` | 1024 | 96 | English semantic search |
-| `cohere.embed-english-light-v3.0` | 384 | 96 | Fast English embeddings |
+## Speech Models (TTS)
 
-### Embedding Options
+Generate speech from text using OCI Speech services.
 
-```typescript
-oci.embeddingModel('cohere.embed-multilingual-v3.0', {
-  truncate: 'END',       // 'START' | 'END' | 'NONE'
-  inputType: 'DOCUMENT', // 'QUERY' | 'DOCUMENT'
-  dimensions: 1024,      // 384 | 1024 (model dependent)
-});
-```
-
-### Example: RAG Application
+### Usage
 
 ```typescript
 import { oci } from '@acedergren/oci-genai-provider';
-import { embedMany, embed } from 'ai';
+import { generateSpeech } from 'ai';
 
-// Index documents
-const documents = [
-  'The capital of France is Paris.',
-  'Python is a popular programming language.',
-  'The Pacific Ocean is the largest ocean.',
-];
-
-const { embeddings } = await embedMany({
-  model: oci.embeddingModel('cohere.embed-multilingual-v3.0'),
-  values: documents,
+const result = await generateSpeech({
+  model: oci.speechModel('oci-tts-standard', {
+    voice: 'en-US-Standard-A',
+    region: 'us-phoenix-1', // Speech only in Phoenix
+  }),
+  text: 'Hello, this is a test.',
 });
 
-// Search: embed query and find most similar documents
-const query = 'What is the largest ocean?';
-const { embedding: queryEmbedding } = await embed({
-  model: oci.embeddingModel('cohere.embed-multilingual-v3.0'),
-  value: query,
-});
-
-// Calculate similarity and find best match
-const similarities = embeddings.map((docEmb) =>
-  cosineSimilarity(queryEmbedding, docEmb)
-);
-const bestMatchIndex = similarities.indexOf(Math.max(...similarities));
-console.log(`Best match: ${documents[bestMatchIndex]}`);
+// result.audio is a Buffer containing MP3 audio
 ```
 
-See [RAG Demo Example](../../examples/rag-demo) for a complete working example.
+**Note:** Speech services are only available in the `us-phoenix-1` region.
 
-## Tool Calling
+See [Speech Models Documentation](./docs/speech.md) for complete reference.
+
+## Transcription Models (STT)
+
+Convert speech to text using OCI Speech to Text services.
+
+### Usage
 
 ```typescript
 import { oci } from '@acedergren/oci-genai-provider';
-import { generateText, tool } from 'ai';
-import { z } from 'zod';
+import { transcribe } from 'ai';
+import { readFileSync } from 'fs';
 
-const result = await generateText({
-  model: oci('cohere.command-a'),
-  prompt: 'What is the weather in San Francisco?',
-  tools: {
-    getWeather: tool({
-      description: 'Get the weather in a location',
-      parameters: z.object({
-        location: z.string().describe('The location to get the weather for'),
-      }),
-      execute: async ({ location }) => ({
-        location,
-        temperature: 72,
-        condition: 'Sunny',
-      }),
-    }),
-  },
+const audioBuffer = readFileSync('./audio.mp3');
+
+const result = await transcribe({
+  model: oci.transcriptionModel('oci-stt-standard', {
+    language: 'en',
+    region: 'us-phoenix-1',
+  }),
+  audio: audioBuffer,
 });
 
 console.log(result.text);
-console.log(result.toolCalls);
 ```
 
-## Configuration
+**Note:** Transcription services are only available in the `us-phoenix-1` region.
 
-### Environment Variables
+See [Transcription Models Documentation](./docs/transcription.md) for complete reference.
 
-```bash
-# Required
-OCI_COMPARTMENT_ID=ocid1.compartment.oc1..your-compartment-id
+## Reranking Models
 
-# Optional (defaults shown)
-OCI_REGION=eu-frankfurt-1
-OCI_CONFIG_PROFILE=DEFAULT
-OCI_CONFIG_FILE=~/.oci/config
-OCI_CLI_AUTH=api_key
+Improve search results with semantic reranking.
+
+### Usage
+
+```typescript
+import { oci } from '@acedergren/oci-genai-provider';
+import { rerank } from 'ai';
+
+const { ranking } = await rerank({
+  model: oci.rerankingModel('cohere.rerank-v3.5'),
+  query: 'What is quantum computing?',
+  documents: [
+    'Quantum computing uses qubits...',
+    'Classical computers use bits...',
+    'Machine learning is a subset...',
+  ],
+  topN: 2,
+});
+
+// ranking contains indices and relevance scores
+console.log(ranking); // Top 2 most relevant documents
 ```
 
-### Regions
+See [Reranking Models Documentation](./docs/reranking.md) for complete reference.
 
-- `eu-frankfurt-1` (default)
-- `eu-stockholm-1`
-- `us-ashburn-1`
-- `us-phoenix-1`
-- And more...
+## Regional Availability
+
+| Service | Available Regions |
+|---------|-------------------|
+| Language Models | All OCI regions |
+| Embeddings | All OCI regions |
+| Speech (TTS) | **us-phoenix-1 only** |
+| Transcription (STT) | **us-phoenix-1 only** |
+| Reranking | All OCI regions |
+
+Supported regions include: `us-phoenix-1`, `us-ashburn-1`, `eu-frankfurt-1`, `eu-stockholm-1`, `uk-london-1`, `ap-tokyo-1`, `ap-mumbai-1`, and more.
 
 ## Error Handling
 
@@ -330,78 +298,88 @@ import {
 } from '@acedergren/oci-genai-provider';
 
 try {
-  const result = await generateText({ model, prompt: 'Hello!' });
+  const result = await generateText({ model, prompt: 'Hello\!' });
 } catch (error) {
   if (error instanceof RateLimitError) {
-    // Rate limited - retry after delay
     console.log(`Retry after ${error.retryAfterMs}ms`);
   } else if (error instanceof NetworkError) {
-    // Network issue - retryable
     console.log(`Network error: ${error.code}`);
   } else if (error instanceof AuthenticationError) {
-    // Auth failed - check credentials
-    console.log(`Auth type: ${error.authType}`);
+    console.log(`Auth failed: ${error.message}`);
   } else if (error instanceof ModelNotFoundError) {
-    // Invalid model ID
-    console.log(`Model: ${error.modelId}`);
-  } else if (error instanceof OCIGenAIError) {
-    // Generic OCI error
-    if (error.retryable) {
-      // Safe to retry
-    }
+    console.log(`Invalid model: ${error.modelId}`);
   }
 }
 ```
 
-**Error Types:**
+## Examples
 
-| Error Class           | Retryable | When Thrown                           |
-| --------------------- | --------- | ------------------------------------- |
-| `NetworkError`        | Yes       | Connection failures, timeouts, DNS    |
-| `RateLimitError`      | Yes       | 429 Too Many Requests                 |
-| `AuthenticationError` | No        | 401 Unauthorized, invalid credentials |
-| `ModelNotFoundError`  | No        | 404 Not Found, invalid model ID       |
-| `OCIGenAIError`       | Varies    | Other OCI API errors                  |
+Complete working examples in `examples/` directory:
 
-## Retry and Timeout
+- **[chatbot-demo](../../examples/chatbot-demo/)** - SvelteKit chatbot with streaming
+- **[nextjs-chatbot](../../examples/nextjs-chatbot/)** - Next.js chatbot
+- **[rag-demo](../../examples/rag-demo/)** - RAG with embeddings
+- **[speech-demo](../../examples/speech-demo/)** - Text-to-speech
+- **[transcription-demo](../../examples/transcription-demo/)** - Speech-to-text
+- **[rag-reranking-demo](../../examples/rag-reranking-demo/)** - RAG with embeddings + reranking
 
-The provider includes utilities for handling transient failures:
+## Migration from v1.x
 
-### Automatic Retry
+v2.0 introduces ProviderV3 support with breaking changes. See [Migration Guide](./docs/migration.md) for detailed upgrade instructions.
 
-```typescript
-import { withRetry } from '@acedergren/oci-genai-provider';
-
-const result = await withRetry(() => generateText({ model, prompt: 'Hello!' }), {
-  maxRetries: 3, // Default: 3
-  baseDelayMs: 100, // Default: 100ms
-  maxDelayMs: 10000, // Default: 10s
-});
-```
-
-Retries automatically on:
-
-- HTTP 429 (rate limit)
-- HTTP 5xx (server errors)
-- Network errors (ECONNRESET, ETIMEDOUT, etc.)
-
-### Request Timeout
+### Quick Migration
 
 ```typescript
-import { withTimeout, TimeoutError } from '@acedergren/oci-genai-provider';
+// v1.x (deprecated)
+import { oci } from '@acedergren/oci-genai-provider';
+const model = oci('cohere.command-r-plus'); // ❌ No longer supported
 
-try {
-  const result = await withTimeout(
-    generateText({ model, prompt: 'Hello!' }),
-    30000, // 30 second timeout
-    'OCI GenAI request'
-  );
-} catch (error) {
-  if (error instanceof TimeoutError) {
-    console.log(`Timed out after ${error.timeoutMs}ms`);
-  }
-}
+// v2.0 (ProviderV3)
+import { oci } from '@acedergren/oci-genai-provider';
+const model = oci.languageModel('cohere.command-r-plus'); // ✅ Use this
 ```
+
+## Troubleshooting
+
+### Common Issues
+
+**Authentication Error**
+
+```
+Error: Authentication failed
+```
+
+Solution: Verify your OCI config file and ensure `OCI_COMPARTMENT_ID` is set.
+
+**Region Not Available for Speech**
+
+```
+Error: Speech services not available in this region
+```
+
+Solution: Use `us-phoenix-1` region for speech/transcription services.
+
+**Model Not Found**
+
+```
+Error: Invalid model ID
+```
+
+Solution: Check [available models](./docs/api-reference.md) for correct model IDs.
+
+See [Troubleshooting Guide](./docs/troubleshooting.md) for more solutions.
+
+## Documentation
+
+- [API Reference](./docs/api-reference.md) - Complete API documentation
+- [Language Models](./docs/language-models.md) - Language model reference
+- [Embeddings](./docs/embeddings.md) - Embedding models reference
+- [Speech Models](./docs/speech.md) - Speech synthesis reference
+- [Transcription Models](./docs/transcription.md) - Speech-to-text reference
+- [Reranking Models](./docs/reranking.md) - Reranking reference
+- [Configuration Guide](./docs/configuration.md) - Configuration and authentication
+- [Migration Guide](./docs/migration.md) - Upgrade from v1.x to v2.0
+- [Troubleshooting Guide](./docs/troubleshooting.md) - Common issues and solutions
 
 ## TypeScript
 
@@ -411,7 +389,7 @@ Full type safety:
 import type { OCIConfig, ModelMetadata } from '@acedergren/oci-genai-provider';
 
 const config: OCIConfig = {
-  region: 'eu-frankfurt-1',
+  region: 'us-phoenix-1',
   auth: 'config_file',
   compartmentId: 'ocid1.compartment.oc1..test',
 };
@@ -423,8 +401,8 @@ This package is part of a monorepo. For contributors:
 
 ```bash
 # Clone the monorepo
-git clone https://github.com/acedergren/oci-genai-provider.git
-cd oci-genai-provider
+git clone https://github.com/acedergren/opencode-oci-genai.git
+cd opencode-oci-genai
 
 # Install dependencies (requires pnpm 8+)
 pnpm install
@@ -437,33 +415,18 @@ pnpm --filter @acedergren/oci-genai-provider test
 
 # Run tests in watch mode
 pnpm --filter @acedergren/oci-genai-provider test -- --watch
-
-# Type check
-pnpm --filter @acedergren/oci-genai-provider type-check
 ```
 
-### Test Suite
+## Contributing
 
-- **121 comprehensive tests** covering all modules
-- **80%+ coverage** target
-- **TDD workflow** with RED-GREEN-REFACTOR cycles
-- See [Testing Guide](../../docs/testing/README.md)
-
-### Contributing
-
-1. Follow the [TDD Implementation Plan](../../docs/plans/2026-01-27-core-provider-tdd-implementation.md)
-2. Write tests first (RED)
-3. Implement minimal code (GREEN)
-4. Commit atomically
+See [CONTRIBUTING.md](../../CONTRIBUTING.md) for development setup and guidelines.
 
 ## License
 
 MIT
 
-## Links
+## Support
 
-- [Documentation](https://github.com/acedergren/oci-genai-provider/tree/main/docs)
-- [Examples](https://github.com/acedergren/oci-genai-provider/tree/main/examples) - SvelteKit, Next.js, CLI demos
-- [Troubleshooting Guide](https://github.com/acedergren/oci-genai-provider/tree/main/docs/guides/troubleshooting.md)
-- [Testing Guide](https://github.com/acedergren/oci-genai-provider/tree/main/docs/testing)
-- [Issues](https://github.com/acedergren/oci-genai-provider/issues)
+- GitHub Issues: [opencode-oci-genai/issues](https://github.com/acedergren/opencode-oci-genai/issues)
+- Documentation: [docs/](./docs/)
+- Examples: [examples/](../../examples/)
