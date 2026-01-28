@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { oci } from '@acedergren/oci-genai-provider';
+import { createOCI } from '@acedergren/oci-genai-provider';
 import { generateText, streamText, type LanguageModel } from 'ai';
 import * as readline from 'node:readline';
 
@@ -22,11 +22,12 @@ if (!COMPARTMENT_ID) {
   process.exit(1);
 }
 
-// Create model
-const model = oci(MODEL_ID, {
+// Create provider and model
+const provider = createOCI({
   compartmentId: COMPARTMENT_ID,
   region: REGION,
-}) as unknown as LanguageModel;
+});
+const model = provider.languageModel(MODEL_ID) as unknown as LanguageModel;
 
 // Check for piped input
 async function readStdin(): Promise<string | null> {

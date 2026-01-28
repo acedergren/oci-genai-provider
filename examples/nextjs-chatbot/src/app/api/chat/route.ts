@@ -1,10 +1,15 @@
-import { oci } from '@acedergren/oci-genai-provider';
+import { createOCI } from '@acedergren/oci-genai-provider';
 import { streamText, type LanguageModelV1 } from 'ai';
+
+// Create provider instance with environment configuration
+const provider = createOCI({
+  compartmentId: process.env.OCI_COMPARTMENT_ID,
+  region: process.env.OCI_REGION ?? 'eu-frankfurt-1',
+});
 
 export async function POST(request: Request) {
   // Validate environment
-  const compartmentId = process.env.OCI_COMPARTMENT_ID;
-  if (!compartmentId) {
+  if (!process.env.OCI_COMPARTMENT_ID) {
     return new Response(JSON.stringify({ error: 'OCI_COMPARTMENT_ID not configured' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
@@ -22,7 +27,7 @@ export async function POST(request: Request) {
     });
   }
 
-  const { messages, model = 'cohere.command-r-plus' } = body;
+  const { messages, model: modelId = 'cohere.command-r-plus' } = body;
 
   if (!Array.isArray(messages)) {
     return new Response(JSON.stringify({ error: 'messages must be an array' }), {
@@ -33,10 +38,7 @@ export async function POST(request: Request) {
 
   // Type assertion needed due to AI SDK v1/v3 type mismatch
   // The provider implements LanguageModelV3 which is compatible at runtime
-  const languageModel = oci(model, {
-    compartmentId,
-    region: process.env.OCI_REGION ?? 'eu-frankfurt-1',
-  }) as unknown as LanguageModelV1;
+  const languageModel = provider.languageModel(modelId) as unknown as LanguageModelV1;
 
   const result = streamText({
     model: languageModel,
