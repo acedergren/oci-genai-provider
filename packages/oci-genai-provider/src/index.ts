@@ -104,6 +104,19 @@ export {
 export type { EmbeddingModelMetadata } from './embedding-models/registry';
 
 // ============================================================================
+// Transcription Model Exports
+export { OCITranscriptionModel } from "./transcription-models/OCITranscriptionModel";
+export {
+  getTranscriptionModelMetadata,
+  isValidTranscriptionModelId,
+  getAllTranscriptionModels,
+  getSupportedLanguages,
+} from "./transcription-models/registry";
+export type {
+  TranscriptionModelMetadata,
+  SupportedLanguage,
+} from "./transcription-models/registry";
+
 // Reranking Model Exports
 // ============================================================================
 
@@ -114,6 +127,20 @@ export {
   getAllRerankingModels,
 } from './reranking-models/registry';
 export type { RerankingModelMetadata } from './reranking-models/registry';
+
+// ============================================================================
+// Speech Model Exports (TTS)
+// ============================================================================
+
+export { OCISpeechModel } from './speech-models/OCISpeechModel';
+export {
+  getSpeechModelMetadata,
+  isValidSpeechModelId,
+  getAllSpeechModels,
+  getAllVoices,
+} from './speech-models/registry';
+export type { SpeechModelMetadata } from './speech-models/registry';
+
 // ============================================================================
 // Error Exports
 // ============================================================================
