@@ -1,38 +1,40 @@
-import { createMockOCIResponse } from "../utils/test-helpers";
+import { createMockOCIResponse } from '../utils/test-helpers';
 
 /**
  * Mock GenerativeAiInferenceClient
  */
-export function mockGenerativeAiInferenceClient(options: {
-  chatResponse?: any;
-  embedResponse?: any;
-  shouldError?: boolean;
-  errorType?: "RateLimit" | "Authentication" | "Network";
-} = {}): any {
+export function mockGenerativeAiInferenceClient(
+  options: {
+    chatResponse?: any;
+    embedResponse?: any;
+    shouldError?: boolean;
+    errorType?: 'RateLimit' | 'Authentication' | 'Network';
+  } = {}
+): any {
   const mock = {
-    region: "eu-frankfurt-1",
-    endpoint: "https://inference.generativeai.eu-frankfurt-1.oci.oraclecloud.com",
+    region: 'eu-frankfurt-1',
+    endpoint: 'https://inference.generativeai.eu-frankfurt-1.oci.oraclecloud.com',
 
     chat: async () => {
       if (options.shouldError) {
-        throw createMockError(options.errorType || "Network");
+        throw createMockError(options.errorType || 'Network');
       }
-      return createMockOCIResponse("language", options.chatResponse || {});
+      return createMockOCIResponse('language', options.chatResponse || {});
     },
 
     embedText: async () => {
       if (options.shouldError) {
-        throw createMockError(options.errorType || "Network");
+        throw createMockError(options.errorType || 'Network');
       }
-      return createMockOCIResponse("embedding", options.embedResponse || {});
+      return createMockOCIResponse('embedding', options.embedResponse || {});
     },
 
     chatStream: async function* () {
       if (options.shouldError) {
-        throw createMockError(options.errorType || "Network");
+        throw createMockError(options.errorType || 'Network');
       }
 
-      const chunks = ["Hello", " ", "world", "!"];
+      const chunks = ['Hello', ' ', 'world', '!'];
       for (const chunk of chunks) {
         yield {
           chatResponse: { text: chunk },
@@ -40,8 +42,8 @@ export function mockGenerativeAiInferenceClient(options: {
         };
       }
       yield {
-        chatResponse: { text: "" },
-        finishReason: "COMPLETE",
+        chatResponse: { text: '' },
+        finishReason: 'COMPLETE',
       };
     },
   };
@@ -54,12 +56,13 @@ export function mockGenerativeAiInferenceClient(options: {
  */
 export function mockAuthProvider(): any {
   return {
-    getKeyId: () => Promise.resolve("ocid1.tenancy.oc1..test/ocid1.user.oc1..test/fingerprint"),
-    getTenancyId: () => Promise.resolve("ocid1.tenancy.oc1..test"),
-    getUserId: () => Promise.resolve("ocid1.user.oc1..test"),
-    getFingerprint: () => Promise.resolve("test:fingerprint"),
+    getKeyId: () => Promise.resolve('ocid1.tenancy.oc1..test/ocid1.user.oc1..test/fingerprint'),
+    getTenancyId: () => Promise.resolve('ocid1.tenancy.oc1..test'),
+    getUserId: () => Promise.resolve('ocid1.user.oc1..test'),
+    getFingerprint: () => Promise.resolve('test:fingerprint'),
     getPassphrase: () => Promise.resolve(null),
-    getPrivateKey: () => Promise.resolve("-----BEGIN RSA PRIVATE KEY-----\ntest\n-----END RSA PRIVATE KEY-----"),
+    getPrivateKey: () =>
+      Promise.resolve('-----BEGIN RSA PRIVATE KEY-----\ntest\n-----END RSA PRIVATE KEY-----'),
   };
 }
 
@@ -68,9 +71,9 @@ export function mockAuthProvider(): any {
  */
 function createMockError(type: string): Error & { statusCode: number } {
   const errorMap = {
-    RateLimit: { statusCode: 429, message: "Rate limit exceeded" },
-    Authentication: { statusCode: 401, message: "Authentication failed" },
-    Network: { statusCode: 503, message: "Network error" },
+    RateLimit: { statusCode: 429, message: 'Rate limit exceeded' },
+    Authentication: { statusCode: 401, message: 'Authentication failed' },
+    Network: { statusCode: 503, message: 'Network error' },
   };
 
   const errorData = errorMap[type as keyof typeof errorMap] || errorMap.Network;

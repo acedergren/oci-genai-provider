@@ -51,16 +51,8 @@ export const COMMON_SCENARIOS = {
 
   modelIds: {
     language: {
-      cohere: [
-        'cohere.command-r-plus',
-        'cohere.command-r',
-        'cohere.command-r-plus-08-2024',
-      ],
-      meta: [
-        'meta.llama-3.3-70b',
-        'meta.llama-3.1-405b',
-        'meta.llama-3.1-70b',
-      ],
+      cohere: ['cohere.command-r-plus', 'cohere.command-r', 'cohere.command-r-plus-08-2024'],
+      meta: ['meta.llama-3.3-70b', 'meta.llama-3.1-405b', 'meta.llama-3.1-70b'],
     },
     embedding: [
       'cohere.embed-multilingual-v3.0',

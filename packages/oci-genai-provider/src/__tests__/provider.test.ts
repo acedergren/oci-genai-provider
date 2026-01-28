@@ -263,42 +263,40 @@ describe('OCIGenAIProvider (ProviderV3)', () => {
   });
 
   describe('transcriptionModel()', () => {
-    it('should throw NoSuchModelError - not yet implemented', () => {
-      const provider = new OCIGenAIProvider();
+    it('should create transcription model with valid ID', () => {
+      const provider = new OCIGenAIProvider({ region: 'us-phoenix-1' });
+      const model = provider.transcriptionModel('oci.speech.whisper');
 
-      expect(() => provider.transcriptionModel('whisper-1')).toThrow(NoSuchModelError);
+      expect(model).toBeDefined();
+      expect(model.provider).toBe('oci-genai');
+      expect(model.modelId).toBe('oci.speech.whisper');
     });
 
-    it('should include helpful message in error', () => {
+    it('should throw error for invalid model ID', () => {
       const provider = new OCIGenAIProvider();
 
-      try {
-        provider.transcriptionModel('whisper-1');
-        fail('Expected NoSuchModelError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(NoSuchModelError);
-        expect((error as NoSuchModelError).message).toContain('Plan 4');
-      }
+      expect(() => provider.transcriptionModel('invalid-model')).toThrow(
+        'Invalid transcription model ID'
+      );
     });
   });
 
   describe('speechModel()', () => {
-    it('should throw NoSuchModelError - not yet implemented', () => {
-      const provider = new OCIGenAIProvider();
+    it('should create speech model with valid ID', () => {
+      const provider = new OCIGenAIProvider({ region: 'us-phoenix-1' });
+      const model = provider.speechModel('oci.tts-1-hd');
 
-      expect(() => provider.speechModel('tts-1')).toThrow(NoSuchModelError);
+      expect(model).toBeDefined();
+      expect(model.provider).toBe('oci-genai');
+      expect(model.modelId).toBe('oci.tts-1-hd');
     });
 
-    it('should include helpful message in error', () => {
+    it('should throw error for invalid model ID', () => {
       const provider = new OCIGenAIProvider();
 
-      try {
-        provider.speechModel('tts-1');
-        fail('Expected NoSuchModelError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(NoSuchModelError);
-        expect((error as NoSuchModelError).message).toContain('Plan 3');
-      }
+      expect(() => provider.speechModel('invalid-tts')).toThrow(
+        'Invalid speech model ID'
+      );
     });
   });
 

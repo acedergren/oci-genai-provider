@@ -105,17 +105,17 @@ export type { EmbeddingModelMetadata } from './embedding-models/registry';
 
 // ============================================================================
 // Transcription Model Exports
-export { OCITranscriptionModel } from "./transcription-models/OCITranscriptionModel";
+export { OCITranscriptionModel } from './transcription-models/OCITranscriptionModel';
 export {
   getTranscriptionModelMetadata,
   isValidTranscriptionModelId,
   getAllTranscriptionModels,
   getSupportedLanguages,
-} from "./transcription-models/registry";
+} from './transcription-models/registry';
 export type {
   TranscriptionModelMetadata,
   SupportedLanguage,
-} from "./transcription-models/registry";
+} from './transcription-models/registry';
 
 // Reranking Model Exports
 // ============================================================================
