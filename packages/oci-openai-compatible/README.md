@@ -192,7 +192,7 @@ Full OpenAI SDK documentation applies. See:
 
 - **Chat completions only**: OCI's OpenAI-compatible endpoints currently support `/chat/completions` only
 - **Limited regions**: Only 6 regions support OpenAI-compatible endpoints (vs all OCI regions for native provider)
-- **No instance principal auth via OpenAI SDK**: Use `@acedergren/oci-genai-provider` for advanced OCI auth
+- **API key auth only**: Only `api_key` authentication is supported. The `auth` config field accepts other values for type compatibility, but `instance_principal` and `resource_principal` are not implemented. Use `@acedergren/oci-genai-provider` for advanced OCI auth methods
 
 ## Examples
 
