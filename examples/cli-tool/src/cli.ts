@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { oci } from '@acedergren/oci-genai-provider';
-import { generateText, streamText, type LanguageModelV1 } from 'ai';
+import { generateText, streamText, type LanguageModel } from 'ai';
 import * as readline from 'node:readline';
 
 // Configuration
@@ -26,7 +26,7 @@ if (!COMPARTMENT_ID) {
 const model = oci(MODEL_ID, {
   compartmentId: COMPARTMENT_ID,
   region: REGION,
-}) as unknown as LanguageModelV1;
+}) as unknown as LanguageModel;
 
 // Check for piped input
 async function readStdin(): Promise<string | null> {
