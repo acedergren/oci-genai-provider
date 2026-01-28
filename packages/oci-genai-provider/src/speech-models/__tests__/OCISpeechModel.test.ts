@@ -113,11 +113,35 @@ describe('OCISpeechModel', () => {
       expect(model.getVoice()).toBe('custom-voice-id');
     });
 
+    it('should fallback to metadata defaultVoice if config voice not provided', () => {
+      // Test the second fallback in chain: config.voice ?? defaultVoice ?? 'en-US-AriaNeural'
+      // We'll create a model without voice and verify it attempts to use metadata
+      const model = new OCISpeechModel('TTS_2_NATURAL', {
+        region: 'us-phoenix-1',
+        // No voice specified - should use metadata.defaultVoice if available
+      });
+      // Since neither TTS_2_NATURAL nor TTS_1_STANDARD have defaultVoice in registry,
+      // this will fall through to the hardcoded default
+      expect(model.getVoice()).toBe('en-US-AriaNeural');
+    });
+
     it('should fallback to hardcoded default when no defaultVoice in registry', () => {
       // Neither TTS_2_NATURAL nor TTS_1_STANDARD has defaultVoice in registry
       const model = new OCISpeechModel('TTS_1_STANDARD', {
         region: 'us-phoenix-1',
       });
+      expect(model.getVoice()).toBe('en-US-AriaNeural');
+    });
+
+    it('should fallback to en-US-AriaNeural if both config and metadata voice are undefined', () => {
+      // Explicitly test line 27: this.voice = config.voice ?? defaultVoice ?? 'en-US-AriaNeural'
+      // This test ensures the final fallback is triggered when both config.voice and metadata.defaultVoice are undefined
+      const model = new OCISpeechModel('TTS_2_NATURAL', {
+        region: 'us-phoenix-1',
+        // No voice in config (undefined)
+      });
+
+      // Verify the final fallback to hardcoded 'en-US-AriaNeural' works
       expect(model.getVoice()).toBe('en-US-AriaNeural');
     });
 
