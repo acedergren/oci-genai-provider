@@ -126,3 +126,67 @@ export interface ModelMetadata {
   contextWindow: number;
   speed: 'very-fast' | 'fast' | 'medium' | 'slow';
 }
+
+// ============================================================================
+// ProviderV3 Model-Specific Settings
+// ============================================================================
+
+/**
+ * Base configuration shared across all OCI model types.
+ * Alias for OCIConfig for ProviderV3 compatibility.
+ */
+export type OCIBaseConfig = OCIConfig;
+
+/**
+ * Settings specific to language models (chat, completion)
+ */
+export interface OCILanguageModelSettings extends OCIConfig {
+  // Language models use the base config with requestOptions
+  // No additional settings needed currently
+}
+
+/**
+ * Settings for embedding models
+ */
+export interface OCIEmbeddingSettings extends OCIConfig {
+  /** Embedding dimensions (384 for light, 1024 for standard) */
+  dimensions?: 384 | 1024;
+  /** How to truncate input text if it exceeds model limits */
+  truncate?: 'START' | 'END' | 'NONE';
+  /** Input type optimization */
+  inputType?: 'QUERY' | 'DOCUMENT';
+}
+
+/**
+ * Settings for speech models (TTS)
+ */
+export interface OCISpeechSettings extends OCIConfig {
+  /** Voice ID */
+  voice?: string;
+  /** Speech speed multiplier (0.5 to 2.0) */
+  speed?: number;
+  /** Audio output format */
+  format?: 'mp3' | 'wav' | 'pcm';
+}
+
+/**
+ * Settings for transcription models (STT)
+ */
+export interface OCITranscriptionSettings extends OCIConfig {
+  /** Language code (e.g., 'en', 'es', 'de') */
+  language?: string;
+  /** Transcription model to use */
+  model?: 'standard' | 'whisper';
+  /** Custom vocabulary words */
+  vocabulary?: string[];
+}
+
+/**
+ * Settings for reranking models
+ */
+export interface OCIRerankingSettings extends OCIConfig {
+  /** Return only top N results */
+  topN?: number;
+  /** Include document text in response */
+  returnDocuments?: boolean;
+}
