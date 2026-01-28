@@ -1,123 +1,120 @@
 # Security Policy
 
-## Reporting Security Vulnerabilities
+## Reporting Vulnerabilities
 
-**Do not open public GitHub issues for security vulnerabilities.**
+**Do not open public issues for security vulnerabilities.**
 
-If you discover a security vulnerability in this project, please report it responsibly by:
+To report a security issue:
 
-1. **Email**: Send details to the project maintainers (you can find contact info in the README or CONTRIBUTING.md)
-2. **GitHub Security Advisory**: Use [GitHub's private vulnerability reporting](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability)
+1. **GitHub Security Advisory** (preferred): Use [GitHub's private vulnerability reporting](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability)
 
-Please include:
+2. **Email**: Contact the maintainers directly (see repository for contact information)
+
+Include in your report:
 - Description of the vulnerability
-- Steps to reproduce (if applicable)
+- Steps to reproduce
 - Potential impact
 - Suggested fix (if you have one)
 
-## Response Timeline
+### Response Timeline
 
-- **Initial response**: Within 48 hours
-- **Status update**: Within 7 days
-- **Fix & disclosure**: Depends on severity, typically within 30 days
+| Stage | Timeframe |
+|-------|-----------|
+| Initial acknowledgment | Within 48 hours |
+| Status update | Within 7 days |
+| Fix and disclosure | Typically within 30 days (varies by severity) |
 
-## Security Best Practices for Users
+## Security Practices
 
-### API Key Security
+### For Users
 
-**Never commit API keys or credentials to version control:**
+**Protect your credentials:**
 
 ```bash
-# ❌ Bad
-export OCI_API_KEY="ocid1.tenancy.oc1....." # In .env tracked by git
+# Store OCI API keys securely
+chmod 600 ~/.oci/oci_api_key.pem
+chmod 600 ~/.oci/config
+chmod 700 ~/.oci
 
-# ✅ Good
-export OCI_API_KEY="ocid1.tenancy.oc1....." # In .env.local (git-ignored)
+# Use .env.local for secrets (git-ignored)
+# Never: .env (may be committed)
 ```
 
-### Environment Variables
+**Never commit secrets:**
+- API keys
+- Private key files (`.pem`)
+- Compartment IDs with sensitive data
+- Access tokens
 
-- Store `OCI_API_KEY` and `OCI_COMPARTMENT_ID` in `.env.local` or CI/CD secrets
-- Never log or expose API keys in error messages
-- Rotate API keys periodically
-- Use minimal-privilege API keys when possible
+**Rotate credentials regularly:**
+- OCI API keys should be rotated every 90 days
+- Revoke unused keys immediately
+- Use separate keys for development and production
 
-### Authenticated Endpoints
+### For Deployments
 
-- All OCI API calls use HTTPS with TLS 1.2+
-- Custom endpoints must use HTTPS
-- Never send credentials in URL parameters
+**Development:**
+```typescript
+// Use config file authentication
+const oci = createOCI({ profile: 'DEFAULT' });
+```
 
-### Dependency Management
+**Production (OCI Compute):**
+```typescript
+// Use instance principal - no credentials in code
+const oci = createOCI({ auth: 'instance_principal' });
+```
 
-- Keep dependencies updated: `pnpm update`
-- Review security advisories: `npm audit`
-- Run security checks before deploying
-- Use `npm ci` (not `npm install`) in production
-
-## Vulnerability Management
-
-### Scanning
-
-This project uses:
-- **Semgrep**: Static analysis for security patterns
-- **npm audit**: Dependency vulnerability scanning
-- **Pre-commit hooks**: Secret detection (via `gitleaks`)
-
-### Reporting Vulnerabilities to Maintainers
-
-If you discover a vulnerability in a dependency:
-
-1. Check if it's already reported to upstream maintainers
-2. Report to this project if it affects our code
-3. Include version information and impact assessment
+**Production (OCI Functions):**
+```typescript
+// Use resource principal - automatic credential management
+const oci = createOCI({ auth: 'resource_principal' });
+```
 
 ## Security Features
 
-### Secure Defaults
+This package implements several security measures:
 
-- **No API keys in code**: Configuration via environment variables
-- **HTTPS only**: All endpoints require HTTPS
-- **Bearer token auth**: Standard OAuth 2.0 pattern
-- **Header validation**: OCI-specific headers prevent header injection
+**No credentials in code** — All authentication uses OCI config files or instance/resource principals
 
-### Input Validation
+**HTTPS only** — All API calls use TLS 1.2+
 
-- Configuration types validated at runtime
-- Region names restricted to enum (no injection possible)
-- Model IDs validated against known list
-- Custom endpoints validated as HTTPS URLs
+**Input validation** — Regions and model IDs are validated against known values
 
-### Secrets Management
+**Secure defaults** — Safe configuration out of the box
 
-- Credentials never logged in debug output
-- API keys excluded from source maps
-- Environment variables used for all secrets
-- `.env` and `*.pem` files git-ignored
+**No credential logging** — API keys and tokens are never logged
 
-## Compliance
+## Dependency Security
 
-- **MIT License**: Permissive open-source license
-- **Code of Conduct**: Community guidelines enforced
-- **Contribution Guidelines**: Standards for code quality and security
+We maintain dependency security through:
 
-## Security Updates
+- **Automated scanning**: npm audit in CI
+- **Pre-commit hooks**: gitleaks for secret detection
+- **Static analysis**: Semgrep for security patterns
+- **Regular updates**: Dependencies updated monthly
 
-Follow this repository for:
-- **Security patches**: Emergency updates for vulnerabilities
-- **Dependency updates**: Regular maintenance
-- **Best practice guides**: Security recommendations
+Run security checks locally:
 
-## Questions?
+```bash
+npm audit
+```
 
-If you have questions about security practices, please:
+## Scope
 
-1. Check the [DEVELOPMENT.md](./DEVELOPMENT.md) for setup guidance
-2. Review [CONTRIBUTING.md](./CONTRIBUTING.md) for code standards
-3. Open a discussion in GitHub Discussions (not as a security report)
+This security policy covers:
+- `@acedergren/oci-genai-provider`
+- `@acedergren/oci-openai-compatible`
+- `@acedergren/opencode-oci-genai`
+
+For OCI service vulnerabilities, contact [Oracle Security](https://www.oracle.com/corporate/security-practices/assurance/vulnerability/reporting.html).
+
+## Questions
+
+For security-related questions that aren't vulnerabilities:
+- Check [DEVELOPMENT.md](./DEVELOPMENT.md) for secure setup
+- Open a [discussion](https://github.com/acedergren/opencode-oci-genai/discussions) (do not disclose potential vulnerabilities)
 
 ---
 
-**Last Updated**: January 2025
-
-**Maintainers**: Anders Cedergren (@acedergren)
+**Last Updated**: January 2026
