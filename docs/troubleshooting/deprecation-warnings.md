@@ -184,55 +184,33 @@ husky - install command is DEPRECATED
 }
 ```
 
-### Migration to Husky 9
+### Migration to Husky 9 (✅ COMPLETE)
 
-**Step 1: Remove old hooks**
+**Status:** Completed in commit bcd1292 (2026-01-28)
 
-```bash
-rm -rf .husky
-```
+**Changes Applied:**
 
-**Step 2: Initialize Husky 9**
+1. ✅ Updated `package.json` prepare script:
+   ```json
+   {
+     "scripts": {
+       "prepare": "husky"
+     }
+   }
+   ```
 
-```bash
-npx husky init
-```
+2. ✅ Updated `.husky/pre-commit` hook to work with pnpm and turbo:
+   ```bash
+   #!/usr/bin/env sh
 
-This creates:
+   pnpm exec lint-staged
+   pnpm exec turbo run type-check
+   pnpm exec turbo run test
+   ```
 
-- `.husky/` directory
-- `.husky/pre-commit` hook
+3. ✅ Hooks tested and verified working
 
-**Step 3: Update package.json**
-
-```json
-{
-  "scripts": {
-    "prepare": "husky"
-  }
-}
-```
-
-**Step 4: Configure hooks**
-
-Edit `.husky/pre-commit`:
-
-```bash
-#!/usr/bin/env sh
-
-# Run lint-staged
-npx lint-staged
-
-# Run type checking
-pnpm type-check
-```
-
-**Step 5: Test**
-
-```bash
-git add .
-git commit -m "test: verify husky hooks"
-```
+**Note:** The Husky 9 migration is complete. If you see "husky install is DEPRECATED" warnings, they are historical and can be ignored.
 
 ### See Also
 
@@ -242,11 +220,26 @@ git commit -m "test: verify husky hooks"
 
 ## Summary
 
-| Warning         | Severity | Action Required       | Status                   |
-| --------------- | -------- | --------------------- | ------------------------ |
-| **Punycode**    | Low      | Optional suppression  | ✅ Fixed in chatbot-demo |
-| **Vite Re-opt** | Info     | Optional config       | ✅ Fixed in chatbot-demo |
-| **Husky**       | Low      | Migration recommended | ⏳ Todo                  |
+### Deprecation Warnings Status
+
+| Warning         | Severity | Action Required       | Status                       |
+| --------------- | -------- | --------------------- | ---------------------------- |
+| **Punycode**    | Low      | Optional suppression  | ✅ Fixed in chatbot-demo     |
+| **Vite Re-opt** | Info     | Optional config       | ✅ Fixed in chatbot-demo     |
+| **Husky**       | Low      | Migration recommended | ✅ Complete (commit bcd1292) |
+
+### Major Dependency Migrations
+
+For detailed information on completed infrastructure migrations, see [Major Dependency Migrations](./major-dependency-migrations.md).
+
+| Migration       | Severity | Completion Date | Status      |
+| --------------- | -------- | --------------- | ----------- |
+| **npm → pnpm**  | High     | 2026-01-28      | ✅ Complete |
+| **@types/node** | Medium   | 2026-01-28      | ✅ Complete |
+| **ESLint 9**    | High     | 2026-01-28      | ✅ Complete |
+| **Husky 9**     | Medium   | 2026-01-28      | ✅ Complete |
+| **lint-staged** | Low      | 2026-01-28      | ✅ Complete |
+| **Jest 30**     | Low      | Deferred        | ⏳ Future   |
 
 ### Quick Fixes Applied
 
@@ -259,8 +252,12 @@ git commit -m "test: verify husky hooks"
 **Next Steps:**
 
 1. Apply same fixes to other examples (cli-tool, nextjs-chatbot)
-2. Migrate Husky to v9 (optional, low priority)
+2. ~~Migrate Husky to v9~~ ✅ Complete
 3. Test all examples after changes
+
+**Additional Migrations Completed:**
+
+For detailed information on other major dependency migrations (pnpm, @types/node, ESLint 9, lint-staged), see [Major Dependency Migrations](./major-dependency-migrations.md).
 
 ---
 

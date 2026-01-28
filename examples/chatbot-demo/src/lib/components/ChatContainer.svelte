@@ -1,9 +1,9 @@
 <script lang="ts">
-  import type { Message } from 'ai';
+  import type { UIMessage } from 'ai';
   import MessageComponent from './Message.svelte';
 
   interface Props {
-    messages: Message[];
+    messages: UIMessage[];
     isLoading?: boolean;
   }
 
@@ -16,6 +16,15 @@
       containerRef.scrollTop = containerRef.scrollHeight;
     }
   });
+
+  // Extract text content from message parts
+  function getMessageContent(message: UIMessage): string {
+    if (!message.parts) return '';
+    return message.parts
+      .filter((part): part is { type: 'text'; text: string } => part.type === 'text')
+      .map(part => part.text)
+      .join('');
+  }
 </script>
 
 <div
@@ -27,10 +36,10 @@
       <p>Start chatting with OCI GenAI...</p>
     </div>
   {:else}
-    {#each messages as message}
+    {#each messages as message (message.id)}
       <MessageComponent
         role={message.role}
-        content={message.content}
+        content={getMessageContent(message)}
         isStreaming={isLoading && message === messages[messages.length - 1]}
       />
     {/each}

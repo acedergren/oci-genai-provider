@@ -1,13 +1,14 @@
 <script lang="ts">
   import { cn } from '$lib/utils/cn';
+  import type { Snippet } from 'svelte';
+  import type { HTMLButtonAttributes } from 'svelte/elements';
 
-  interface Props {
+  interface Props extends HTMLButtonAttributes {
     variant?: 'accent' | 'ghost';
-    disabled?: boolean;
-    type?: 'button' | 'submit';
+    children?: Snippet;
   }
 
-  let { variant = 'accent', disabled = false, type = 'button', ...restProps }: Props = $props();
+  let { variant = 'accent', disabled = false, type = 'button', children, ...restProps }: Props = $props();
 </script>
 
 <button
@@ -21,5 +22,5 @@
   )}
   {...restProps}
 >
-  <slot />
+  {@render children?.()}
 </button>
