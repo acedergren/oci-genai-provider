@@ -119,6 +119,18 @@ export {
 } from './language-models/registry';
 
 // ============================================================================
+// Embedding Model Exports
+// ============================================================================
+
+export { OCIEmbeddingModel } from './embedding-models/OCIEmbeddingModel';
+export {
+  getEmbeddingModelMetadata,
+  isValidEmbeddingModelId,
+  getAllEmbeddingModels,
+} from './embedding-models/registry';
+export type { EmbeddingModelMetadata } from './embedding-models/registry';
+
+// ============================================================================
 // Error Exports
 // ============================================================================
 
