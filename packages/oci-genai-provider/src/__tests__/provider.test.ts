@@ -1,6 +1,6 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { NoSuchModelError } from '@ai-sdk/provider';
-import { createOCI, oci } from '../index';
+import { createOCI, createOCILegacy, oci } from '../index';
 import { OCIGenAIProvider } from '../provider';
 
 // Mock OCI SDK
@@ -33,7 +33,7 @@ jest.mock('oci-generativeaiinference', () => ({
   })),
 }));
 
-describe('createOCI Provider Factory', () => {
+describe('createOCI Provider Factory (ProviderV3)', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
@@ -49,66 +49,66 @@ describe('createOCI Provider Factory', () => {
   describe('Factory Creation', () => {
     it('should create provider with default config', () => {
       const provider = createOCI();
-      expect(provider.provider).toBe('oci-genai');
-      expect(typeof provider.model).toBe('function');
+      expect(provider.specificationVersion).toBe('v3');
+      expect(typeof provider.languageModel).toBe('function');
     });
 
     it('should create provider with Frankfurt region', () => {
       const provider = createOCI({ region: 'eu-frankfurt-1' });
-      expect(provider.provider).toBe('oci-genai');
+      expect(provider.specificationVersion).toBe('v3');
     });
 
     it('should create provider with custom profile', () => {
       const provider = createOCI({ region: 'eu-frankfurt-1', profile: 'FRANKFURT' });
-      expect(provider.provider).toBe('oci-genai');
+      expect(provider.specificationVersion).toBe('v3');
     });
 
     it('should create provider with compartment ID', () => {
       const provider = createOCI({ compartmentId: 'ocid1.compartment.oc1..test' });
-      expect(provider.provider).toBe('oci-genai');
+      expect(provider.specificationVersion).toBe('v3');
     });
 
     it('should create provider with instance principal auth', () => {
       const provider = createOCI({ auth: 'instance_principal' });
-      expect(provider.provider).toBe('oci-genai');
+      expect(provider.specificationVersion).toBe('v3');
     });
   });
 
-  describe('Model Creation', () => {
+  describe('Model Creation via languageModel()', () => {
     it('should create language model instance', () => {
       const provider = createOCI();
-      const model = provider.model('cohere.command-r-plus');
+      const model = provider.languageModel('cohere.command-r-plus');
       expect(model.modelId).toBe('cohere.command-r-plus');
       expect(model.provider).toBe('oci-genai');
     });
 
     it('should create Grok model', () => {
       const provider = createOCI();
-      const model = provider.model('xai.grok-4-maverick');
+      const model = provider.languageModel('xai.grok-4-maverick');
       expect(model.modelId).toContain('grok');
     });
 
     it('should create Llama model', () => {
       const provider = createOCI();
-      const model = provider.model('meta.llama-3.3-70b-instruct');
+      const model = provider.languageModel('meta.llama-3.3-70b-instruct');
       expect(model.modelId).toContain('llama');
     });
 
     it('should create Cohere model', () => {
       const provider = createOCI();
-      const model = provider.model('cohere.command-r-plus');
+      const model = provider.languageModel('cohere.command-r-plus');
       expect(model.modelId).toContain('cohere');
     });
 
     it('should create Gemini model', () => {
       const provider = createOCI();
-      const model = provider.model('google.gemini-2.5-flash');
+      const model = provider.languageModel('google.gemini-2.5-flash');
       expect(model.modelId).toContain('gemini');
     });
 
     it('should throw error for invalid model ID', () => {
       const provider = createOCI();
-      expect(() => provider.model('invalid.model')).toThrow('Invalid model ID');
+      expect(() => provider.languageModel('invalid.model')).toThrow('Invalid model ID');
     });
   });
 
@@ -116,7 +116,7 @@ describe('createOCI Provider Factory', () => {
     it('should prioritize config over environment', () => {
       process.env.OCI_REGION = 'us-ashburn-1';
       const provider = createOCI({ region: 'eu-frankfurt-1' });
-      const model = provider.model('cohere.command-r-plus');
+      const model = provider.languageModel('cohere.command-r-plus');
       expect(model).toBeDefined();
     });
 
@@ -133,17 +133,44 @@ describe('createOCI Provider Factory', () => {
     });
   });
 
-  describe('oci() convenience function', () => {
-    it('should create model directly', () => {
-      const model = oci('cohere.command-r-plus');
-      expect(model.modelId).toBe('cohere.command-r-plus');
-      expect(model.provider).toBe('oci-genai');
+  describe('oci default instance', () => {
+    it('should export default provider instance', () => {
+      expect(oci).toBeInstanceOf(OCIGenAIProvider);
+      expect(oci.specificationVersion).toBe('v3');
     });
 
-    it('should accept config', () => {
-      const model = oci('xai.grok-4-maverick', { region: 'eu-frankfurt-1' });
-      expect(model.modelId).toBe('xai.grok-4-maverick');
+    it('should create language models from default instance', () => {
+      const model = oci.languageModel('cohere.command-r');
+      expect(model).toBeDefined();
+      expect(model.modelId).toBe('cohere.command-r');
     });
+  });
+});
+
+describe('createOCILegacy (Backward Compatibility)', () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    process.env = { ...originalEnv };
+    process.env.OCI_COMPARTMENT_ID = 'ocid1.compartment.oc1..test';
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
+  it('should create legacy provider with model() method', () => {
+    const provider = createOCILegacy();
+    expect(provider.provider).toBe('oci-genai');
+    expect(typeof provider.model).toBe('function');
+  });
+
+  it('should create models via model() method', () => {
+    const provider = createOCILegacy();
+    const model = provider.model('cohere.command-r-plus');
+    expect(model.modelId).toBe('cohere.command-r-plus');
+    expect(model.provider).toBe('oci-genai');
   });
 });
 
