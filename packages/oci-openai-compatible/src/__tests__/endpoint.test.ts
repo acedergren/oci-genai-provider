@@ -1,0 +1,84 @@
+import { describe, it, expect } from '@jest/globals';
+import { getBaseURL } from '../endpoint';
+import type { OCIOpenAIConfig } from '../types';
+
+describe('getBaseURL', () => {
+  it('should use custom endpoint if provided', () => {
+    const config: OCIOpenAIConfig = {
+      endpoint: 'https://custom.endpoint.com',
+      region: 'us-ashburn-1',
+    };
+
+    const baseURL = getBaseURL(config);
+
+    expect(baseURL).toBe('https://custom.endpoint.com/20231130/actions/v1');
+  });
+
+  it('should construct endpoint from region', () => {
+    const config: OCIOpenAIConfig = {
+      region: 'eu-frankfurt-1',
+    };
+
+    const baseURL = getBaseURL(config);
+
+    expect(baseURL).toBe(
+      'https://inference.generativeai.eu-frankfurt-1.oci.oraclecloud.com/20231130/actions/v1'
+    );
+  });
+
+  it('should handle all supported regions', () => {
+    const regions: Array<[string, string]> = [
+      [
+        'us-ashburn-1',
+        'https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/20231130/actions/v1',
+      ],
+      [
+        'us-chicago-1',
+        'https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/20231130/actions/v1',
+      ],
+      [
+        'us-phoenix-1',
+        'https://inference.generativeai.us-phoenix-1.oci.oraclecloud.com/20231130/actions/v1',
+      ],
+      [
+        'eu-frankfurt-1',
+        'https://inference.generativeai.eu-frankfurt-1.oci.oraclecloud.com/20231130/actions/v1',
+      ],
+      [
+        'ap-hyderabad-1',
+        'https://inference.generativeai.ap-hyderabad-1.oci.oraclecloud.com/20231130/actions/v1',
+      ],
+      [
+        'ap-osaka-1',
+        'https://inference.generativeai.ap-osaka-1.oci.oraclecloud.com/20231130/actions/v1',
+      ],
+    ];
+
+    regions.forEach(([region, expectedURL]) => {
+      const config: OCIOpenAIConfig = { region: region as any };
+      expect(getBaseURL(config)).toBe(expectedURL);
+    });
+  });
+
+  it('should use default region if none provided', () => {
+    const config: OCIOpenAIConfig = {};
+
+    const baseURL = getBaseURL(config);
+
+    // Default region is us-ashburn-1
+    expect(baseURL).toBe(
+      'https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com/20231130/actions/v1'
+    );
+  });
+
+  it('should prefer custom endpoint over region', () => {
+    const config: OCIOpenAIConfig = {
+      endpoint: 'https://custom.com',
+      region: 'eu-frankfurt-1',
+    };
+
+    const baseURL = getBaseURL(config);
+
+    expect(baseURL).toBe('https://custom.com/20231130/actions/v1');
+  });
+});
