@@ -184,5 +184,259 @@ data: {"chatResponse":{"chatChoice":[{"finishReason":"STOP"}],"usage":{"promptTo
         expect(finishPart.usage.promptTokens).toBe(10);
       }
     });
+
+    it('should handle empty event data', async () => {
+      const sseText = `event: message
+data: {}
+
+`;
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller): void {
+          controller.enqueue(encoder.encode(sseText));
+          controller.close();
+        },
+      });
+
+      const response = new Response(stream);
+      const parts: StreamPart[] = [];
+
+      for await (const part of parseSSEStream(response)) {
+        parts.push(part);
+      }
+
+      // Empty data should not yield any parts (no text or finish)
+      expect(parts).toHaveLength(0);
+    });
+
+    it('should handle error event parsing', async () => {
+      const sseText = `event: error
+data: {"error":"Rate limit exceeded"}
+
+`;
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller): void {
+          controller.enqueue(encoder.encode(sseText));
+          controller.close();
+        },
+      });
+
+      const response = new Response(stream);
+      const parts: StreamPart[] = [];
+
+      for await (const part of parseSSEStream(response)) {
+        parts.push(part);
+      }
+
+      // Parser should handle error events without crashing
+      // Error events with no chatResponse should yield no parts
+      expect(parts).toHaveLength(0);
+    });
+
+    it('should handle malformed JSON in events gracefully', async () => {
+      const sseText = `event: message
+data: {invalid json}
+
+`;
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller): void {
+          controller.enqueue(encoder.encode(sseText));
+          controller.close();
+        },
+      });
+
+      const response = new Response(stream);
+      const parts: StreamPart[] = [];
+
+      for await (const part of parseSSEStream(response)) {
+        parts.push(part);
+      }
+
+      // Malformed JSON should be caught and ignored
+      expect(parts).toHaveLength(0);
+    });
+
+    it('should handle multiple consecutive newlines', async () => {
+      const sseText = `event: message
+data: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"test"}]}}]}}
+
+
+`;
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller): void {
+          controller.enqueue(encoder.encode(sseText));
+          controller.close();
+        },
+      });
+
+      const response = new Response(stream);
+      const parts: StreamPart[] = [];
+
+      for await (const part of parseSSEStream(response)) {
+        parts.push(part);
+      }
+
+      // Should parse single event regardless of extra newlines
+      expect(parts).toHaveLength(1);
+      expect(parts[0].type).toBe('text-delta');
+    });
+
+    it('should handle mixed line endings (CRLF vs LF)', async () => {
+      const sseText = `event: message\r\ndata: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"test"}]}}]}}\r\n\r\n`;
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller): void {
+          controller.enqueue(encoder.encode(sseText));
+          controller.close();
+        },
+      });
+
+      const response = new Response(stream);
+      const parts: StreamPart[] = [];
+
+      for await (const part of parseSSEStream(response)) {
+        parts.push(part);
+      }
+
+      // Should handle CRLF line endings correctly
+      expect(parts).toHaveLength(1);
+      expect(parts[0].type).toBe('text-delta');
+      if (parts[0].type === 'text-delta') {
+        expect(parts[0].textDelta).toBe('test');
+      }
+    });
+
+    it('should throw when response body is not readable', async () => {
+      const response = new Response(null);
+
+      await expect(async () => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        for await (const _part of parseSSEStream(response)) {
+          // consume the stream
+        }
+      }).rejects.toThrow('Response body is not readable');
+    });
+
+    it('should yield remaining parts after stream completes', async () => {
+      const sseText = `event: message
+data: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"first"}]}}]}}
+
+event: message
+data: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"second"}]}}]}}
+
+`;
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller): void {
+          controller.enqueue(encoder.encode(sseText));
+          controller.close();
+        },
+      });
+
+      const response = new Response(stream);
+      const parts: StreamPart[] = [];
+
+      for await (const part of parseSSEStream(response)) {
+        parts.push(part);
+      }
+
+      // Both parts should be yielded including final parts after stream ends
+      expect(parts).toHaveLength(2);
+      expect(parts[0].type).toBe('text-delta');
+      expect(parts[1].type).toBe('text-delta');
+      if (parts[0].type === 'text-delta' && parts[1].type === 'text-delta') {
+        expect(parts[0].textDelta).toBe('first');
+        expect(parts[1].textDelta).toBe('second');
+      }
+    });
+
+    it('should handle large chunked streams with buffered parts', async () => {
+      // Create a large number of events that are parsed but may be buffered
+      const events: string[] = [];
+      for (let i = 0; i < 100; i++) {
+        events.push(
+          `event: message\ndata: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"token${i}"}]}}]}}\n\n`
+        );
+      }
+      const sseText = events.join('');
+
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller): void {
+          controller.enqueue(encoder.encode(sseText));
+          controller.close();
+        },
+      });
+
+      const response = new Response(stream);
+      const parts: StreamPart[] = [];
+
+      for await (const part of parseSSEStream(response)) {
+        parts.push(part);
+      }
+
+      // All 100 parts should be yielded, testing cleanup loop
+      expect(parts).toHaveLength(100);
+      expect(parts[0].type).toBe('text-delta');
+      expect(parts[99].type).toBe('text-delta');
+    });
+
+    it('should handle events with whitespace in data fields', async () => {
+      const sseText = `event: message
+data:   {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"  spaced  "}]}}]}}
+
+`;
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller): void {
+          controller.enqueue(encoder.encode(sseText));
+          controller.close();
+        },
+      });
+
+      const response = new Response(stream);
+      const parts: StreamPart[] = [];
+
+      for await (const part of parseSSEStream(response)) {
+        parts.push(part);
+      }
+
+      expect(parts).toHaveLength(1);
+      expect(parts[0].type).toBe('text-delta');
+      if (parts[0].type === 'text-delta') {
+        expect(parts[0].textDelta).toBe('  spaced  ');
+      }
+    });
+
+    it('should handle [DONE] marker correctly', async () => {
+      const sseText = `event: message
+data: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"final"}]}}]}}
+
+event: message
+data: [DONE]
+
+`;
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller): void {
+          controller.enqueue(encoder.encode(sseText));
+          controller.close();
+        },
+      });
+
+      const response = new Response(stream);
+      const parts: StreamPart[] = [];
+
+      for await (const part of parseSSEStream(response)) {
+        parts.push(part);
+      }
+
+      // Only the first text part should be yielded, [DONE] is ignored
+      expect(parts).toHaveLength(1);
+      expect(parts[0].type).toBe('text-delta');
+    });
   });
 });
