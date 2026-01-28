@@ -1,13 +1,7 @@
-import {
-  RerankingModelV3,
-  RerankingModelV3CallOptions,
-} from '@ai-sdk/provider';
+import { RerankingModelV3, RerankingModelV3CallOptions } from '@ai-sdk/provider';
 import { GenerativeAiInferenceClient } from 'oci-generativeaiinference';
 import { createAuthProvider, getCompartmentId, getRegion } from '../auth';
-import {
-  getRerankingModelMetadata,
-  isValidRerankingModelId,
-} from './registry';
+import { getRerankingModelMetadata, isValidRerankingModelId } from './registry';
 import type { OCIRerankingSettings } from '../types';
 
 export class OCIRerankingModel implements RerankingModelV3 {
@@ -21,9 +15,7 @@ export class OCIRerankingModel implements RerankingModelV3 {
     private config: OCIRerankingSettings
   ) {
     if (!isValidRerankingModelId(modelId)) {
-      throw new Error(
-        `Invalid reranking model ID: ${modelId}. Valid models: cohere.rerank-v3.5`
-      );
+      throw new Error(`Invalid reranking model ID: ${modelId}. Valid models: cohere.rerank-v3.5`);
     }
   }
 
@@ -62,9 +54,7 @@ export class OCIRerankingModel implements RerankingModelV3 {
     const { query, documents, topN } = options;
 
     if (documents.type !== 'text') {
-      throw new Error(
-        `OCI reranking only supports text documents, got: ${documents.type}`
-      );
+      throw new Error(`OCI reranking only supports text documents, got: ${documents.type}`);
     }
 
     const documentTexts = documents.values;

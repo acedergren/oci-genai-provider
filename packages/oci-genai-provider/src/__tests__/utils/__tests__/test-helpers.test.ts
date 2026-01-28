@@ -63,17 +63,17 @@ describe('Test Helpers', () => {
   describe('waitForCondition', () => {
     it('should resolve when condition becomes true', async () => {
       let value = false;
-      setTimeout(() => { value = true; }, 100);
+      setTimeout(() => {
+        value = true;
+      }, 100);
 
-      await expect(
-        waitForCondition(() => value, 500)
-      ).resolves.toBe(undefined);
+      await expect(waitForCondition(() => value, 500)).resolves.toBe(undefined);
     });
 
     it('should timeout if condition never becomes true', async () => {
-      await expect(
-        waitForCondition(() => false, 100)
-      ).rejects.toThrow('Condition not met within 100ms');
+      await expect(waitForCondition(() => false, 100)).rejects.toThrow(
+        'Condition not met within 100ms'
+      );
     });
   });
 });

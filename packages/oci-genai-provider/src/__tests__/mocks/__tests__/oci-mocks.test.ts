@@ -1,32 +1,28 @@
-import { describe, it, expect, beforeEach } from "@jest/globals";
-import {
-  mockGenerativeAiInferenceClient,
-  mockAuthProvider,
-  resetAllMocks,
-} from "../oci-mocks";
+import { describe, it, expect, beforeEach } from '@jest/globals';
+import { mockGenerativeAiInferenceClient, mockAuthProvider, resetAllMocks } from '../oci-mocks';
 
-describe("OCI Mocks", () => {
+describe('OCI Mocks', () => {
   beforeEach(() => {
     resetAllMocks();
   });
 
-  describe("mockGenerativeAiInferenceClient", () => {
-    it("should create mock client with default responses", () => {
+  describe('mockGenerativeAiInferenceClient', () => {
+    it('should create mock client with default responses', () => {
       const client = mockGenerativeAiInferenceClient();
 
       expect(client.chat).toBeDefined();
       expect(client.embedText).toBeDefined();
     });
 
-    it("should allow custom response setup", () => {
+    it('should allow custom response setup', () => {
       const client = mockGenerativeAiInferenceClient({
-        chatResponse: { text: "Custom response" },
+        chatResponse: { text: 'Custom response' },
       });
 
       expect(client).toBeDefined();
     });
 
-    it("should have chat method callable", async () => {
+    it('should have chat method callable', async () => {
       const client = mockGenerativeAiInferenceClient();
 
       const result = await client.chat({ chatDetails: {} });
@@ -35,20 +31,20 @@ describe("OCI Mocks", () => {
     });
   });
 
-  describe("mockAuthProvider", () => {
-    it("should create valid auth provider mock", async () => {
+  describe('mockAuthProvider', () => {
+    it('should create valid auth provider mock', async () => {
       const authProvider = mockAuthProvider();
 
       expect(authProvider).toBeDefined();
       expect(authProvider.getKeyId).toBeDefined();
 
       const keyId = await authProvider.getKeyId();
-      expect(keyId).toContain("ocid1.tenancy");
+      expect(keyId).toContain('ocid1.tenancy');
     });
   });
 
-  describe("resetAllMocks", () => {
-    it("should be callable without error", () => {
+  describe('resetAllMocks', () => {
+    it('should be callable without error', () => {
       resetAllMocks();
       expect(true).toBe(true);
     });

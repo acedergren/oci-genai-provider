@@ -1,14 +1,14 @@
-import { describe, it, expect } from "@jest/globals";
-import { createMockOCIConfig } from "../utils/test-helpers";
+import { describe, it, expect } from '@jest/globals';
+import { createMockOCIConfig } from '../utils/test-helpers';
 
-describe("E2E: Complete Workflows", () => {
-  it("should support complete RAG workflow", async () => {
+describe('E2E: Complete Workflows', () => {
+  it('should support complete RAG workflow', async () => {
     // 1. Create embedding config
     const embeddingConfig = createMockOCIConfig();
     expect(embeddingConfig).toBeDefined();
 
     // 2. Create language model config
-    const languageConfig = createMockOCIConfig({ region: "eu-frankfurt-1" });
+    const languageConfig = createMockOCIConfig({ region: 'eu-frankfurt-1' });
     expect(languageConfig).toBeDefined();
 
     // 3. Create reranking config
@@ -19,7 +19,7 @@ describe("E2E: Complete Workflows", () => {
     expect(embeddingConfig.region).toBe(languageConfig.region);
   });
 
-  it("should support multimodal workflow", async () => {
+  it('should support multimodal workflow', async () => {
     // 1. Transcription (audio -> text)
     const transcriptionConfig = createMockOCIConfig();
     expect(transcriptionConfig).toBeDefined();
@@ -33,11 +33,11 @@ describe("E2E: Complete Workflows", () => {
     expect(speechConfig).toBeDefined();
   });
 
-  it("should handle errors gracefully across model types", async () => {
+  it('should handle errors gracefully across model types', async () => {
     // Test invalid model handling
     expect(() => {
-      const config = createMockOCIConfig({ region: "invalid" });
-      expect(config.region).toBe("invalid");
+      const config = createMockOCIConfig({ region: 'invalid' });
+      expect(config.region).toBe('invalid');
     }).not.toThrow();
   });
 });

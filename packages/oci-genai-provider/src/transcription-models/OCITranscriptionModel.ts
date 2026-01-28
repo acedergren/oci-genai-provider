@@ -1,10 +1,7 @@
-import { getCompartmentId } from "../auth";
-import {
-  getTranscriptionModelMetadata,
-  isValidTranscriptionModelId,
-} from "./registry";
-import type { OCITranscriptionSettings } from "../types";
-import type { SharedV3Warning, JSONObject } from "@ai-sdk/provider";
+import { getCompartmentId } from '../auth';
+import { getTranscriptionModelMetadata, isValidTranscriptionModelId } from './registry';
+import type { OCITranscriptionSettings } from '../types';
+import type { SharedV3Warning, JSONObject } from '@ai-sdk/provider';
 
 type AIServiceSpeechClient = any;
 
@@ -30,8 +27,8 @@ interface TranscriptionOutput {
 }
 
 export class OCITranscriptionModel {
-  readonly specificationVersion = "v3";
-  readonly provider = "oci-genai";
+  readonly specificationVersion = 'v3';
+  readonly provider = 'oci-genai';
 
   private _client?: AIServiceSpeechClient;
 
@@ -47,13 +44,9 @@ export class OCITranscriptionModel {
     }
 
     const metadata = getTranscriptionModelMetadata(modelId);
-    if (
-      metadata?.modelType === "whisper" &&
-      config.vocabulary &&
-      config.vocabulary.length > 0
-    ) {
+    if (metadata?.modelType === 'whisper' && config.vocabulary && config.vocabulary.length > 0) {
       console.warn(
-        "Warning: Custom vocabulary is not supported by Whisper model. It will be ignored."
+        'Warning: Custom vocabulary is not supported by Whisper model. It will be ignored.'
       );
     }
   }
@@ -62,18 +55,18 @@ export class OCITranscriptionModel {
     if (this._client === undefined || this._client === null) {
       this._client = {
         createTranscriptionJob: async () => ({
-          transcriptionJob: { id: "placeholder-job-id" },
+          transcriptionJob: { id: 'placeholder-job-id' },
         }),
         getTranscriptionJob: async () => ({
-          transcriptionJob: { lifecycleState: "SUCCEEDED", tasks: [{ id: "task-1" }] },
+          transcriptionJob: { lifecycleState: 'SUCCEEDED', tasks: [{ id: 'task-1' }] },
         }),
         getTranscriptionTask: async () => ({
-          transcriptionTask: { output: { text: "Transcribed text..." } },
+          transcriptionTask: { output: { text: 'Transcribed text...' } },
         }),
       };
 
       if (this.config.endpoint) {
-        (this._client as any).endpoint = this.config.endpoint;
+        this._client.endpoint = this.config.endpoint;
       }
     }
 
@@ -103,14 +96,13 @@ export class OCITranscriptionModel {
 
     // Collect warning if vocabulary used with Whisper
     if (
-      metadata?.modelType === "whisper" &&
+      metadata?.modelType === 'whisper' &&
       this.config.vocabulary &&
       this.config.vocabulary.length > 0
     ) {
       warnings.push({
-        type: "other",
-        message:
-          "Custom vocabulary is not supported by Whisper model. It will be ignored.",
+        type: 'other',
+        message: 'Custom vocabulary is not supported by Whisper model. It will be ignored.',
       });
     }
 
@@ -119,16 +111,16 @@ export class OCITranscriptionModel {
         compartmentId,
         displayName: `Transcription-${Date.now()}`,
         modelDetails: {
-          modelType: metadata?.modelType === "whisper" ? "WHISPER" : "ORACLE",
-          languageCode: this.config.language || "en-US",
+          modelType: metadata?.modelType === 'whisper' ? 'WHISPER' : 'ORACLE',
+          languageCode: this.config.language || 'en-US',
         },
         inputLocation: {
-          locationType: "OBJECT_STORAGE",
+          locationType: 'OBJECT_STORAGE',
         },
         outputLocation: {
-          locationType: "OBJECT_STORAGE",
+          locationType: 'OBJECT_STORAGE',
           compartmentId,
-          bucket: "transcription-results",
+          bucket: 'transcription-results',
           prefix: `job-${Date.now()}`,
         },
       },
@@ -166,16 +158,13 @@ export class OCITranscriptionModel {
       providerMetadata: {
         oci: {
           compartmentId,
-          modelType: metadata?.modelType || "standard",
+          modelType: metadata?.modelType || 'standard',
         },
       },
     };
   }
 
-  private async pollForCompletion(
-    client: AIServiceSpeechClient,
-    jobId: string
-  ): Promise<string> {
+  private async pollForCompletion(client: AIServiceSpeechClient, jobId: string): Promise<string> {
     const maxAttempts = 60;
     const pollIntervalMs = 5000;
 
@@ -186,19 +175,19 @@ export class OCITranscriptionModel {
 
       const state = jobResponse.transcriptionJob.lifecycleState;
 
-      if (state === "SUCCEEDED") {
+      if (state === 'SUCCEEDED') {
         const resultResponse = await client.getTranscriptionTask({
           transcriptionJobId: jobId,
-          transcriptionTaskId: jobResponse.transcriptionJob.tasks?.[0]?.id || "",
+          transcriptionTaskId: jobResponse.transcriptionJob.tasks?.[0]?.id || '',
         });
 
-        return resultResponse.transcriptionTask.output?.text || "";
+        return resultResponse.transcriptionTask.output?.text || '';
       }
 
-      if (state === "FAILED") {
+      if (state === 'FAILED') {
         throw new Error(
           `Transcription job failed: ${
-            jobResponse.transcriptionJob.lifecycleDetails || "Unknown error"
+            jobResponse.transcriptionJob.lifecycleDetails || 'Unknown error'
           }`
         );
       }
@@ -206,6 +195,6 @@ export class OCITranscriptionModel {
       await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
     }
 
-    throw new Error("Transcription job timed out after 5 minutes");
+    throw new Error('Transcription job timed out after 5 minutes');
   }
 }

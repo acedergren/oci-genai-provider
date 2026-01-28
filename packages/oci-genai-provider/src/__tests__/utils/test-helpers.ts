@@ -5,9 +5,7 @@
 /**
  * Create a mock OCI config for testing
  */
-export function createMockOCIConfig(
-  overrides: Record<string, any> = {}
-): Record<string, any> {
+export function createMockOCIConfig(overrides: Record<string, any> = {}): Record<string, any> {
   return {
     region: 'eu-frankfurt-1',
     compartmentId: 'ocid1.compartment.oc1..aaaaaaatest',
@@ -111,11 +109,12 @@ export async function waitForCondition(
  * Create a mock streaming response
  */
 export function createMockStreamChunks(texts: string[]): string[] {
-  return texts.map((text) =>
-    `data: ${JSON.stringify({
-      chatResponse: { text },
-      finishReason: null,
-    })}\n\n`
+  return texts.map(
+    (text) =>
+      `data: ${JSON.stringify({
+        chatResponse: { text },
+        finishReason: null,
+      })}\n\n`
   );
 }
 

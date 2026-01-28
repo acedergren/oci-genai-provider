@@ -12,7 +12,7 @@ import { OCILanguageModel } from './language-models/oci-language-model';
 import { OCIEmbeddingModel } from './embedding-models/oci-embedding-model';
 import { OCISpeechModel } from './speech-models/OCISpeechModel';
 import { OCIRerankingModel } from './reranking-models/OCIRerankingModel';
-import { OCITranscriptionModel } from "./transcription-models/OCITranscriptionModel";
+import { OCITranscriptionModel } from './transcription-models/OCITranscriptionModel';
 import type {
   OCIConfig,
   OCILanguageModelSettings,
@@ -95,7 +95,7 @@ export class OCIGenAIProvider implements ProviderV3 {
     const mergedConfig: OCIConfig = { ...this.config, ...settings };
     return new OCITranscriptionModel(modelId, mergedConfig);
   }
-  
+
   /**
    * Create a speech model instance (TTS).
    *

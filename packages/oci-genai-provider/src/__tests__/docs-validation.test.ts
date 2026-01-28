@@ -5,10 +5,7 @@ import { join } from 'path';
 describe('Documentation Validation', () => {
   describe('README completeness', () => {
     it('README should document all model types', () => {
-      const readme = readFileSync(
-        join(__dirname, '../../README.md'),
-        'utf-8'
-      );
+      const readme = readFileSync(join(__dirname, '../../README.md'), 'utf-8');
 
       expect(readme).toContain('Language Models');
       expect(readme).toContain('Embeddings');
@@ -18,39 +15,27 @@ describe('Documentation Validation', () => {
     });
 
     it('README should include installation instructions', () => {
-      const readme = readFileSync(
-        join(__dirname, '../../README.md'),
-        'utf-8'
-      );
+      const readme = readFileSync(join(__dirname, '../../README.md'), 'utf-8');
 
       expect(readme).toContain('npm install');
       expect(readme).toContain('pnpm add');
     });
 
     it('README should document authentication', () => {
-      const readme = readFileSync(
-        join(__dirname, '../../README.md'),
-        'utf-8'
-      );
+      const readme = readFileSync(join(__dirname, '../../README.md'), 'utf-8');
 
       expect(readme).toContain('Authentication');
       expect(readme).toContain('OCI_CONFIG_PROFILE');
     });
 
     it('README should link to examples', () => {
-      const readme = readFileSync(
-        join(__dirname, '../../README.md'),
-        'utf-8'
-      );
+      const readme = readFileSync(join(__dirname, '../../README.md'), 'utf-8');
 
       expect(readme).toContain('examples/');
     });
 
     it('README should document regional availability', () => {
-      const readme = readFileSync(
-        join(__dirname, '../../README.md'),
-        'utf-8'
-      );
+      const readme = readFileSync(join(__dirname, '../../README.md'), 'utf-8');
 
       expect(readme).toContain('Regional');
       expect(readme).toContain('us-phoenix-1');
@@ -59,10 +44,7 @@ describe('Documentation Validation', () => {
 
   describe('API Reference Documentation', () => {
     it('should document all provider methods', () => {
-      const apiRef = readFileSync(
-        join(__dirname, '../../docs/api-reference.md'),
-        'utf-8'
-      );
+      const apiRef = readFileSync(join(__dirname, '../../docs/api-reference.md'), 'utf-8');
 
       expect(apiRef).toContain('languageModel()');
       expect(apiRef).toContain('embeddingModel()');
@@ -72,10 +54,7 @@ describe('Documentation Validation', () => {
     });
 
     it('should document createOCI factory', () => {
-      const apiRef = readFileSync(
-        join(__dirname, '../../docs/api-reference.md'),
-        'utf-8'
-      );
+      const apiRef = readFileSync(join(__dirname, '../../docs/api-reference.md'), 'utf-8');
 
       expect(apiRef).toContain('createOCI');
       expect(apiRef).toContain('OCIBaseConfig');
@@ -84,10 +63,7 @@ describe('Documentation Validation', () => {
 
   describe('Configuration Guide', () => {
     it('should document configuration methods', () => {
-      const config = readFileSync(
-        join(__dirname, '../../docs/configuration.md'),
-        'utf-8'
-      );
+      const config = readFileSync(join(__dirname, '../../docs/configuration.md'), 'utf-8');
 
       expect(config).toContain('Authentication');
       expect(config).toContain('Region');
@@ -97,10 +73,7 @@ describe('Documentation Validation', () => {
 
   describe('Migration Guide', () => {
     it('should document breaking changes', () => {
-      const migration = readFileSync(
-        join(__dirname, '../../docs/migration.md'),
-        'utf-8'
-      );
+      const migration = readFileSync(join(__dirname, '../../docs/migration.md'), 'utf-8');
 
       expect(migration).toContain('v1.x');
       expect(migration).toContain('v2.0');
