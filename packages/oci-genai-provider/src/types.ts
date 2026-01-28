@@ -1,5 +1,3 @@
-import type { LanguageModelV3 } from '@ai-sdk/provider';
-
 /**
  * Request options for configuring retry and timeout behavior.
  */
@@ -92,23 +90,6 @@ export interface OCIConfig {
    * These can be overridden per-request.
    */
   requestOptions?: RequestOptions;
-}
-
-/**
- * OCI Provider interface returned by createOCI()
- */
-export interface OCIProvider {
-  /**
-   * Provider identifier
-   */
-  readonly provider: 'oci-genai';
-
-  /**
-   * Create a language model instance
-   * @param modelId - OCI model identifier (e.g., 'cohere.command-r-plus')
-   * @returns Language model instance
-   */
-  model: (modelId: string) => LanguageModelV3;
 }
 
 /**
