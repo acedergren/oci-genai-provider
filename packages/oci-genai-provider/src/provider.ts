@@ -8,8 +8,8 @@ import {
   RerankingModelV3,
   NoSuchModelError,
 } from '@ai-sdk/provider';
-import { OCILanguageModel } from './language-models/oci-language-model';
-import { OCIEmbeddingModel } from './embedding-models/oci-embedding-model';
+import { OCILanguageModel } from './language-models/OCILanguageModel';
+import { OCIEmbeddingModel } from './embedding-models/OCIEmbeddingModel';
 import { OCISpeechModel } from './speech-models/OCISpeechModel';
 import { OCIRerankingModel } from './reranking-models/OCIRerankingModel';
 import { OCITranscriptionModel } from './transcription-models/OCITranscriptionModel';

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { OCIEmbeddingModel } from '../oci-embedding-model';
+import { OCIEmbeddingModel } from '../OCIEmbeddingModel';
 import type { EmbeddingModelV3CallOptions } from '@ai-sdk/provider';
 
 // Mockable embedText function - use any to avoid complex Jest typing issues
