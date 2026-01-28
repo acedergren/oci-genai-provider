@@ -1,6 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-function-type, @typescript-eslint/no-unsafe-call, @typescript-eslint/require-await */
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 // Mock oci-objectstorage
 const mockGetObject = jest.fn<any>();

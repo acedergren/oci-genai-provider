@@ -265,11 +265,19 @@ describe('OCIGenAIProvider (ProviderV3)', () => {
   describe('transcriptionModel()', () => {
     it('should create transcription model with valid ID', () => {
       const provider = new OCIGenAIProvider({ region: 'us-phoenix-1' });
-      const model = provider.transcriptionModel('oci.speech.whisper');
+      const model = provider.transcriptionModel('WHISPER_MEDIUM');
 
       expect(model).toBeDefined();
       expect(model.provider).toBe('oci-genai');
-      expect(model.modelId).toBe('oci.speech.whisper');
+      expect(model.modelId).toBe('WHISPER_MEDIUM');
+    });
+
+    it('should create Oracle transcription model', () => {
+      const provider = new OCIGenAIProvider({ region: 'us-phoenix-1' });
+      const model = provider.transcriptionModel('ORACLE');
+
+      expect(model).toBeDefined();
+      expect(model.modelId).toBe('ORACLE');
     });
 
     it('should throw error for invalid model ID', () => {
@@ -284,19 +292,25 @@ describe('OCIGenAIProvider (ProviderV3)', () => {
   describe('speechModel()', () => {
     it('should create speech model with valid ID', () => {
       const provider = new OCIGenAIProvider({ region: 'us-phoenix-1' });
-      const model = provider.speechModel('oci.tts-1-hd');
+      const model = provider.speechModel('TTS_2_NATURAL');
 
       expect(model).toBeDefined();
       expect(model.provider).toBe('oci-genai');
-      expect(model.modelId).toBe('oci.tts-1-hd');
+      expect(model.modelId).toBe('TTS_2_NATURAL');
+    });
+
+    it('should create TTS_1_STANDARD model', () => {
+      const provider = new OCIGenAIProvider({ region: 'us-phoenix-1' });
+      const model = provider.speechModel('TTS_1_STANDARD');
+
+      expect(model).toBeDefined();
+      expect(model.modelId).toBe('TTS_1_STANDARD');
     });
 
     it('should throw error for invalid model ID', () => {
       const provider = new OCIGenAIProvider();
 
-      expect(() => provider.speechModel('invalid-tts')).toThrow(
-        'Invalid speech model ID'
-      );
+      expect(() => provider.speechModel('invalid-tts')).toThrow('Invalid speech model ID');
     });
   });
 

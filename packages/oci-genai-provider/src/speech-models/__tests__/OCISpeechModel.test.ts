@@ -66,13 +66,13 @@ describe('OCISpeechModel', () => {
   });
 
   it('should have correct specification version and provider', () => {
-    const model = new OCISpeechModel('oci.tts-1-hd', {
+    const model = new OCISpeechModel('TTS_2_NATURAL', {
       compartmentId: 'ocid1.compartment.test',
       region: 'us-phoenix-1',
     });
     expect(model.specificationVersion).toBe('v3');
     expect(model.provider).toBe('oci-genai');
-    expect(model.modelId).toBe('oci.tts-1-hd');
+    expect(model.modelId).toBe('TTS_2_NATURAL');
   });
 
   it('should throw error for invalid model ID', () => {
@@ -81,20 +81,20 @@ describe('OCISpeechModel', () => {
     }).toThrow('Invalid speech model ID');
   });
 
-  it('should throw error if region is not us-phoenix-1', () => {
-    expect(() => {
-      new OCISpeechModel('oci.tts-1-hd', { region: 'eu-frankfurt-1' });
-    }).toThrow('OCI Speech is only available in us-phoenix-1 region');
-  });
-
-  it('should allow us-phoenix-1 region', () => {
+  it('should reject old-style model IDs', () => {
     expect(() => {
       new OCISpeechModel('oci.tts-1-hd', { region: 'us-phoenix-1' });
+    }).toThrow('Invalid speech model ID');
+  });
+
+  it('should allow any region (no Phoenix-only restriction)', () => {
+    expect(() => {
+      new OCISpeechModel('TTS_2_NATURAL', { region: 'eu-frankfurt-1' });
     }).not.toThrow();
   });
 
   it('should validate text length does not exceed max', async () => {
-    const model = new OCISpeechModel('oci.tts-1-hd', {
+    const model = new OCISpeechModel('TTS_2_NATURAL', {
       compartmentId: 'test',
       region: 'us-phoenix-1',
     });
@@ -106,32 +106,23 @@ describe('OCISpeechModel', () => {
 
   describe('Voice Selection', () => {
     it('should use config.voice when provided (highest priority)', () => {
-      const model = new OCISpeechModel('oci.tts-1-hd', {
+      const model = new OCISpeechModel('TTS_2_NATURAL', {
         region: 'us-phoenix-1',
         voice: 'custom-voice-id',
       });
       expect(model.getVoice()).toBe('custom-voice-id');
     });
 
-    it('should use metadata.defaultVoice when config.voice not provided', () => {
-      // oci.tts-1-hd has defaultVoice: 'en-US-Neural2-A' in registry
-      const model = new OCISpeechModel('oci.tts-1-hd', {
-        region: 'us-phoenix-1',
-      });
-      expect(model.getVoice()).toBe('en-US-Neural2-A');
-    });
-
-    it('should fallback to hardcoded default when both config.voice and metadata.defaultVoice are undefined', () => {
-      // oci.tts-1 has no defaultVoice in registry
-      const model = new OCISpeechModel('oci.tts-1', {
+    it('should fallback to hardcoded default when no defaultVoice in registry', () => {
+      // Neither TTS_2_NATURAL nor TTS_1_STANDARD has defaultVoice in registry
+      const model = new OCISpeechModel('TTS_1_STANDARD', {
         region: 'us-phoenix-1',
       });
       expect(model.getVoice()).toBe('en-US-AriaNeural');
     });
 
-    it('should prefer config.voice over metadata.defaultVoice', () => {
-      // oci.tts-1-hd has defaultVoice but config.voice should override it
-      const model = new OCISpeechModel('oci.tts-1-hd', {
+    it('should prefer config.voice over default', () => {
+      const model = new OCISpeechModel('TTS_2_NATURAL', {
         region: 'us-phoenix-1',
         voice: 'my-custom-voice',
       });
@@ -141,7 +132,7 @@ describe('OCISpeechModel', () => {
 
   describe('doGenerate', () => {
     it('should generate audio successfully for valid text', async () => {
-      const model = new OCISpeechModel('oci.tts-1-hd', {
+      const model = new OCISpeechModel('TTS_2_NATURAL', {
         compartmentId: 'test',
         region: 'us-phoenix-1',
       });
@@ -150,11 +141,11 @@ describe('OCISpeechModel', () => {
       expect(result.audio).toBeInstanceOf(Uint8Array);
       expect((result.audio as Uint8Array).length).toBeGreaterThan(0);
       expect(result.warnings).toEqual([]);
-      expect(result.response.modelId).toBe('oci.tts-1-hd');
+      expect(result.response.modelId).toBe('TTS_2_NATURAL');
     });
 
     it('should return timestamp in response', async () => {
-      const model = new OCISpeechModel('oci.tts-1-hd', {
+      const model = new OCISpeechModel('TTS_2_NATURAL', {
         compartmentId: 'test',
         region: 'us-phoenix-1',
       });
@@ -166,7 +157,7 @@ describe('OCISpeechModel', () => {
     });
 
     it('should include request body in response', async () => {
-      const model = new OCISpeechModel('oci.tts-1-hd', {
+      const model = new OCISpeechModel('TTS_2_NATURAL', {
         compartmentId: 'test',
         region: 'us-phoenix-1',
       });
@@ -176,7 +167,7 @@ describe('OCISpeechModel', () => {
     });
 
     it('should include providerMetadata with voice and format', async () => {
-      const model = new OCISpeechModel('oci.tts-1-hd', {
+      const model = new OCISpeechModel('TTS_2_NATURAL', {
         compartmentId: 'test',
         region: 'us-phoenix-1',
         format: 'wav',
@@ -186,11 +177,30 @@ describe('OCISpeechModel', () => {
       expect(result.providerMetadata?.oci).toBeDefined();
       expect((result.providerMetadata?.oci as Record<string, unknown>).format).toBe('wav');
     });
+
+    it('should pass correct modelName to OCI SDK', async () => {
+      const model = new OCISpeechModel('TTS_1_STANDARD', {
+        compartmentId: 'test',
+        region: 'us-phoenix-1',
+      });
+      await model.doGenerate({ text: 'Test' });
+
+      expect(mockSynthesizeSpeech).toHaveBeenCalledWith({
+        synthesizeSpeechDetails: expect.objectContaining({
+          configuration: expect.objectContaining({
+            modelFamily: 'ORACLE',
+            modelDetails: expect.objectContaining({
+              modelName: 'TTS_1_STANDARD',
+            }),
+          }),
+        }),
+      });
+    });
   });
 
   describe('format mapping', () => {
     it('should default to mp3 format when not specified', async () => {
-      const model = new OCISpeechModel('oci.tts-1-hd', {
+      const model = new OCISpeechModel('TTS_2_NATURAL', {
         compartmentId: 'test',
         region: 'us-phoenix-1',
       });

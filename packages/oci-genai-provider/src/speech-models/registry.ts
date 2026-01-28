@@ -2,45 +2,51 @@ export interface SpeechModelMetadata {
   id: string;
   name: string;
   family: 'oci-speech';
+  modelName: string;
   supportedFormats: ('mp3' | 'ogg' | 'pcm')[];
-  supportedVoices: string[];
   maxTextLength: number;
-  requiredRegion: 'us-phoenix-1';
   defaultVoice?: string;
+  supportedLanguages: string[];
 }
 
-export const OCI_TTS_VOICES = [
-  'en-US-Neural2-A',
-  'en-US-Neural2-C',
-  'en-US-Neural2-D',
-  'en-US-Neural2-E',
-  'en-US-Neural2-F',
-  'en-US-Neural2-G',
-  'en-US-Neural2-H',
-  'en-US-Neural2-I',
-  'en-US-Neural2-J',
+/**
+ * TTS_2_NATURAL supported languages (9 languages)
+ */
+export const TTS_2_NATURAL_LANGUAGES = [
+  'en-US',
+  'en-GB',
+  'es-ES',
+  'pt-BR',
+  'hi-IN',
+  'fr-FR',
+  'it-IT',
+  'ja-JP',
+  'cmn-CN',
 ] as const;
+
+/**
+ * TTS_1_STANDARD supported languages
+ */
+export const TTS_1_STANDARD_LANGUAGES = ['en-US'] as const;
 
 export const SPEECH_MODELS: SpeechModelMetadata[] = [
   {
-    id: 'oci.tts-1-hd',
-    name: 'OCI TTS High Definition',
+    id: 'TTS_2_NATURAL',
+    name: 'OCI TTS Natural',
     family: 'oci-speech',
+    modelName: 'TTS_2_NATURAL',
     supportedFormats: ['mp3', 'ogg', 'pcm'],
-    supportedVoices: [...OCI_TTS_VOICES],
     maxTextLength: 5000,
-    requiredRegion: 'us-phoenix-1',
-    defaultVoice: 'en-US-Neural2-A',
+    supportedLanguages: [...TTS_2_NATURAL_LANGUAGES],
   },
   {
-    id: 'oci.tts-1',
+    id: 'TTS_1_STANDARD',
     name: 'OCI TTS Standard',
     family: 'oci-speech',
+    modelName: 'TTS_1_STANDARD',
     supportedFormats: ['mp3', 'ogg', 'pcm'],
-    supportedVoices: [...OCI_TTS_VOICES],
     maxTextLength: 5000,
-    requiredRegion: 'us-phoenix-1',
-    // No defaultVoice - tests hardcoded fallback
+    supportedLanguages: [...TTS_1_STANDARD_LANGUAGES],
   },
 ];
 
@@ -56,6 +62,65 @@ export function getAllSpeechModels(): SpeechModelMetadata[] {
   return SPEECH_MODELS;
 }
 
-export function getAllVoices(): string[] {
-  return [...OCI_TTS_VOICES];
+/**
+ * Voice metadata for TTS models
+ */
+export interface VoiceMetadata {
+  id: string;
+  name: string;
+  language: string;
+  model: 'TTS_2_NATURAL' | 'TTS_1_STANDARD';
+}
+
+/**
+ * Available voices for TTS models
+ */
+const AVAILABLE_VOICES: VoiceMetadata[] = [
+  // TTS_2_NATURAL voices
+  { id: 'en-US-AriaNeural', name: 'Aria (US English)', language: 'en-US', model: 'TTS_2_NATURAL' },
+  { id: 'en-US-GuyNeural', name: 'Guy (US English)', language: 'en-US', model: 'TTS_2_NATURAL' },
+  {
+    id: 'en-GB-LibbyNeural',
+    name: 'Libby (UK English)',
+    language: 'en-GB',
+    model: 'TTS_2_NATURAL',
+  },
+  { id: 'en-GB-RyanNeural', name: 'Ryan (UK English)', language: 'en-GB', model: 'TTS_2_NATURAL' },
+  { id: 'es-ES-AlvaroNeural', name: 'Alvaro (Spanish)', language: 'es-ES', model: 'TTS_2_NATURAL' },
+  {
+    id: 'pt-BR-FranciscaNeural',
+    name: 'Francisca (Portuguese BR)',
+    language: 'pt-BR',
+    model: 'TTS_2_NATURAL',
+  },
+  { id: 'fr-FR-DeniseNeural', name: 'Denise (French)', language: 'fr-FR', model: 'TTS_2_NATURAL' },
+  {
+    id: 'it-IT-IsabellaNeural',
+    name: 'Isabella (Italian)',
+    language: 'it-IT',
+    model: 'TTS_2_NATURAL',
+  },
+  {
+    id: 'ja-JP-NanamiNeural',
+    name: 'Nanami (Japanese)',
+    language: 'ja-JP',
+    model: 'TTS_2_NATURAL',
+  },
+  {
+    id: 'cmn-CN-XiaoxuanNeural',
+    name: 'Xiaoxuan (Mandarin)',
+    language: 'cmn-CN',
+    model: 'TTS_2_NATURAL',
+  },
+  // TTS_1_STANDARD voices
+  {
+    id: 'en-US-Standard-A',
+    name: 'Standard A (US English)',
+    language: 'en-US',
+    model: 'TTS_1_STANDARD',
+  },
+];
+
+export function getAllVoices(): VoiceMetadata[] {
+  return AVAILABLE_VOICES;
 }

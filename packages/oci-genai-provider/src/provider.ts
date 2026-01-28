@@ -99,14 +99,14 @@ export class OCIGenAIProvider implements ProviderV3 {
   /**
    * Create a speech model instance (TTS).
    *
-   * @param modelId - OCI speech model identifier (e.g., 'oci.tts-1-hd')
+   * @param modelId - OCI speech model identifier (e.g., 'TTS_2_NATURAL')
    * @param settings - Optional model-specific settings that override provider config
    * @returns Speech model instance
    *
    * @example
    * ```typescript
    * const provider = new OCIGenAIProvider({ region: 'us-phoenix-1' });
-   * const model = provider.speechModel('oci.tts-1-hd');
+   * const model = provider.speechModel('TTS_2_NATURAL');
    * ```
    */
   speechModel(modelId: string, settings?: OCISpeechSettings): SpeechModelV3 {
