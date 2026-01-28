@@ -395,6 +395,51 @@ const config: OCIConfig = {
 };
 ```
 
+## Testing
+
+### Running Tests
+
+```bash
+# All tests
+pnpm test
+
+# With coverage
+pnpm test:coverage
+
+# Watch mode
+pnpm test:watch
+
+# Unit tests only
+pnpm test:unit
+
+# Integration tests
+pnpm test:integration
+```
+
+### Coverage
+
+We maintain 80%+ test coverage across:
+- Language models
+- Embedding models
+- Speech models (TTS)
+- Transcription models (STT)
+- Reranking models
+
+View coverage report:
+```bash
+pnpm test:coverage
+open coverage/lcov-report/index.html
+```
+
+### Contributing Tests
+
+See [Testing Guide](../../docs/testing-guide.md) for detailed information on:
+- Writing unit tests
+- Writing integration tests
+- Using test helpers and mocks
+- Test fixtures and best practices
+
+
 ## Development
 
 This package is part of a monorepo. For contributors:
