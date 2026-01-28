@@ -63,21 +63,7 @@ export class OCIEmbeddingModel implements EmbeddingModelV3 {
     const client = await this.getClient();
     const compartmentId = getCompartmentId(this.config);
 
-    // Map truncate value to OCI API enum
-    const truncateMap: Record<string, any> = {
-      START: 'START',
-      END: 'END',
-      NONE: 'NONE',
-    };
-
-    // Map inputType to OCI API enum
-    const inputTypeMap: Record<string, any> = {
-      QUERY: 'QUERY',
-      DOCUMENT: 'DOCUMENT',
-    };
-
-    // Build OCI request
-    const request = {
+    const response = await client.embedText({
       embedTextDetails: {
         servingMode: {
           servingType: 'ON_DEMAND',
@@ -85,16 +71,12 @@ export class OCIEmbeddingModel implements EmbeddingModelV3 {
         },
         compartmentId,
         inputs: values,
-        truncate: truncateMap[this.config.truncate || 'END'],
-        inputType: inputTypeMap[this.config.inputType || 'DOCUMENT'],
+        truncate: (this.config.truncate ?? 'END') as any,
+        inputType: (this.config.inputType ?? 'DOCUMENT') as any,
       },
-    };
+    });
 
-    // Call OCI API
-    const response = await client.embedText(request);
-
-    // Convert OCI response to AI SDK format
-    const embeddings = response.embedTextResult.embeddings.map((emb: any) => emb);
+    const embeddings = response.embedTextResult.embeddings;
 
     return {
       embeddings,
