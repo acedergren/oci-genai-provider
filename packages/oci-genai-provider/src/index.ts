@@ -104,6 +104,17 @@ export {
 export type { EmbeddingModelMetadata } from './embedding-models/registry';
 
 // ============================================================================
+// Reranking Model Exports
+// ============================================================================
+
+export { OCIRerankingModel } from './reranking-models/OCIRerankingModel';
+export {
+  getRerankingModelMetadata,
+  isValidRerankingModelId,
+  getAllRerankingModels,
+} from './reranking-models/registry';
+export type { RerankingModelMetadata } from './reranking-models/registry';
+// ============================================================================
 // Error Exports
 // ============================================================================
 
