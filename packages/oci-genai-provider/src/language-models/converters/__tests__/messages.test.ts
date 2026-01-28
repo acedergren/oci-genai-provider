@@ -122,6 +122,142 @@ describe('Message Conversion', () => {
       expect(result[0].content[0].text).toBe('Text part');
     });
 
+    it('should handle image content type (non-text branch)', () => {
+      const aiPrompt = [
+        {
+          role: 'user' as const,
+          content: [
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            { type: 'image' as const, image: new Uint8Array([1, 2, 3]) } as any,
+          ],
+        },
+      ];
+
+      const result = convertToOCIMessages(aiPrompt);
+
+      // Image content should be filtered out, leaving empty content array
+      expect(result[0].content).toHaveLength(0);
+    });
+
+    it('should handle file content type (non-text branch)', () => {
+      const aiPrompt = [
+        {
+          role: 'user' as const,
+          content: [
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            { type: 'file' as const, data: new Uint8Array(), mimeType: 'application/pdf' } as any,
+          ],
+        },
+      ];
+
+      const result = convertToOCIMessages(aiPrompt);
+
+      // File content should be filtered out, leaving empty content array
+      expect(result[0].content).toHaveLength(0);
+    });
+
+    it('should handle mixed text and image content types', () => {
+      const aiPrompt = [
+        {
+          role: 'user' as const,
+          content: [
+            { type: 'text' as const, text: 'What is this?' },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            { type: 'image' as const, image: new Uint8Array([1, 2, 3]) } as any,
+            { type: 'text' as const, text: 'Can you analyze?' },
+          ],
+        },
+      ];
+
+      const result = convertToOCIMessages(aiPrompt);
+
+      // Only text parts should be included
+      expect(result[0].content).toHaveLength(2);
+      expect(result[0].content[0].text).toBe('What is this?');
+      expect(result[0].content[1].text).toBe('Can you analyze?');
+    });
+
+    it('should handle mixed text, image, and file content types', () => {
+      const aiPrompt = [
+        {
+          role: 'user' as const,
+          content: [
+            { type: 'text' as const, text: 'Text 1' },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            { type: 'image' as const, image: new Uint8Array() } as any,
+            { type: 'text' as const, text: 'Text 2' },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            { type: 'file' as const, data: new Uint8Array(), mimeType: 'application/pdf' } as any,
+            { type: 'text' as const, text: 'Text 3' },
+          ],
+        },
+      ];
+
+      const result = convertToOCIMessages(aiPrompt);
+
+      // Only text parts should be included
+      expect(result[0].content).toHaveLength(3);
+      expect(result[0].content[0].text).toBe('Text 1');
+      expect(result[0].content[1].text).toBe('Text 2');
+      expect(result[0].content[2].text).toBe('Text 3');
+    });
+
+    it('should handle assistant message with non-text content', () => {
+      const aiPrompt = [
+        {
+          role: 'assistant' as const,
+          content: [
+            { type: 'text' as const, text: 'Response' },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            { type: 'image' as const, image: 'base64...' } as any,
+          ],
+        },
+      ];
+
+      const result = convertToOCIMessages(aiPrompt);
+
+      expect(result[0].role).toBe('ASSISTANT');
+      expect(result[0].content).toHaveLength(1);
+      expect(result[0].content[0].text).toBe('Response');
+    });
+
+    it('should handle user message with only non-text content', () => {
+      const aiPrompt = [
+        {
+          role: 'user' as const,
+          content: [
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            { type: 'image' as const, image: new Uint8Array() } as any,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            { type: 'file' as const, data: new Uint8Array(), mimeType: 'text/plain' } as any,
+          ],
+        },
+      ];
+
+      const result = convertToOCIMessages(aiPrompt);
+
+      // All non-text content filtered out
+      expect(result[0].content).toHaveLength(0);
+      expect(result[0].role).toBe('USER');
+    });
+
+    it('should handle content that is not string or array (edge case for branch coverage)', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const aiPrompt: any = [
+        {
+          role: 'user' as const,
+          content: null,
+        },
+      ];
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      const result = convertToOCIMessages(aiPrompt);
+
+      // When content is neither string nor array, should result in empty content
+      expect(result[0].content).toHaveLength(0);
+      expect(result[0].role).toBe('USER');
+    });
+
     it('should throw error for unsupported role', () => {
       const aiPrompt = [
         {
