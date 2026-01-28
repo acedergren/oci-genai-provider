@@ -15,7 +15,7 @@ echo "Prerequisites: Plans 1 (Core) and 2 (Embeddings) must be complete"
 echo ""
 
 # Verify Plans 1-2 are complete
-if [ ! -d "src/language-models" ] || [ ! -d "src/embedding-models" ]; then
+if [ ! -d "packages/oci-genai-provider/src/language-models" ] || [ ! -d "packages/oci-genai-provider/src/embedding-models" ]; then
   echo "❌ Error: Plans 1-2 not complete. Missing language-models or embedding-models directories."
   echo "   Please execute Plans 1 and 2 first."
   exit 1
@@ -107,16 +107,58 @@ else
   exit 1
 fi
 
-# Final summary
-echo "════════════════════════════════════════════════════════════════"
-echo "  🎉 Success! All Plans 3-7 Executed"
-echo "════════════════════════════════════════════════════════════════"
+# Verify implementation completion
 echo ""
-echo "✅ Plan 3: Speech Models (TTS)"
-echo "✅ Plan 4: Transcription Models (STT)"
-echo "✅ Plan 5: Reranking Models"
-echo "✅ Plan 6: Documentation & Examples"
-echo "✅ Plan 7: Testing Infrastructure"
+echo "🔍 Verifying implementation..."
+echo ""
+
+VERIFICATION_FAILED=0
+
+# Check Plan 3 (Speech)
+if [ -d "packages/oci-genai-provider/src/speech-models" ]; then
+  echo "✅ Plan 3: Speech Models (TTS) - Directory created"
+else
+  echo "⚠️  Plan 3: Speech Models (TTS) - Directory missing"
+  VERIFICATION_FAILED=1
+fi
+
+# Check Plan 4 (Transcription)
+if [ -d "packages/oci-genai-provider/src/transcription-models" ]; then
+  echo "✅ Plan 4: Transcription Models (STT) - Directory created"
+else
+  echo "⚠️  Plan 4: Transcription Models (STT) - Directory missing"
+  VERIFICATION_FAILED=1
+fi
+
+# Check Plan 5 (Reranking)
+if [ -d "packages/oci-genai-provider/src/reranking-models" ]; then
+  echo "✅ Plan 5: Reranking Models - Directory created"
+else
+  echo "⚠️  Plan 5: Reranking Models - Directory missing"
+  VERIFICATION_FAILED=1
+fi
+
+echo ""
+
+# Final summary
+if [ $VERIFICATION_FAILED -eq 0 ]; then
+  echo "════════════════════════════════════════════════════════════════"
+  echo "  🎉 Success! All Plans 3-7 Executed"
+  echo "════════════════════════════════════════════════════════════════"
+else
+  echo "════════════════════════════════════════════════════════════════"
+  echo "  ⚠️  Plans Executed with Warnings"
+  echo "════════════════════════════════════════════════════════════════"
+  echo ""
+  echo "Some model directories were not created. Check the output logs."
+fi
+echo ""
+echo "📋 Completed Plans:"
+echo "   • Plan 3: Speech Models (TTS)"
+echo "   • Plan 4: Transcription Models (STT)"
+echo "   • Plan 5: Reranking Models"
+echo "   • Plan 6: Documentation & Examples"
+echo "   • Plan 7: Testing Infrastructure"
 echo ""
 echo "📊 Output logs:"
 echo "   • plan3-output.log - Speech TTS execution"
