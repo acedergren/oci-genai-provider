@@ -6,6 +6,7 @@ export interface SpeechModelMetadata {
   supportedVoices: string[];
   maxTextLength: number;
   requiredRegion: 'us-phoenix-1';
+  defaultVoice?: string;
 }
 
 export const OCI_TTS_VOICES = [
@@ -29,6 +30,7 @@ export const SPEECH_MODELS: SpeechModelMetadata[] = [
     supportedVoices: [...OCI_TTS_VOICES],
     maxTextLength: 5000,
     requiredRegion: 'us-phoenix-1',
+    defaultVoice: 'en-US-Neural2-A',
   },
   {
     id: 'oci.tts-1',
@@ -38,6 +40,7 @@ export const SPEECH_MODELS: SpeechModelMetadata[] = [
     supportedVoices: [...OCI_TTS_VOICES],
     maxTextLength: 5000,
     requiredRegion: 'us-phoenix-1',
+    // No defaultVoice - tests hardcoded fallback
   },
 ];
 
