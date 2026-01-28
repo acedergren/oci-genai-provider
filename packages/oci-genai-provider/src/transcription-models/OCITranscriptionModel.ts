@@ -6,6 +6,7 @@ import {
   uploadAudioToObjectStorage,
   deleteFromObjectStorage,
   generateAudioObjectName,
+  downloadTranscriptionResult,
 } from '../shared/storage/object-storage';
 import type { OCITranscriptionSettings } from '../types';
 import type {
@@ -49,7 +50,7 @@ export class OCITranscriptionModel implements TranscriptionModelV3 {
     if (isValidTranscriptionModelId(modelId) === false) {
       throw new Error(
         `Invalid transcription model ID: ${modelId}. ` +
-          `Valid models: oci.speech.standard, oci.speech.whisper`
+          `Valid models: ORACLE, WHISPER_MEDIUM, WHISPER_LARGE_V2`
       );
     }
   }
@@ -104,7 +105,7 @@ export class OCITranscriptionModel implements TranscriptionModelV3 {
 
     // Collect warning if vocabulary used with Whisper
     if (
-      metadata?.modelType === 'whisper' &&
+      metadata?.modelType !== 'ORACLE' &&
       this.config.vocabulary &&
       this.config.vocabulary.length > 0
     ) {
@@ -142,7 +143,7 @@ export class OCITranscriptionModel implements TranscriptionModelV3 {
           compartmentId,
           displayName: `Transcription-${Date.now()}`,
           modelDetails: {
-            modelType: metadata?.modelType === 'whisper' ? 'WHISPER_MEDIUM' : 'ORACLE',
+            modelType: metadata?.modelType || 'ORACLE',
             languageCode,
           },
           inputLocation: {
@@ -167,11 +168,17 @@ export class OCITranscriptionModel implements TranscriptionModelV3 {
       const jobId = jobResponse.transcriptionJob.id;
 
       // Poll for job completion and get transcript
-      const { text, taskId } = await this.pollForCompletion(client, jobId);
+      const { text, taskId, segments } = await this.pollForCompletion(
+        client,
+        jobId,
+        bucketName,
+        uploadedLocation.namespaceName,
+        `results-${Date.now()}`
+      );
 
       return {
         text,
-        segments: [],
+        segments,
         language: this.config.language || undefined,
         durationInSeconds: undefined,
         warnings,
@@ -186,7 +193,7 @@ export class OCITranscriptionModel implements TranscriptionModelV3 {
         providerMetadata: {
           oci: {
             compartmentId,
-            modelType: metadata?.modelType || 'standard',
+            modelType: metadata?.modelType || 'ORACLE',
             jobId,
             taskId,
           },
@@ -240,8 +247,15 @@ export class OCITranscriptionModel implements TranscriptionModelV3 {
 
   private async pollForCompletion(
     client: AIServiceSpeechClient,
-    jobId: string
-  ): Promise<{ text: string; taskId: string }> {
+    jobId: string,
+    outputBucket: string,
+    outputNamespace: string,
+    outputPrefix: string
+  ): Promise<{
+    text: string;
+    taskId: string;
+    segments: Array<{ text: string; startSecond: number; endSecond: number }>;
+  }> {
     const maxAttempts = 60;
     const pollIntervalMs = 5000;
 
@@ -263,11 +277,56 @@ export class OCITranscriptionModel implements TranscriptionModelV3 {
           throw new Error('No transcription tasks found in job');
         }
 
-        // The transcription text is stored in Object Storage output location
-        // For now, return a placeholder - in production, read from output location
-        const text = `Transcription completed for task ${firstTask.id}`;
+        // Get full task details to retrieve output file location
+        let taskDetails;
+        try {
+          const taskResponse = await client.getTranscriptionTask({
+            transcriptionTaskId: firstTask.id,
+          });
+          taskDetails = taskResponse.transcriptionTask;
+        } catch (error) {
+          throw new Error(
+            `Failed to get transcription task details: ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
+        }
 
-        return { text, taskId: firstTask.id };
+        // Determine the output file name
+        let outputFileName: string;
+
+        // If task has outputLocation, use it; otherwise use fallback naming
+        if (taskDetails.outputLocation) {
+          // outputLocation typically contains the prefix and actual filename
+          // Format is usually "{prefix}/{input_filename}.json"
+          outputFileName = taskDetails.outputLocation;
+        } else {
+          // Fallback: construct filename from prefix and task input
+          // Assuming input object name is available in task details
+          const inputName =
+            taskDetails.inputLocation?.objectName || `task-${firstTask.id}`;
+          const baseName = inputName.replace(/\.[^.]*$/, ''); // Remove extension
+          outputFileName = `${outputPrefix}/${baseName}.json`;
+        }
+
+        // Download and parse the transcription result from Object Storage
+        let result;
+        try {
+          result = await downloadTranscriptionResult(
+            this.config,
+            outputNamespace,
+            outputBucket,
+            outputFileName
+          );
+        } catch (error) {
+          throw new Error(
+            `Failed to download transcription result: ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
+        }
+
+        return {
+          text: result.text,
+          taskId: firstTask.id,
+          segments: result.segments,
+        };
       }
 
       if (state === models.TranscriptionJob.LifecycleState.Failed) {
