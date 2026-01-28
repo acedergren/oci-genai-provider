@@ -98,22 +98,9 @@ export class OCILanguageModel implements LanguageModelV3 {
         configOptions.timeoutMs ??
         DEFAULT_REQUEST_OPTIONS.timeoutMs,
       retry: {
-        enabled:
-          perRequestOptions?.retry?.enabled ??
-          configOptions.retry?.enabled ??
-          DEFAULT_REQUEST_OPTIONS.retry.enabled,
-        maxRetries:
-          perRequestOptions?.retry?.maxRetries ??
-          configOptions.retry?.maxRetries ??
-          DEFAULT_REQUEST_OPTIONS.retry.maxRetries,
-        baseDelayMs:
-          perRequestOptions?.retry?.baseDelayMs ??
-          configOptions.retry?.baseDelayMs ??
-          DEFAULT_REQUEST_OPTIONS.retry.baseDelayMs,
-        maxDelayMs:
-          perRequestOptions?.retry?.maxDelayMs ??
-          configOptions.retry?.maxDelayMs ??
-          DEFAULT_REQUEST_OPTIONS.retry.maxDelayMs,
+        ...DEFAULT_REQUEST_OPTIONS.retry,
+        ...configOptions.retry,
+        ...perRequestOptions?.retry,
       },
     };
   }

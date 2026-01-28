@@ -70,7 +70,6 @@ export const oci = createOCI();
 export type {
   OCIConfig,
   OCIAuthMethod,
-  OCIBaseConfig,
   OCILanguageModelSettings,
   OCIEmbeddingSettings,
   OCISpeechSettings,
@@ -96,7 +95,7 @@ export {
 // Embedding Model Exports
 // ============================================================================
 
-export { OCIEmbeddingModel } from './embedding-models/OCIEmbeddingModel';
+export { OCIEmbeddingModel } from './embedding-models/oci-embedding-model';
 export {
   getEmbeddingModelMetadata,
   isValidEmbeddingModelId,
@@ -114,7 +113,7 @@ export {
   RateLimitError,
   AuthenticationError,
   ModelNotFoundError,
-  isRetryableError,
+  isRetryableStatusCode,
   handleOCIError,
 } from './shared/errors';
 
@@ -129,11 +128,6 @@ export type {
 // Utility Exports
 // ============================================================================
 
-export {
-  withRetry,
-  withTimeout,
-  TimeoutError,
-  isRetryableError as isRetryableNetworkError,
-} from './shared/utils';
+export { withRetry, withTimeout, TimeoutError, isRetryableError } from './shared/utils';
 
 export type { RetryOptions } from './shared/utils';

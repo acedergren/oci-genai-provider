@@ -3,10 +3,13 @@ import {
   EmbeddingModelV3CallOptions,
   EmbeddingModelV3Result,
 } from '@ai-sdk/provider';
-import { GenerativeAiInferenceClient } from 'oci-generativeaiinference';
+import { GenerativeAiInferenceClient, models as ociModels } from 'oci-generativeaiinference';
 import { createAuthProvider, getCompartmentId, getRegion } from '../auth';
 import { isValidEmbeddingModelId } from './registry';
 import type { OCIEmbeddingSettings } from '../types';
+
+type Truncate = ociModels.EmbedTextDetails.Truncate;
+type InputType = ociModels.EmbedTextDetails.InputType;
 
 export class OCIEmbeddingModel implements EmbeddingModelV3 {
   readonly specificationVersion = 'v3';
@@ -38,9 +41,11 @@ export class OCIEmbeddingModel implements EmbeddingModelV3 {
       });
 
       // Set region after client creation
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
       (this._client as any).region = region;
 
       if (this.config.endpoint) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
         (this._client as any).endpoint = this.config.endpoint;
       }
     }
@@ -48,9 +53,7 @@ export class OCIEmbeddingModel implements EmbeddingModelV3 {
     return this._client;
   }
 
-  async doEmbed(
-    options: EmbeddingModelV3CallOptions
-  ): Promise<EmbeddingModelV3Result> {
+  async doEmbed(options: EmbeddingModelV3CallOptions): Promise<EmbeddingModelV3Result> {
     const { values } = options;
 
     // Validate batch size
@@ -71,8 +74,8 @@ export class OCIEmbeddingModel implements EmbeddingModelV3 {
         },
         compartmentId,
         inputs: values,
-        truncate: (this.config.truncate ?? 'END') as any,
-        inputType: (this.config.inputType ?? 'DOCUMENT') as any,
+        truncate: (this.config.truncate ?? 'END') as Truncate,
+        inputType: (this.config.inputType ?? 'DOCUMENT') as InputType,
       },
     });
 

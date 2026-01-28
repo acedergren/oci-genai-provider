@@ -1,5 +1,5 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { OCIEmbeddingModel } from '../OCIEmbeddingModel';
+import { OCIEmbeddingModel } from '../oci-embedding-model';
 import type { EmbeddingModelV3CallOptions } from '@ai-sdk/provider';
 
 // Mock OCI SDK
@@ -38,7 +38,7 @@ describe('OCIEmbeddingModel', () => {
       compartmentId: 'test',
     });
 
-    const texts = Array(97).fill('test'); // 97 > 96 max
+    const texts: string[] = Array.from({ length: 97 }, () => 'test'); // 97 > 96 max
 
     const options: EmbeddingModelV3CallOptions = {
       values: texts,

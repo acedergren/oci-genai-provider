@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { OCIGenAIError, isRetryableError, handleOCIError } from '../shared/errors';
+import { OCIGenAIError, isRetryableStatusCode, handleOCIError } from '../shared/errors';
 
 describe('Error Handling', () => {
   describe('OCIGenAIError', () => {
@@ -27,31 +27,31 @@ describe('Error Handling', () => {
 
   describe('isRetryableError', () => {
     it('should identify 429 as retryable', () => {
-      expect(isRetryableError(429)).toBe(true);
+      expect(isRetryableStatusCode(429)).toBe(true);
     });
 
     it('should identify 500 as retryable', () => {
-      expect(isRetryableError(500)).toBe(true);
+      expect(isRetryableStatusCode(500)).toBe(true);
     });
 
     it('should identify 503 as retryable', () => {
-      expect(isRetryableError(503)).toBe(true);
+      expect(isRetryableStatusCode(503)).toBe(true);
     });
 
     it('should mark 400 as non-retryable', () => {
-      expect(isRetryableError(400)).toBe(false);
+      expect(isRetryableStatusCode(400)).toBe(false);
     });
 
     it('should mark 401 as non-retryable', () => {
-      expect(isRetryableError(401)).toBe(false);
+      expect(isRetryableStatusCode(401)).toBe(false);
     });
 
     it('should mark 403 as non-retryable', () => {
-      expect(isRetryableError(403)).toBe(false);
+      expect(isRetryableStatusCode(403)).toBe(false);
     });
 
     it('should mark 404 as non-retryable', () => {
-      expect(isRetryableError(404)).toBe(false);
+      expect(isRetryableStatusCode(404)).toBe(false);
     });
   });
 

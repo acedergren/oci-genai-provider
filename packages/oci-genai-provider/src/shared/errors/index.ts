@@ -117,7 +117,7 @@ export class ModelNotFoundError extends OCIGenAIError {
 /**
  * Check if an HTTP status code indicates a retryable error.
  */
-export function isRetryableError(statusCode: number): boolean {
+export function isRetryableStatusCode(statusCode: number): boolean {
   return statusCode === 429 || statusCode >= 500;
 }
 
@@ -132,7 +132,7 @@ export function handleOCIError(error: unknown): OCIGenAIError {
 
   // Extract status code if available
   const statusCode = (error as { statusCode?: number })?.statusCode;
-  const retryable = statusCode ? isRetryableError(statusCode) : false;
+  const retryable = statusCode ? isRetryableStatusCode(statusCode) : false;
 
   // Extract original message
   let message = error instanceof Error ? error.message : String(error);

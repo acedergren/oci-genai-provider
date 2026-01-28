@@ -231,11 +231,11 @@ describe('OCILanguageModel', () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const parsedBody = JSON.parse(result.request?.body as string);
       expect(Array.isArray(parsedBody)).toBe(true);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(parsedBody[0]).toHaveProperty('role', 'USER');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(parsedBody[0]).toHaveProperty('content');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(parsedBody[0].content[0]).toHaveProperty('text', 'Test prompt');
     });
   });

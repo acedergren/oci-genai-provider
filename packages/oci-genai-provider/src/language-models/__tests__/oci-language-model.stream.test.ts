@@ -36,9 +36,7 @@ jest.mock('oci-common', () => ({
 
 // Mock OCI SDK to return streaming response
 jest.mock('oci-generativeaiinference', () => ({
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   GenerativeAiInferenceClient: jest.fn().mockImplementation(() => ({
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     chat: jest.fn().mockImplementation((): Promise<Response> => {
       // Create a mock streaming response
       const encoder = new TextEncoder();

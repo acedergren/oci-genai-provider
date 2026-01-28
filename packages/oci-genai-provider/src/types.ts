@@ -112,19 +112,8 @@ export interface ModelMetadata {
 // ProviderV3 Model-Specific Settings
 // ============================================================================
 
-/**
- * Base configuration shared across all OCI model types.
- * Alias for OCIConfig for ProviderV3 compatibility.
- */
-export type OCIBaseConfig = OCIConfig;
-
-/**
- * Settings specific to language models (chat, completion)
- */
-export interface OCILanguageModelSettings extends OCIConfig {
-  // Language models use the base config with requestOptions
-  // No additional settings needed currently
-}
+/** Settings for language models. Currently identical to OCIConfig. */
+export type OCILanguageModelSettings = OCIConfig;
 
 /**
  * Settings for embedding models
