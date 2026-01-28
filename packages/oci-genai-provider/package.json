@@ -35,7 +35,10 @@
     "test:coverage": "jest --coverage",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test:coverage:ci": "jest --coverage --ci --maxWorkers=2",
+    "test:integration": "jest --testPathPattern=integration",
+    "test:unit": "jest --testPathPattern=__tests__ --testPathIgnorePatterns=integration"
   },
   "dependencies": {
     "@ai-sdk/provider": "^3.0.5",
