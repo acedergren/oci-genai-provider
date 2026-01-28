@@ -94,12 +94,12 @@ describe('OCITranscriptionSettings', () => {
   it('should have STT-specific options', () => {
     const settings: OCITranscriptionSettings = {
       language: 'en',
-      model: 'whisper',
+      model: 'WHISPER_MEDIUM',
       vocabulary: ['OCI', 'GenAI', 'Vercel'],
     };
 
     expect(settings.language).toBe('en');
-    expect(settings.model).toBe('whisper');
+    expect(settings.model).toBe('WHISPER_MEDIUM');
     expect(settings.vocabulary).toContain('OCI');
   });
 });
