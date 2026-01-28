@@ -99,31 +99,31 @@ The following OCI GenAI models are available in `eu-frankfurt-1`:
 ### Example Structure
 ```ini
 [DEFAULT]
-user=ocid1.user.oc1..aaaaaaaaow3f3fklz7nv7h4z7y7qvxenjrmo4qbe5z5ne7s2id4yhlyhsnpq
-fingerprint=94:99:26:62:b4:e1:05:dd:39:fb:94:00:63:e6:2c:dc
-key_file=/Users/acedergr/.oci/oci_api_key.pem
-tenancy=ocid1.tenancy.oc1..aaaaaaaasb6hzdlysstqiacelk35wlgpjuottvsfkm6k7aa4ujrylb4shmra
+user=ocid1.user.oc1..aaaaaaaaexampleuserocid1234567890abcd
+fingerprint=aa:bb:cc:dd:ee:ff:00:11:22:33:44:55:66:77:88:99
+key_file=~/.oci/oci_api_key.pem
+tenancy=ocid1.tenancy.oc1..aaaaaaaaexampletenancyocid123456
 region=eu-frankfurt-1
 
 [FRANKFURT]
-user=ocid1.user.oc1..aaaaaaaaow3f3fklz7nv7h4z7y7qvxenjrmo4qbe5z5ne7s2id4yhlyhsnpq
-fingerprint=94:99:26:62:b4:e1:05:dd:39:fb:94:00:63:e6:2c:dc
-key_file=/Users/acedergr/.oci/oci_api_key.pem
-tenancy=ocid1.tenancy.oc1..aaaaaaaasb6hzdlysstqiacelk35wlgpjuottvsfkm6k7aa4ujrylb4shmra
+user=ocid1.user.oc1..aaaaaaaaexampleuserocid1234567890abcd
+fingerprint=aa:bb:cc:dd:ee:ff:00:11:22:33:44:55:66:77:88:99
+key_file=~/.oci/oci_api_key.pem
+tenancy=ocid1.tenancy.oc1..aaaaaaaaexampletenancyocid123456
 region=eu-frankfurt-1
 
 [STOCKHOLM]
-user=ocid1.user.oc1..aaaaaaaaow3f3fklz7nv7h4z7y7qvxenjrmo4qbe5z5ne7s2id4yhlyhsnpq
-fingerprint=94:99:26:62:b4:e1:05:dd:39:fb:94:00:63:e6:2c:dc
-key_file=/Users/acedergr/.oci/oci_api_key.pem
-tenancy=ocid1.tenancy.oc1..aaaaaaaasb6hzdlysstqiacelk35wlgpjuottvsfkm6k7aa4ujrylb4shmra
+user=ocid1.user.oc1..aaaaaaaaexampleuserocid1234567890abcd
+fingerprint=aa:bb:cc:dd:ee:ff:00:11:22:33:44:55:66:77:88:99
+key_file=~/.oci/oci_api_key.pem
+tenancy=ocid1.tenancy.oc1..aaaaaaaaexampletenancyocid123456
 region=eu-stockholm-1
 
 [ASHBURN]
-user=ocid1.user.oc1..aaaaaaaaow3f3fklz7nv7h4z7y7qvxenjrmo4qbe5z5ne7s2id4yhlyhsnpq
-fingerprint=94:99:26:62:b4:e1:05:dd:39:fb:94:00:63:e6:2c:dc
-key_file=/Users/acedergr/.oci/oci_api_key.pem
-tenancy=ocid1.tenancy.oc1..aaaaaaaasb6hzdlysstqiacelk35wlgpjuottvsfkm6k7aa4ujrylb4shmra
+user=ocid1.user.oc1..aaaaaaaaexampleuserocid1234567890abcd
+fingerprint=aa:bb:cc:dd:ee:ff:00:11:22:33:44:55:66:77:88:99
+key_file=~/.oci/oci_api_key.pem
+tenancy=ocid1.tenancy.oc1..aaaaaaaaexampletenancyocid123456
 region=us-ashburn-1
 ```
 

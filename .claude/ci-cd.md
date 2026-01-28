@@ -149,4 +149,3 @@ git commit -m "docs: update README" --no-verify
 
 - [OCI Configuration](./oci-setup.md) — Environment variables and regional setup
 - [Security Practices](./security.md) — Handling credentials in workflows
-- [Credentials & Secrets](./credentials.md) — Token storage and management

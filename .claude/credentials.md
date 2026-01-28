@@ -85,5 +85,5 @@ OCI_REGION=eu-frankfurt-1
 
 ## Related Files
 
-- [OCI Configuration](.oci-setup.md) — Environment variables and regional setup
+- [OCI Configuration](./oci-setup.md) — Environment variables and regional setup
 - [Security Practices](./security.md) — Best practices for handling credentials

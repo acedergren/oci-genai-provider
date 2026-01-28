@@ -257,6 +257,5 @@ Before deploying to production:
 
 ## Related Files
 
-- [Credentials & Secrets](./credentials.md) — Credential locations and usage
 - [CI/CD & Deployment](./ci-cd.md) — Handling credentials in workflows
 - [OCI Configuration](./oci-setup.md) — OCI authentication setup
