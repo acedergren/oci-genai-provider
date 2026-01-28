@@ -200,7 +200,9 @@ for await (const chunk of stream.textStream) {
 
 ## Documentation
 
+### User Guides
 - **[Core Provider Documentation](./packages/oci-genai-provider/README.md)** - Main provider API reference
+- **[OpenAI-Compatible Wrapper](./packages/oci-openai-compatible/README.md)** - Drop-in OpenAI SDK compatibility
 - **[Getting Started](./docs/getting-started/README.md)** - Quick start guide
 - **[Examples](./examples/)** - Ready-to-run example applications
 - **[OpenCode Integration Guide](./docs/guides/opencode-integration/README.md)** - Using with OpenCode
@@ -210,6 +212,13 @@ for await (const chunk of stream.textStream) {
 - **[Tool Calling Guide](./docs/guides/tool-calling/README.md)** - Function calling
 - **[API Reference](./docs/api-reference/)** - Complete API documentation
 - **[Architecture](./docs/architecture/)** - System design and decisions
+
+### Contributing & Development
+- **[Contributing Guidelines](./CONTRIBUTING.md)** - How to contribute to this project
+- **[Development Guide](./DEVELOPMENT.md)** - Setting up development environment
+- **[Security Policy](./SECURITY.md)** - Reporting vulnerabilities responsibly
+- **[Code of Conduct](./CODE_OF_CONDUCT.md)** - Community standards and expectations
+- **[Changelog](./CHANGELOG.md)** - Release notes and version history
 
 ## Development
 
@@ -233,14 +242,45 @@ pnpm test:coverage
 
 ```
 packages/
-├── oci-genai-provider/      # Core Vercel AI SDK provider
-├── opencode-integration/    # Optional OpenCode wrapper
-└── test-utils/              # Shared test utilities
+├── oci-genai-provider/          # Core Vercel AI SDK provider
+├── oci-openai-compatible/       # OpenAI-compatible wrapper for OCI
+├── opencode-integration/        # Optional OpenCode wrapper
+└── test-utils/                  # Shared test utilities
 ```
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for development guidelines.
+We welcome contributions! Please see:
+
+- **[Contributing Guidelines](./CONTRIBUTING.md)** - How to contribute, code standards, and PR process
+- **[Development Guide](./DEVELOPMENT.md)** - Local setup, testing, building, and debugging
+- **[Code of Conduct](./CODE_OF_CONDUCT.md)** - Community standards
+- **[Security Policy](./SECURITY.md)** - How to responsibly report security vulnerabilities
+
+**Quick start for contributors:**
+
+```bash
+# Clone and setup
+git clone https://github.com/acedergren/opencode-oci-genai.git
+cd opencode-oci-genai
+pnpm install
+
+# Create feature branch
+git checkout -b feat/your-feature
+
+# Make changes and test
+pnpm test
+pnpm lint
+pnpm type-check
+
+# Commit with conventional commits
+git commit -m "feat: add your feature"
+
+# Push and create PR
+git push origin feat/your-feature
+```
+
+See [DEVELOPMENT.md](./DEVELOPMENT.md) for comprehensive setup and workflow details.
 
 ## Legal Disclaimer
 
