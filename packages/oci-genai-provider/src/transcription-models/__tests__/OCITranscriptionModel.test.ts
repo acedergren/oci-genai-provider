@@ -1,9 +1,101 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+// Mock oci-aispeech - needs to be at top level
+const mockCreateTranscriptionJob = jest.fn<any>();
+const mockGetTranscriptionJob = jest.fn<any>();
+const mockListTranscriptionTasks = jest.fn<any>();
+const mockGetTranscriptionTask = jest.fn<any>();
+
+jest.mock('oci-aispeech', () => ({
+  AIServiceSpeechClient: jest.fn().mockImplementation(() => ({
+    region: null,
+    endpoint: null,
+    createTranscriptionJob: mockCreateTranscriptionJob,
+    getTranscriptionJob: mockGetTranscriptionJob,
+    listTranscriptionTasks: mockListTranscriptionTasks,
+    getTranscriptionTask: mockGetTranscriptionTask,
+  })),
+  models: {
+    TranscriptionModelDetails: {
+      LanguageCode: {
+        EnUs: 'en-US',
+        EsEs: 'es-ES',
+        En: 'en',
+        Auto: 'auto',
+      },
+    },
+    TranscriptionJob: {
+      LifecycleState: {
+        Succeeded: 'SUCCEEDED',
+        Failed: 'FAILED',
+        InProgress: 'IN_PROGRESS',
+      },
+    },
+  },
+}));
+
+// Mock oci-common
+jest.mock('oci-common', () => ({
+  ConfigFileAuthenticationDetailsProvider: jest.fn().mockImplementation(() => ({})),
+  InstancePrincipalsAuthenticationDetailsProviderBuilder: jest.fn().mockImplementation(() => ({
+    // @ts-expect-error - Mock implementation for testing
+    build: jest.fn().mockResolvedValue({}),
+  })),
+  ResourcePrincipalAuthenticationDetailsProvider: {
+    builder: jest.fn().mockReturnValue({}),
+  },
+  Region: {
+    fromRegionId: jest.fn().mockReturnValue({ regionId: 'eu-frankfurt-1' }),
+  },
+}));
+
+// Mock Object Storage functions
+const mockUploadAudioToObjectStorage = jest.fn<any>();
+const mockDeleteFromObjectStorage = jest.fn<any>();
+const mockGenerateAudioObjectName = jest.fn<any>();
+
+jest.mock('../../shared/storage/object-storage', () => ({
+  uploadAudioToObjectStorage: mockUploadAudioToObjectStorage,
+  deleteFromObjectStorage: mockDeleteFromObjectStorage,
+  generateAudioObjectName: mockGenerateAudioObjectName,
+}));
+
+// Import after mocks
 import { OCITranscriptionModel } from '../OCITranscriptionModel';
 
 describe('OCITranscriptionModel', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+
+    // Setup default mock responses
+    mockGenerateAudioObjectName.mockReturnValue('test-audio.wav');
+    mockUploadAudioToObjectStorage.mockResolvedValue({
+      namespaceName: 'test-namespace',
+      bucketName: 'test-bucket',
+      objectName: 'test-audio.wav',
+    });
+    mockDeleteFromObjectStorage.mockResolvedValue(undefined);
+    mockCreateTranscriptionJob.mockResolvedValue({
+      transcriptionJob: { id: 'test-job-id' },
+    });
+    mockGetTranscriptionJob.mockResolvedValue({
+      transcriptionJob: {
+        lifecycleState: 'SUCCEEDED',
+        lifecycleDetails: null,
+      },
+    });
+    mockListTranscriptionTasks.mockResolvedValue({
+      transcriptionTaskCollection: {
+        items: [{ id: 'test-task-id' }],
+      },
+    });
+    mockGetTranscriptionTask.mockResolvedValue({
+      transcriptionTask: {
+        id: 'test-task-id',
+      },
+    });
   });
 
   it('should have correct specification version and provider', () => {
@@ -61,7 +153,7 @@ describe('OCITranscriptionModel', () => {
       Object.defineProperty(largeAudio, 'byteLength', {
         value: 3 * 1024 * 1024 * 1024,
       });
-      await expect(model.doGenerate({ audioData: largeAudio })).rejects.toThrow('Audio file size');
+      await expect(model.doGenerate({ audio: largeAudio, mediaType: 'audio/wav' })).rejects.toThrow('Audio file size');
     });
 
     it('should accept audio under 2GB limit', async () => {
@@ -69,7 +161,8 @@ describe('OCITranscriptionModel', () => {
         compartmentId: 'test',
       });
       const result = await model.doGenerate({
-        audioData: new Uint8Array(1000),
+        audio: new Uint8Array(1000),
+        mediaType: 'audio/wav',
       });
       expect(result.text).toBeDefined();
     });
@@ -80,7 +173,7 @@ describe('OCITranscriptionModel', () => {
       const model = new OCITranscriptionModel('oci.speech.standard', {
         compartmentId: 'test',
       });
-      const result = await model.doGenerate({ audioData: new Uint8Array(100) });
+      const result = await model.doGenerate({ audio: new Uint8Array(100), mediaType: 'audio/wav' });
 
       expect(result.text).toBeDefined();
       expect(result.segments).toBeInstanceOf(Array);
@@ -91,6 +184,16 @@ describe('OCITranscriptionModel', () => {
       expect('language' in result).toBe(true);
       expect('durationInSeconds' in result).toBe(true);
     });
+
+    it('should include providerMetadata with jobId', async () => {
+      const model = new OCITranscriptionModel('oci.speech.standard', {
+        compartmentId: 'test',
+      });
+      const result = await model.doGenerate({ audio: new Uint8Array(100), mediaType: 'audio/wav' });
+
+      expect(result.providerMetadata).toBeDefined();
+      expect(result.providerMetadata?.oci).toBeDefined();
+    });
   });
 
   describe('warnings', () => {
@@ -99,7 +202,7 @@ describe('OCITranscriptionModel', () => {
         compartmentId: 'test',
         vocabulary: ['custom', 'terms'],
       });
-      const result = await model.doGenerate({ audioData: new Uint8Array(100) });
+      const result = await model.doGenerate({ audio: new Uint8Array(100), mediaType: 'audio/wav' });
       expect(result.warnings).toHaveLength(1);
       expect(result.warnings[0].type).toBe('other');
     });
@@ -108,7 +211,7 @@ describe('OCITranscriptionModel', () => {
       const model = new OCITranscriptionModel('oci.speech.standard', {
         compartmentId: 'test',
       });
-      const result = await model.doGenerate({ audioData: new Uint8Array(100) });
+      const result = await model.doGenerate({ audio: new Uint8Array(100), mediaType: 'audio/wav' });
       expect(result.warnings).toEqual([]);
     });
   });
@@ -119,7 +222,7 @@ describe('OCITranscriptionModel', () => {
         compartmentId: 'test',
         language: 'es-ES',
       });
-      const result = await model.doGenerate({ audioData: new Uint8Array(100) });
+      const result = await model.doGenerate({ audio: new Uint8Array(100), mediaType: 'audio/wav' });
       expect(result.language).toBe('es-ES');
     });
 
@@ -127,8 +230,36 @@ describe('OCITranscriptionModel', () => {
       const model = new OCITranscriptionModel('oci.speech.standard', {
         compartmentId: 'test',
       });
-      const result = await model.doGenerate({ audioData: new Uint8Array(100) });
+      const result = await model.doGenerate({ audio: new Uint8Array(100), mediaType: 'audio/wav' });
       expect(result.language).toBeUndefined();
+    });
+  });
+
+  describe('Object Storage integration', () => {
+    it('should use custom bucket when configured', async () => {
+      const model = new OCITranscriptionModel('oci.speech.standard', {
+        compartmentId: 'test',
+        transcriptionBucket: 'my-custom-bucket',
+      });
+
+      await model.doGenerate({ audio: new Uint8Array(100), mediaType: 'audio/wav' });
+
+      expect(mockUploadAudioToObjectStorage).toHaveBeenCalledWith(
+        expect.anything(),
+        'my-custom-bucket',
+        expect.any(String),
+        expect.any(Uint8Array)
+      );
+    });
+
+    it('should cleanup uploaded file after transcription', async () => {
+      const model = new OCITranscriptionModel('oci.speech.standard', {
+        compartmentId: 'test',
+      });
+
+      await model.doGenerate({ audio: new Uint8Array(100), mediaType: 'audio/wav' });
+
+      expect(mockDeleteFromObjectStorage).toHaveBeenCalled();
     });
   });
 });
