@@ -11,7 +11,7 @@ All environment variables should be set in `.env` (not committed to git):
 | `OCI_REGION` | `eu-frankfurt-1` | Default region for OCI services |
 | `OCI_COMPARTMENT_ID` | `ocid1.compartment.oc1...` | Default compartment for resources |
 | `OCI_CONFIG_PROFILE` | `FRANKFURT` | OCI CLI profile to use |
-| `OCI_CONFIG_FILE` | `/Users/acedergr/.oci/config` | Path to OCI configuration file |
+| `OCI_CONFIG_FILE` | `~/.oci/config` | Path to OCI configuration file |
 | `OCI_CLI_AUTH` | `api_key` | Authentication method |
 
 ## OCI CLI Profiles

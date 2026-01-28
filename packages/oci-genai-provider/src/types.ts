@@ -149,6 +149,8 @@ export interface OCITranscriptionSettings extends OCIConfig {
   model?: 'standard' | 'whisper';
   /** Custom vocabulary words */
   vocabulary?: string[];
+  /** Object Storage bucket for audio uploads (required for transcription) */
+  transcriptionBucket?: string;
 }
 
 /**

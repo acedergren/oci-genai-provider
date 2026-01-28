@@ -1,7 +1,70 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { Readable } from 'stream';
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+// Helper to create a mock readable stream
+function createMockAudioStream(
+  data: Buffer = Buffer.from([0x48, 0x65, 0x6c, 0x6c, 0x6f])
+): NodeJS.ReadableStream {
+  const readable = new Readable({
+    read() {
+      this.push(data);
+      this.push(null);
+    },
+  });
+  return readable;
+}
+
+// Mock oci-aispeech - needs to be at top level
+const mockSynthesizeSpeech = jest.fn<any>();
+
+jest.mock('oci-aispeech', () => ({
+  AIServiceSpeechClient: jest.fn().mockImplementation(() => ({
+    region: null,
+    endpoint: null,
+    synthesizeSpeech: mockSynthesizeSpeech,
+  })),
+  models: {
+    TtsOracleSpeechSettings: {
+      OutputFormat: {
+        Mp3: 'MP3',
+        Ogg: 'OGG',
+        Pcm: 'PCM',
+        Json: 'JSON',
+      },
+    },
+  },
+}));
+
+// Mock oci-common
+jest.mock('oci-common', () => ({
+  ConfigFileAuthenticationDetailsProvider: jest.fn().mockImplementation(() => ({})),
+  InstancePrincipalsAuthenticationDetailsProviderBuilder: jest.fn().mockImplementation(() => ({
+    // @ts-expect-error - Mock implementation for testing
+    build: jest.fn().mockResolvedValue({}),
+  })),
+  ResourcePrincipalAuthenticationDetailsProvider: {
+    builder: jest.fn().mockReturnValue({}),
+  },
+  Region: {
+    fromRegionId: jest.fn().mockReturnValue({ regionId: 'us-phoenix-1' }),
+  },
+}));
+
+// Import after mocks
 import { OCISpeechModel } from '../OCISpeechModel';
 
 describe('OCISpeechModel', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    // Setup default mock response
+    mockSynthesizeSpeech.mockResolvedValue({
+      value: createMockAudioStream(),
+    });
+  });
+
   it('should have correct specification version and provider', () => {
     const model = new OCISpeechModel('oci.tts-1-hd', {
       compartmentId: 'ocid1.compartment.test',
@@ -79,17 +142,20 @@ describe('OCISpeechModel', () => {
   describe('doGenerate', () => {
     it('should generate audio successfully for valid text', async () => {
       const model = new OCISpeechModel('oci.tts-1-hd', {
+        compartmentId: 'test',
         region: 'us-phoenix-1',
       });
       const result = await model.doGenerate({ text: 'Hello world' });
       expect(result).toBeDefined();
       expect(result.audio).toBeInstanceOf(Uint8Array);
+      expect((result.audio as Uint8Array).length).toBeGreaterThan(0);
       expect(result.warnings).toEqual([]);
       expect(result.response.modelId).toBe('oci.tts-1-hd');
     });
 
     it('should return timestamp in response', async () => {
       const model = new OCISpeechModel('oci.tts-1-hd', {
+        compartmentId: 'test',
         region: 'us-phoenix-1',
       });
       const before = new Date();
@@ -97,6 +163,39 @@ describe('OCISpeechModel', () => {
       const after = new Date();
       expect(result.response.timestamp.getTime()).toBeGreaterThanOrEqual(before.getTime());
       expect(result.response.timestamp.getTime()).toBeLessThanOrEqual(after.getTime());
+    });
+
+    it('should include request body in response', async () => {
+      const model = new OCISpeechModel('oci.tts-1-hd', {
+        compartmentId: 'test',
+        region: 'us-phoenix-1',
+      });
+      const result = await model.doGenerate({ text: 'Hello' });
+      expect(result.request).toBeDefined();
+      expect(result.request?.body).toBeDefined();
+    });
+
+    it('should include providerMetadata with voice and format', async () => {
+      const model = new OCISpeechModel('oci.tts-1-hd', {
+        compartmentId: 'test',
+        region: 'us-phoenix-1',
+        format: 'wav',
+      });
+      const result = await model.doGenerate({ text: 'Hello' });
+      expect(result.providerMetadata).toBeDefined();
+      expect(result.providerMetadata?.oci).toBeDefined();
+      expect((result.providerMetadata?.oci as Record<string, unknown>).format).toBe('wav');
+    });
+  });
+
+  describe('format mapping', () => {
+    it('should default to mp3 format when not specified', async () => {
+      const model = new OCISpeechModel('oci.tts-1-hd', {
+        compartmentId: 'test',
+        region: 'us-phoenix-1',
+      });
+      const result = await model.doGenerate({ text: 'Test' });
+      expect((result.providerMetadata?.oci as Record<string, unknown>).format).toBe('mp3');
     });
   });
 });
