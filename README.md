@@ -261,8 +261,8 @@ We welcome contributions! Please see:
 
 ```bash
 # Clone and setup
-git clone https://github.com/acedergren/opencode-oci-genai.git
-cd opencode-oci-genai
+git clone https://github.com/acedergren/oci-genai-provider.git
+cd oci-genai-provider
 pnpm install
 
 # Create feature branch
