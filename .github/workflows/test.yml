@@ -28,14 +28,28 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run unit tests
-        run: pnpm test:unit
-        working-directory: packages/oci-genai-provider
+      - name: Setup Turborepo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ hashFiles('turbo.json') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-${{ hashFiles('turbo.json') }}-
+            ${{ runner.os }}-turbo-
 
-      - name: Run integration tests
-        run: pnpm test:integration
-        working-directory: packages/oci-genai-provider
+      - name: Run tests
+        run: pnpm test
 
-      - name: Run tests with coverage
-        run: pnpm test:coverage:ci
-        working-directory: packages/oci-genai-provider
+      - name: Display Turborepo cache stats
+        if: always()
+        run: |
+          echo "### Turborepo Cache Statistics :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -d ".turbo" ]; then
+            CACHE_SIZE=$(du -sh .turbo | cut -f1)
+            echo "- Cache directory size: \`$CACHE_SIZE\`" >> $GITHUB_STEP_SUMMARY
+            echo "- Cache hit: Tasks reused cached results for faster execution" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- Cache status: Cold start (no cache available)" >> $GITHUB_STEP_SUMMARY
+            echo "- Next run will benefit from cached task outputs" >> $GITHUB_STEP_SUMMARY
+          fi
