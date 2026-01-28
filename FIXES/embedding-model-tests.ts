@@ -278,6 +278,27 @@ describe('OCIEmbeddingModel', () => {
   // ✅ NEW TEST: Batch processing
   describe('batch processing', () => {
     it('should handle maximum batch size (96 embeddings)', async () => {
+      const { GenerativeAiInferenceClient } = require('oci-generativeaiinference');
+
+      // Create a dynamic mock that returns correct number of embeddings
+      const mockEmbedText = jest.fn().mockImplementation((request) => {
+        const inputCount = request.embedTextDetails.inputs.length;
+
+        return Promise.resolve({
+          embedTextResult: {
+            embeddings: Array.from({ length: inputCount }, (_, i) => [
+              0.1 + i * 0.01,
+              0.2 + i * 0.01,
+              0.3 + i * 0.01,
+            ]),
+          },
+        });
+      });
+
+      GenerativeAiInferenceClient.mockImplementation(() => ({
+        embedText: mockEmbedText,
+      }));
+
       const model = new OCIEmbeddingModel('cohere.embed-multilingual-v3.0', {
         compartmentId: 'test',
       });
@@ -286,18 +307,48 @@ describe('OCIEmbeddingModel', () => {
 
       const result = await model.doEmbed({ values: texts });
 
-      expect(result.embeddings).toHaveLength(2); // Mock returns 2
+      // Verify correct number of embeddings returned
+      expect(result.embeddings).toHaveLength(96);
+
+      // Verify the API was called with all 96 inputs
+      expect(mockEmbedText).toHaveBeenCalledWith({
+        embedTextDetails: expect.objectContaining({
+          inputs: expect.arrayContaining(texts),
+        }),
+      });
+
       expect(result.warnings).toEqual([]);
     });
 
     it('should handle single text embedding', async () => {
+      const { GenerativeAiInferenceClient } = require('oci-generativeaiinference');
+
+      const mockEmbedText = jest.fn().mockImplementation((request) => {
+        const inputCount = request.embedTextDetails.inputs.length;
+
+        return Promise.resolve({
+          embedTextResult: {
+            embeddings: Array.from({ length: inputCount }, () => [
+              0.1,
+              0.2,
+              0.3,
+            ]),
+          },
+        });
+      });
+
+      GenerativeAiInferenceClient.mockImplementation(() => ({
+        embedText: mockEmbedText,
+      }));
+
       const model = new OCIEmbeddingModel('cohere.embed-multilingual-v3.0', {
         compartmentId: 'test',
       });
 
       const result = await model.doEmbed({ values: ['single text'] });
 
-      expect(result.embeddings).toBeDefined();
+      expect(result.embeddings).toHaveLength(1);
+      expect(result.embeddings[0]).toEqual([0.1, 0.2, 0.3]);
     });
   });
 });
