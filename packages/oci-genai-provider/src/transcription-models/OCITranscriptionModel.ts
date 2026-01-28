@@ -52,7 +52,6 @@ export class OCITranscriptionModel implements TranscriptionModelV3 {
           `Valid models: oci.speech.standard, oci.speech.whisper`
       );
     }
-
   }
 
   private async getClient(): Promise<AIServiceSpeechClient> {

@@ -161,7 +161,7 @@ export class OCISpeechModel implements SpeechModelV3 {
         resolve(new Uint8Array(buffer));
       });
 
-      stream.on('error', (error) => {
+      stream.on('error', (error: Error) => {
         reject(error);
       });
     });

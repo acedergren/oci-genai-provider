@@ -153,7 +153,9 @@ describe('OCITranscriptionModel', () => {
       Object.defineProperty(largeAudio, 'byteLength', {
         value: 3 * 1024 * 1024 * 1024,
       });
-      await expect(model.doGenerate({ audio: largeAudio, mediaType: 'audio/wav' })).rejects.toThrow('Audio file size');
+      await expect(
+        model.doGenerate({ audio: largeAudio, mediaType: 'audio/wav' })
+      ).rejects.toThrow('Audio file size');
     });
 
     it('should accept audio under 2GB limit', async () => {
