@@ -4,13 +4,29 @@ import {
   isValidTranscriptionModelId,
 } from "./registry";
 import type { OCITranscriptionSettings } from "../types";
+import type { SharedV3Warning, JSONObject } from "@ai-sdk/provider";
 
 type AIServiceSpeechClient = any;
 
 interface TranscriptionOutput {
   text: string;
-  segments: Array<any>;
-  language: string;
+  segments: Array<{
+    text: string;
+    startSecond: number;
+    endSecond: number;
+  }>;
+  language: string | undefined;
+  durationInSeconds: number | undefined;
+  warnings: SharedV3Warning[];
+  request?: {
+    body?: string;
+  };
+  response: {
+    timestamp: Date;
+    modelId: string;
+    headers?: Record<string, string>;
+  };
+  providerMetadata?: Record<string, JSONObject>;
 }
 
 export class OCITranscriptionModel {
@@ -69,6 +85,8 @@ export class OCITranscriptionModel {
   }
 
   async doTranscribe(options: any): Promise<TranscriptionOutput> {
+    const startTime = new Date();
+    const warnings: SharedV3Warning[] = [];
     const audioData = options.audioData as Uint8Array;
 
     const maxSizeBytes = 2 * 1024 * 1024 * 1024;
@@ -82,6 +100,19 @@ export class OCITranscriptionModel {
     const client = await this.getClient();
     const compartmentId = getCompartmentId(this.config);
     const metadata = getTranscriptionModelMetadata(this.modelId);
+
+    // Collect warning if vocabulary used with Whisper
+    if (
+      metadata?.modelType === "whisper" &&
+      this.config.vocabulary &&
+      this.config.vocabulary.length > 0
+    ) {
+      warnings.push({
+        type: "other",
+        message:
+          "Custom vocabulary is not supported by Whisper model. It will be ignored.",
+      });
+    }
 
     const createJobRequest = {
       createTranscriptionJobDetails: {
@@ -121,7 +152,23 @@ export class OCITranscriptionModel {
     return {
       text: transcript,
       segments: [],
-      language: this.config.language || "en-US",
+      language: this.config.language || undefined,
+      durationInSeconds: undefined,
+      warnings,
+      request: {
+        body: JSON.stringify({ audioSize: audioData.byteLength }),
+      },
+      response: {
+        timestamp: startTime,
+        modelId: this.modelId,
+        headers: {},
+      },
+      providerMetadata: {
+        oci: {
+          compartmentId,
+          modelType: metadata?.modelType || "standard",
+        },
+      },
     };
   }
 
