@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return, @typescript-eslint/require-await, @typescript-eslint/explicit-function-return-type */
 import { createMockOCIResponse } from '../utils/test-helpers';
 
 /**

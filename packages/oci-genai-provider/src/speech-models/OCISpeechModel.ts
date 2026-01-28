@@ -18,18 +18,10 @@ export class OCISpeechModel implements SpeechModelV3 {
     config: OCISpeechSettings
   ) {
     if (!isValidSpeechModelId(modelId)) {
-      throw new Error('Invalid speech model ID: ' + modelId);
-    }
-    const region = getRegion(config);
-    if (region !== 'us-phoenix-1') {
       throw new Error(
-        'OCI Speech is only available in us-phoenix-1 region. Current region: ' + region
+        `Invalid speech model ID: ${modelId}. ` + `Valid models: TTS_1_STANDARD, TTS_2_NATURAL`
       );
     }
-    // Voice selection priority:
-    // 1. config.voice (if provided)
-    // 2. metadata.defaultVoice (from registry)
-    // 3. Fallback to 'en-US-AriaNeural'
     const metadata = getSpeechModelMetadata(modelId);
     const defaultVoice = metadata?.defaultVoice;
     this.voice = config.voice ?? defaultVoice ?? 'en-US-AriaNeural';
@@ -92,7 +84,7 @@ export class OCISpeechModel implements SpeechModelV3 {
       configuration: {
         modelFamily: 'ORACLE',
         modelDetails: {
-          modelName: 'TTS_2_NATURAL',
+          modelName: metadata.modelName,
           voiceId: this.voice,
         },
         speechSettings: {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { mockGenerativeAiInferenceClient, mockAuthProvider, resetAllMocks } from '../oci-mocks';
 

@@ -2,7 +2,7 @@ import { describe, it, expect } from '@jest/globals';
 import { createMockOCIConfig } from '../utils/test-helpers';
 
 describe('E2E: Complete Workflows', () => {
-  it('should support complete RAG workflow', async () => {
+  it('should support complete RAG workflow', () => {
     // 1. Create embedding config
     const embeddingConfig = createMockOCIConfig();
     expect(embeddingConfig).toBeDefined();
@@ -19,7 +19,7 @@ describe('E2E: Complete Workflows', () => {
     expect(embeddingConfig.region).toBe(languageConfig.region);
   });
 
-  it('should support multimodal workflow', async () => {
+  it('should support multimodal workflow', () => {
     // 1. Transcription (audio -> text)
     const transcriptionConfig = createMockOCIConfig();
     expect(transcriptionConfig).toBeDefined();
@@ -33,7 +33,7 @@ describe('E2E: Complete Workflows', () => {
     expect(speechConfig).toBeDefined();
   });
 
-  it('should handle errors gracefully across model types', async () => {
+  it('should handle errors gracefully across model types', () => {
     // Test invalid model handling
     expect(() => {
       const config = createMockOCIConfig({ region: 'invalid' });

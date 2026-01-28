@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any */
 import { ObjectStorageClient } from 'oci-objectstorage';
 import { Region } from 'oci-common';
 import type { OCIConfig } from '../../types';
@@ -219,7 +220,9 @@ export async function downloadTranscriptionResult(
     try {
       speechResult = JSON.parse(jsonString);
     } catch (parseError) {
-      throw new Error(`Failed to parse transcription JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+      throw new Error(
+        `Failed to parse transcription JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`
+      );
     }
 
     // Extract transcription data from OCI Speech response
@@ -235,7 +238,11 @@ export async function downloadTranscriptionResult(
     const tokens: TranscriptionToken[] = [];
     if (transcription.tokens && Array.isArray(transcription.tokens)) {
       for (const token of transcription.tokens) {
-        if (token.token && typeof token.startTime === 'number' && typeof token.endTime === 'number') {
+        if (
+          token.token &&
+          typeof token.startTime === 'number' &&
+          typeof token.endTime === 'number'
+        ) {
           tokens.push({
             token: token.token,
             startTime: token.startTime,
