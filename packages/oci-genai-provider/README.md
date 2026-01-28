@@ -159,6 +159,49 @@ for await (const chunk of result.textStream) {
 
 See [Language Models Documentation](./docs/language-models.md) for complete reference.
 
+## Speech-to-Text Transcription
+
+Convert audio files to text using OCI Speech:
+
+```typescript
+import { oci } from "@acedergren/oci-genai-provider";
+import { transcribe } from "ai";
+import { readFileSync } from "fs";
+
+const audioData = readFileSync("audio.wav");
+
+const { text } = await transcribe({
+  model: oci.transcriptionModel("oci.speech.standard", {
+    language: "en-US",
+    vocabulary: ["OpenCode", "GenAI"],
+  }),
+  audioData,
+});
+
+console.log("Transcript:", text);
+```
+
+### Available Transcription Models
+
+| Model ID              | Languages | Custom Vocabulary | Formats                        | Use Case                 |
+| --------------------- | --------- | ----------------- | ------------------------------ | ------------------------ |
+| `oci.speech.standard` | 21        | ✅ Yes            | WAV, MP3, FLAC, OGG            | Production transcription |
+| `oci.speech.whisper`  | 99+       | ❌ No             | WAV, MP3, FLAC, OGG, M4A, WEBM | Multilingual support     |
+
+### Transcription Options
+
+```typescript
+oci.transcriptionModel("oci.speech.standard", {
+  language: "en-US",
+  vocabulary: ["term1"],
+});
+```
+
+### Supported Languages
+
+21+ languages including: English (US/UK/AU/IN), Spanish, Portuguese, French, German, Italian, Japanese, Korean, Chinese, Dutch, Polish, Russian, Turkish, Hindi, Arabic.
+
+
 ## Embeddings
 
 Generate text embeddings for semantic search, clustering, and RAG applications.
