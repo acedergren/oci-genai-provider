@@ -20,28 +20,35 @@ export function mapFinishReason(reason: string): LanguageModelV3FinishReason {
   };
 }
 
-interface OCIChatResponse {
-  chatResponse?: {
-    chatChoice?: Array<{
-      message?: {
-        content?: Array<{ text?: string }>;
-      };
-      finishReason?: string;
-    }>;
-    usage?: {
-      promptTokens?: number;
-      completionTokens?: number;
-    };
+/**
+ * OCI streaming format (2025+):
+ * Text chunk: {"index":0,"message":{"role":"ASSISTANT","content":[{"type":"TEXT","text":"..."}]},"pad":"..."}
+ * Finish:     {"message":{"role":"ASSISTANT"},"finishReason":"stop","pad":"..."}
+ */
+interface OCIStreamChunk {
+  index?: number;
+  message?: {
+    role?: string;
+    content?: Array<{ type?: string; text?: string }>;
   };
+  finishReason?: string;
+  pad?: string;
 }
 
-export async function* parseSSEStream(response: Response): AsyncGenerator<StreamPart> {
-  const body = response.body;
-  if (!body) {
+/**
+ * Parses an OCI GenAI streaming response.
+ * Accepts either a ReadableStream directly (new OCI SDK behavior) or a Response object.
+ */
+export async function* parseSSEStream(
+  input: ReadableStream<Uint8Array> | Response
+): AsyncGenerator<StreamPart> {
+  // Handle both ReadableStream and Response objects
+  const stream = input instanceof ReadableStream ? input : input.body;
+  if (!stream) {
     throw new Error('Response body is not readable');
   }
 
-  const reader = body.getReader();
+  const reader = stream.getReader();
   const decoder = new TextDecoder();
   const parts: StreamPart[] = [];
   let yieldedIndex = 0;
@@ -52,11 +59,10 @@ export async function* parseSSEStream(response: Response): AsyncGenerator<Stream
       if (data === '[DONE]') return;
 
       try {
-        const parsed = JSON.parse(data) as OCIChatResponse;
-        const choice = parsed.chatResponse?.chatChoice?.[0];
+        const parsed = JSON.parse(data) as OCIStreamChunk;
 
-        // Check for text delta
-        const textContent = choice?.message?.content?.[0]?.text;
+        // Check for text delta in the new OCI format
+        const textContent = parsed.message?.content?.[0]?.text;
         if (textContent) {
           parts.push({
             type: 'text-delta',
@@ -64,15 +70,15 @@ export async function* parseSSEStream(response: Response): AsyncGenerator<Stream
           });
         }
 
-        // Check for finish
-        const finishReason = choice?.finishReason;
+        // Check for finish (OCI returns lowercase 'stop')
+        const finishReason = parsed.finishReason;
         if (finishReason) {
           parts.push({
             type: 'finish',
-            finishReason: mapFinishReason(finishReason),
+            finishReason: mapFinishReason(finishReason.toUpperCase()),
             usage: {
-              promptTokens: parsed.chatResponse?.usage?.promptTokens ?? 0,
-              completionTokens: parsed.chatResponse?.usage?.completionTokens ?? 0,
+              promptTokens: 0,
+              completionTokens: 0,
             },
           });
         }

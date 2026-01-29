@@ -8,13 +8,13 @@
   import Select from '$lib/components/Select.svelte';
 
   const models = [
-    { value: 'cohere.command-r-plus', label: 'Cohere Command R+' },
-    { value: 'cohere.command-r', label: 'Cohere Command R' },
-    { value: 'meta.llama-3.1-70b-instruct', label: 'Llama 3.1 70B' },
-    { value: 'meta.llama-3.1-405b-instruct', label: 'Llama 3.1 405B' },
+    { value: 'meta.llama-3.3-70b-instruct', label: 'Llama 3.3 70B' },
+    { value: 'cohere.command-plus-latest', label: 'Cohere Command R+ Latest' },
+    { value: 'cohere.command-a-03-2025', label: 'Cohere Command A' },
+    { value: 'google.gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
   ];
 
-  let selectedModel = $state('cohere.command-r-plus');
+  let selectedModel = $state('meta.llama-3.3-70b-instruct');
   let inputValue = $state('');
   let chat = $state<Chat | null>(null);
 

@@ -2,7 +2,10 @@ import { defineConfig } from 'tsup';
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-call
 export default defineConfig({
-  entry: ['src/index.ts'],
+  entry: {
+    index: 'src/index.ts',
+    'config/index': 'src/config/index.ts',
+  },
   format: ['cjs', 'esm'],
   dts: true,
   clean: true,

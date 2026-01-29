@@ -60,12 +60,12 @@ describe('OCIEmbeddingSettings', () => {
       region: 'eu-frankfurt-1',
       dimensions: 1024,
       truncate: 'END',
-      inputType: 'DOCUMENT',
+      inputType: 'SEARCH_DOCUMENT',
     };
 
     expect(settings.dimensions).toBe(1024);
     expect(settings.truncate).toBe('END');
-    expect(settings.inputType).toBe('DOCUMENT');
+    expect(settings.inputType).toBe('SEARCH_DOCUMENT');
   });
 
   it('should accept 384 dimensions for light models', () => {

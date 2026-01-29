@@ -4,9 +4,10 @@ import { useChat } from '@ai-sdk/react';
 import { useState } from 'react';
 
 const MODELS = [
-  { id: 'cohere.command-r-plus', name: 'Command R+' },
-  { id: 'cohere.command-r-08-2024', name: 'Command R (Aug 2024)' },
-  { id: 'meta.llama-3.1-70b-instruct', name: 'Llama 3.1 70B' },
+  { id: 'meta.llama-3.3-70b-instruct', name: 'Llama 3.3 70B' },
+  { id: 'cohere.command-plus-latest', name: 'Command R+ Latest' },
+  { id: 'cohere.command-a-03-2025', name: 'Command A' },
+  { id: 'google.gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
 ];
 
 export default function Chat() {
@@ -69,7 +70,7 @@ export default function Chat() {
         />
         <button
           type="submit"
-          disabled={isLoading || !input.trim()}
+          disabled={isLoading || !(input ?? '').trim()}
           className="bg-accent-primary text-white px-6 py-3 rounded-lg font-medium disabled:opacity-50 transition-opacity"
         >
           Send

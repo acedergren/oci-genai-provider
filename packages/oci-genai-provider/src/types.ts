@@ -123,8 +123,8 @@ export interface OCIEmbeddingSettings extends OCIConfig {
   dimensions?: 384 | 1024;
   /** How to truncate input text if it exceeds model limits */
   truncate?: 'START' | 'END' | 'NONE';
-  /** Input type optimization */
-  inputType?: 'QUERY' | 'DOCUMENT';
+  /** Input type optimization for embeddings */
+  inputType?: 'SEARCH_QUERY' | 'SEARCH_DOCUMENT' | 'CLASSIFICATION' | 'CLUSTERING' | 'IMAGE';
 }
 
 /**

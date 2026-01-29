@@ -4,7 +4,7 @@ import { generateText, streamText, type LanguageModel } from 'ai';
 import * as readline from 'node:readline';
 
 // Configuration
-const MODEL_ID = process.env.OCI_MODEL_ID || 'cohere.command-r-plus';
+const MODEL_ID = process.env.OCI_MODEL_ID || 'meta.llama-3.3-70b-instruct';
 const COMPARTMENT_ID = process.env.OCI_COMPARTMENT_ID;
 const REGION = process.env.OCI_REGION || 'eu-frankfurt-1';
 
@@ -14,7 +14,7 @@ if (!COMPARTMENT_ID) {
   console.error('Usage:');
   console.error('  export OCI_COMPARTMENT_ID=ocid1.compartment.oc1...');
   console.error('  export OCI_REGION=eu-frankfurt-1  # optional');
-  console.error('  export OCI_MODEL_ID=cohere.command-r-plus  # optional');
+  console.error('  export OCI_MODEL_ID=meta.llama-3.3-70b-instruct  # optional');
   console.error('');
   console.error('Then run:');
   console.error('  pnpm dev "Your prompt here"');
@@ -141,7 +141,7 @@ Options:
 Environment:
   OCI_COMPARTMENT_ID  Required. Your OCI compartment OCID
   OCI_REGION          Optional. OCI region (default: eu-frankfurt-1)
-  OCI_MODEL_ID        Optional. Model ID (default: cohere.command-r-plus)
+  OCI_MODEL_ID        Optional. Model ID (default: meta.llama-3.3-70b-instruct)
 
 Examples:
   pnpm dev "What is TypeScript?"

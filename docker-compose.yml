@@ -1,0 +1,76 @@
+# Docker Compose for OpenCode OCI GenAI Demos
+# Production deployment configuration
+
+services:
+  # Traefik reverse proxy for TLS and routing
+  traefik:
+    image: traefik:v3.0
+    command:
+      - "--api.dashboard=false"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "letsencrypt:/letsencrypt"
+    networks:
+      - web
+    restart: unless-stopped
+
+  # SvelteKit Chatbot Demo
+  chatbot-sveltekit:
+    build:
+      context: .
+      dockerfile: examples/chatbot-demo/Dockerfile
+    environment:
+      - OCI_COMPARTMENT_ID=${OCI_COMPARTMENT_ID}
+      - OCI_REGION=${OCI_REGION:-eu-frankfurt-1}
+      - OCI_CONFIG_PROFILE=${OCI_CONFIG_PROFILE:-FRANKFURT}
+    volumes:
+      - ${OCI_CONFIG_PATH:-/opt/secrets/oci}:/home/sveltekit/.oci:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.chatbot-svelte.rule=Host(`${SVELTEKIT_HOST:-chat.localhost}`)"
+      - "traefik.http.routers.chatbot-svelte.entrypoints=websecure"
+      - "traefik.http.routers.chatbot-svelte.tls.certresolver=letsencrypt"
+      - "traefik.http.services.chatbot-svelte.loadbalancer.server.port=3000"
+    networks:
+      - web
+    restart: unless-stopped
+
+  # Next.js Chatbot Demo
+  chatbot-nextjs:
+    build:
+      context: .
+      dockerfile: examples/nextjs-chatbot/Dockerfile
+    environment:
+      - OCI_COMPARTMENT_ID=${OCI_COMPARTMENT_ID}
+      - OCI_REGION=${OCI_REGION:-eu-frankfurt-1}
+      - OCI_CONFIG_PROFILE=${OCI_CONFIG_PROFILE:-FRANKFURT}
+    volumes:
+      - ${OCI_CONFIG_PATH:-/opt/secrets/oci}:/home/nextjs/.oci:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.chatbot-next.rule=Host(`${NEXTJS_HOST:-chat-next.localhost}`)"
+      - "traefik.http.routers.chatbot-next.entrypoints=websecure"
+      - "traefik.http.routers.chatbot-next.tls.certresolver=letsencrypt"
+      - "traefik.http.services.chatbot-next.loadbalancer.server.port=3000"
+    networks:
+      - web
+    restart: unless-stopped
+
+networks:
+  web:
+    name: web
+
+volumes:
+  letsencrypt:

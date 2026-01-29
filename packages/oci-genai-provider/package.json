@@ -9,6 +9,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
+    },
+    "./config": {
+      "types": "./dist/config/index.d.ts",
+      "import": "./dist/config/index.mjs",
+      "require": "./dist/config/index.js"
     }
   },
   "files": [
@@ -47,6 +52,7 @@
     "oci-common": "^2.94.0",
     "oci-generativeaiinference": "^2.94.0",
     "oci-aispeech": "^2.94.0",
+    "oci-identity": "^2.94.0",
     "oci-objectstorage": "^2.94.0",
     "zod": "^3.25.76"
   },

@@ -4,6 +4,7 @@ import {
   EmbeddingModelV3Result,
 } from '@ai-sdk/provider';
 import { GenerativeAiInferenceClient, models as ociModels } from 'oci-generativeaiinference';
+import { Region } from 'oci-common';
 import { createAuthProvider, getCompartmentId, getRegion } from '../auth';
 import { isValidEmbeddingModelId } from './registry';
 import type { OCIEmbeddingSettings } from '../types';
@@ -34,19 +35,17 @@ export class OCIEmbeddingModel implements EmbeddingModelV3 {
   private async getClient(): Promise<GenerativeAiInferenceClient> {
     if (!this._client) {
       const authProvider = await createAuthProvider(this.config);
-      const region = getRegion(this.config);
+      const regionId = getRegion(this.config);
 
       this._client = new GenerativeAiInferenceClient({
         authenticationDetailsProvider: authProvider,
       });
 
-      // Set region after client creation
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-      (this._client as any).region = region;
+      // Set region using proper OCI Region API
+      this._client.region = Region.fromRegionId(regionId);
 
       if (this.config.endpoint) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-        (this._client as any).endpoint = this.config.endpoint;
+        this._client.endpoint = this.config.endpoint;
       }
     }
 
@@ -75,7 +74,7 @@ export class OCIEmbeddingModel implements EmbeddingModelV3 {
         compartmentId,
         inputs: values,
         truncate: (this.config.truncate ?? 'END') as Truncate,
-        inputType: (this.config.inputType ?? 'DOCUMENT') as InputType,
+        inputType: (this.config.inputType ?? 'SEARCH_DOCUMENT') as InputType,
       },
     });
 
