@@ -47,7 +47,24 @@ export type OCIAuthMethod =
   | 'resource_principal'; // OCI Functions
 
 /**
- * Configuration options for OCI GenAI provider
+ * OCI GenAI Provider Configuration
+ *
+ * @example
+ * ```typescript
+ * const provider = createOCI({
+ *   compartmentId: 'ocid1.compartment...',
+ *   region: 'eu-frankfurt-1',
+ *   requestOptions: {
+ *     timeoutMs: 30000,
+ *     retry: { enabled: true, maxRetries: 3 }
+ *   }
+ * });
+ * ```
+ *
+ * @remarks
+ * The seed parameter is supported for deterministic generation.
+ * OCI provides "best effort" determinism - responses with the same seed
+ * are similar but not guaranteed to be byte-for-byte identical.
  */
 export interface OCIConfig {
   /**
@@ -93,6 +110,24 @@ export interface OCIConfig {
 }
 
 /**
+ * OCI GenAI supported regions
+ */
+export type OCIGenAIRegion =
+  | 'us-chicago-1'
+  | 'eu-frankfurt-1'
+  | 'ap-osaka-1'
+  | 'uk-london-1'
+  | 'us-ashburn-1'
+  | 'ap-mumbai-1'
+  | 'us-sanjose-1'
+  | 'ap-singapore-1'
+  | 'ap-seoul-1'
+  | 'sa-saopaulo-1'
+  | 'ap-sydney-1'
+  | 'ap-tokyo-1'
+  | 'ca-toronto-1';
+
+/**
  * Model metadata for dynamic selection
  */
 export interface ModelMetadata {
@@ -106,6 +141,14 @@ export interface ModelMetadata {
   };
   contextWindow: number;
   speed: 'very-fast' | 'fast' | 'medium' | 'slow';
+  /** Regions where this model is available (undefined = all regions) */
+  regions?: OCIGenAIRegion[];
+  /** Whether the model is only available on dedicated AI clusters */
+  dedicatedOnly?: boolean;
+  /** Recommended for coding agents (pre-selected in setup wizard) */
+  codingRecommended?: boolean;
+  /** Notes about coding suitability (e.g., "No tool support") */
+  codingNote?: string;
 }
 
 // ============================================================================
