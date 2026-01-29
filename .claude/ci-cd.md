@@ -128,12 +128,26 @@ Sensitive credentials are stored as GitHub Secrets, not in `.env`:
 
 ## Runners
 
-**Default**: GitHub-hosted runners (`ubuntu-latest`)
+**Self-Hosted Runners**: gha01, gha02
 
-**For OCI-specific tasks**:
-- OCI CLI pre-installed
-- Node.js with npm/pnpm available
-- Docker available for containerization
+**Configuration**:
+- Private runners shared across organization
+- Node.js 22 installed natively
+- Docker available for container jobs
+- pnpm configured globally
+- Zero GitHub Actions minutes cost
+
+**Container Jobs** (CI, Test Suite, Publish):
+- Use `node:22-bookworm` image for consistent environments
+- Faster than GitHub-hosted runners (no cold start)
+
+**Native Jobs** (Deploy):
+- Run directly on runner for faster startup
+- Ideal for deployment workflows
+
+**External Workflows** (Claude Code):
+- Use GitHub-hosted runners (`ubuntu-latest`)
+- Better for external API integrations
 
 ## Skipping CI/CD
 
