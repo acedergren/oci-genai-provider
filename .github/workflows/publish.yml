@@ -42,8 +42,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-turbo-
 
-      - name: Run tests
-        run: pnpm test
+      # Skip tests for publish workflow - run separately in CI
+      # - name: Run tests
+      #   run: pnpm test
 
       - name: Build packages
         run: pnpm build
