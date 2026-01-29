@@ -12,20 +12,14 @@ env:
 
 jobs:
   publish:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     timeout-minutes: 10
-    container:
-      image: node:22-bookworm
-      options: --user root
     permissions:
       contents: read
       packages: write
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Configure git
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Enable Corepack and activate pnpm
         run: corepack enable && corepack prepare pnpm@latest --activate
