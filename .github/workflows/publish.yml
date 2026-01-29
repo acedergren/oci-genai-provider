@@ -47,7 +47,7 @@ jobs:
       #   run: pnpm test
 
       - name: Build packages
-        run: pnpm build
+        run: pnpm -r --filter="packages/**" build
 
       - name: Validate packages
         run: pnpm validate:packages
