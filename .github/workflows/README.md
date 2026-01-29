@@ -7,6 +7,7 @@ This directory contains GitHub Actions workflows for CI/CD automation.
 | Workflow        | Trigger                 | Purpose                 | Time     | Runner                  |
 | --------------- | ----------------------- | ----------------------- | -------- | ----------------------- |
 | **CI**          | PR, push to main        | Quality gates           | ~2-3 min | Self-hosted + container |
+| **Test Suite**  | PR, push to main        | Fast test execution     | ~1-2 min | Self-hosted + container |
 | **Deploy Demo** | Manual, path changes    | Cloudflare Pages deploy | ~2-3 min | Self-hosted             |
 | **Publish**     | Version tags (`v*.*.*`) | GitHub Packages         | ~3-5 min | Self-hosted + container |
 
@@ -42,6 +43,38 @@ Configure these required status checks in repository settings:
 - `Lint & Type Check`
 - `Test`
 - `Build`
+
+---
+
+### Test Suite (`test.yml`)
+
+Fast, focused test execution in a containerized environment.
+
+**Triggers:**
+
+- Push to main branch
+- Pull requests to main branch
+
+**Features:**
+
+- Runs in Node.js 22 container on self-hosted runner
+- Concurrency control: cancels in-progress runs when new commits are pushed
+- Turborepo caching for faster test execution
+- Optimized for quick feedback on test results
+
+**Workflow Steps:**
+
+1. Checkout code
+2. Configure git for container environment
+3. Enable Corepack and activate pnpm
+4. Install dependencies with frozen lockfile
+5. Setup Turborepo cache
+6. Run full test suite
+7. Display cache statistics
+
+**Estimated time:** 1-2 minutes
+
+**Note:** This workflow provides fast test-only execution, while the CI workflow includes comprehensive quality checks (lint, type-check, test, build).
 
 ---
 
@@ -137,20 +170,22 @@ git push origin v0.1.1
 
 ## Self-Hosted Runner Configuration
 
-All workflows use self-hosted runners for zero GitHub Actions minutes cost.
+All workflows use self-hosted runners (gha01, gha02) for zero GitHub Actions minutes cost.
 
 **Runner Setup:**
 
-- Two private runners available
+- Two private runners: gha01, gha02
 - Node.js 22 installed natively
 - Docker available for container jobs
 - pnpm configured globally
+- Shared with other projects in the organization
 
-**Container Jobs (CI, Publish):**
+**Container Jobs (CI, Test Suite, Publish):**
 
 - Use `node:22-bookworm` image
 - Run as root for git configuration
 - Consistent environment across runs
+- Faster than GitHub-hosted runners (no cold start)
 
 **Native Jobs (Deploy Demo):**
 
