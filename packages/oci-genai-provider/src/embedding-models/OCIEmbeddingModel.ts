@@ -13,7 +13,7 @@ type Truncate = ociModels.EmbedTextDetails.Truncate;
 type InputType = ociModels.EmbedTextDetails.InputType;
 
 export class OCIEmbeddingModel implements EmbeddingModelV3 {
-  readonly specificationVersion = 'v3';
+  readonly specificationVersion = 'V3';
   readonly provider = 'oci-genai';
   readonly maxEmbeddingsPerCall = 96;
   readonly supportsParallelCalls = true;

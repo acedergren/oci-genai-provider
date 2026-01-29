@@ -44,28 +44,28 @@ describe('createOCI Provider Factory (ProviderV3)', () => {
   describe('Factory Creation', () => {
     it('should create provider with default config', () => {
       const provider = createOCI();
-      expect(provider.specificationVersion).toBe('v3');
+      expect(provider.specificationVersion).toBe('V3');
       expect(typeof provider.languageModel).toBe('function');
     });
 
     it('should create provider with Frankfurt region', () => {
       const provider = createOCI({ region: 'eu-frankfurt-1' });
-      expect(provider.specificationVersion).toBe('v3');
+      expect(provider.specificationVersion).toBe('V3');
     });
 
     it('should create provider with custom profile', () => {
       const provider = createOCI({ region: 'eu-frankfurt-1', profile: 'FRANKFURT' });
-      expect(provider.specificationVersion).toBe('v3');
+      expect(provider.specificationVersion).toBe('V3');
     });
 
     it('should create provider with compartment ID', () => {
       const provider = createOCI({ compartmentId: 'ocid1.compartment.oc1..test' });
-      expect(provider.specificationVersion).toBe('v3');
+      expect(provider.specificationVersion).toBe('V3');
     });
 
     it('should create provider with instance principal auth', () => {
       const provider = createOCI({ auth: 'instance_principal' });
-      expect(provider.specificationVersion).toBe('v3');
+      expect(provider.specificationVersion).toBe('V3');
     });
   });
 
@@ -131,7 +131,7 @@ describe('createOCI Provider Factory (ProviderV3)', () => {
   describe('oci default instance', () => {
     it('should export default provider instance', () => {
       expect(oci).toBeInstanceOf(OCIGenAIProvider);
-      expect(oci.specificationVersion).toBe('v3');
+      expect(oci.specificationVersion).toBe('V3');
     });
 
     it('should create language models from default instance', () => {
@@ -160,9 +160,9 @@ describe('OCIGenAIProvider (ProviderV3)', () => {
   });
 
   describe('specificationVersion', () => {
-    it('should have specificationVersion v3', () => {
+    it('should have specificationVersion V3', () => {
       const provider = new OCIGenAIProvider();
-      expect(provider.specificationVersion).toBe('v3');
+      expect(provider.specificationVersion).toBe('V3');
     });
   });
 

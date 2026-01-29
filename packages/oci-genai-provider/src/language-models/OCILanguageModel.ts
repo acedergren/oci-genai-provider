@@ -61,7 +61,7 @@ interface OCIChatResponse {
 }
 
 export class OCILanguageModel implements LanguageModelV3 {
-  readonly specificationVersion = 'v3';
+  readonly specificationVersion = 'V3';
   readonly provider = 'oci-genai';
   readonly defaultObjectGenerationMode = 'tool';
   readonly supportedUrls: Record<string, RegExp[]> = {};

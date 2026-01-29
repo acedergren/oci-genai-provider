@@ -38,7 +38,7 @@ interface TranscriptionOutput {
 }
 
 export class OCITranscriptionModel implements TranscriptionModelV3 {
-  readonly specificationVersion = 'v3';
+  readonly specificationVersion = 'V3';
   readonly provider = 'oci-genai';
 
   private _client?: AIServiceSpeechClient;
