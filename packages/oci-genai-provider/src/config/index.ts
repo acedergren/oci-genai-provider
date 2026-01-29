@@ -48,24 +48,13 @@
 // Types
 // ============================================================================
 
-export type {
-  OCIProfile,
-  OCIConfigResult,
-  OCICompartment,
-  ValidationResult,
-} from './types';
+export type { OCIProfile, OCIConfigResult, OCICompartment, ValidationResult } from './types';
 
 // ============================================================================
 // OCI Config Parsing
 // ============================================================================
 
-export {
-  parseOCIConfig,
-  hasOCIConfig,
-  getConfigPath,
-  getProfile,
-  expandPath,
-} from './oci-config';
+export { parseOCIConfig, hasOCIConfig, getConfigPath, getProfile, expandPath } from './oci-config';
 
 // ============================================================================
 // Credential Validation

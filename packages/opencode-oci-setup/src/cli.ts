@@ -27,7 +27,12 @@ import {
   type ManualSetupInfo,
 } from '@acedergren/oci-genai-provider/config';
 
-import { getAllModels } from '@acedergren/oci-genai-provider';
+import {
+  getModelsByRegion,
+  getAllModels,
+  getCodingRecommendedModels,
+  type OCIGenAIRegion,
+} from '@acedergren/oci-genai-provider';
 
 const VERSION = '0.1.0';
 
@@ -61,6 +66,74 @@ program
 
 program.parse();
 
+// Setup mode - fresh install or modify existing
+type SetupMode = 'fresh' | 'modify' | 'cancel';
+
+/**
+ * Check for existing config and ask user how to proceed
+ */
+async function checkExistingSetup(
+  options: CLIOptions,
+  log: ReturnType<typeof createLogger>
+): Promise<{ mode: SetupMode; existingConfig?: Record<string, unknown> }> {
+  const configPath = path.join(os.homedir(), '.config/opencode/opencode.json');
+
+  if (!fs.existsSync(configPath)) {
+    return { mode: 'fresh' };
+  }
+
+  // Parse existing config
+  let existingConfig: Record<string, unknown> | undefined;
+  try {
+    existingConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+  } catch {
+    // Invalid JSON, treat as fresh
+    return { mode: 'fresh' };
+  }
+
+  // Check if OCI provider is already configured
+  const hasOCIProvider = !!(existingConfig as { provider?: { 'oci-genai'?: unknown } })?.provider?.['oci-genai'];
+
+  if (!hasOCIProvider) {
+    // Config exists but no OCI provider, we can add to it
+    log.log(chalk.yellow('📋 Existing opencode.json found (without OCI GenAI)\n'));
+    return { mode: 'fresh', existingConfig };
+  }
+
+  // OCI provider exists - ask user what to do
+  log.log(chalk.yellow('📋 Existing OCI GenAI configuration found!\n'));
+
+  if (options.yes) {
+    // Non-interactive mode: default to fresh
+    return { mode: 'fresh', existingConfig };
+  }
+
+  const { setupMode } = await prompts({
+    type: 'select',
+    name: 'setupMode',
+    message: 'How would you like to proceed?',
+    choices: [
+      {
+        title: 'Start fresh',
+        value: 'fresh',
+        description: 'Replace existing OCI GenAI config (other providers preserved)',
+      },
+      {
+        title: 'Modify current setup',
+        value: 'modify',
+        description: 'Add/remove models, change settings',
+      },
+      {
+        title: 'Cancel',
+        value: 'cancel',
+        description: 'Keep existing configuration',
+      },
+    ],
+  });
+
+  return { mode: setupMode || 'cancel', existingConfig };
+}
+
 /**
  * Main setup flow
  */
@@ -68,6 +141,18 @@ async function main(options: CLIOptions) {
   const log = createLogger(options.quiet ?? false);
 
   log.log(chalk.bold.blue('\n🔧 OpenCode OCI GenAI Setup\n'));
+
+  // Check for existing setup first
+  const { mode, existingConfig } = await checkExistingSetup(options, log);
+
+  if (mode === 'cancel') {
+    log.log(chalk.gray('\nSetup cancelled. Your existing configuration is unchanged.\n'));
+    process.exit(0);
+  }
+
+  if (mode === 'modify') {
+    log.log(chalk.cyan('\n📝 Modifying existing configuration...\n'));
+  }
 
   let profile: OCIProfile | undefined;
   let compartmentId: string | undefined = options.compartment;
@@ -94,22 +179,32 @@ async function main(options: CLIOptions) {
     process.exit(1);
   }
 
-  // Step 3: Select models
-  const selectedModels = await selectModels(options, log);
+  // Step 3: Select models (filtered by region)
+  const selectedModels = await selectModels(profile.region, options, log);
 
   if (selectedModels.length === 0) {
     log.error(chalk.red('No models selected. Exiting.'));
     process.exit(1);
   }
 
-  // Step 4: Install package
+  // Step 4: Ask about coding optimization
+  const enableCodingOptimization = await askCodingOptimization(options, log);
+
+  // Step 5: Install package
   await installPackage(log);
 
-  // Step 5: Generate opencode.json
-  await generateConfig(profile.name, compartmentId, selectedModels, log);
+  // Step 6: Generate opencode.json
+  await generateConfig(
+    profile.name,
+    compartmentId,
+    selectedModels,
+    enableCodingOptimization,
+    existingConfig,
+    log
+  );
 
-  // Step 6: Show success message
-  showSuccessMessage(selectedModels, log);
+  // Step 7: Show success message
+  showSuccessMessage(selectedModels, enableCodingOptimization, log);
 }
 
 /**
@@ -447,34 +542,121 @@ async function getManualCompartmentId(
 }
 
 /**
- * Select models to enable
+ * Ask about coding optimization settings
+ */
+async function askCodingOptimization(
+  options: CLIOptions,
+  log: ReturnType<typeof createLogger>
+): Promise<boolean> {
+  if (options.yes) {
+    // Default to enabled in non-interactive mode
+    return true;
+  }
+
+  log.log(chalk.bold('\n🔧 Model Optimization\n'));
+  log.log('Coding-optimized settings tune models for better code generation:');
+  log.log(chalk.gray('  • Lower temperature (0.2) - More consistent, deterministic code'));
+  log.log(chalk.gray('  • Higher max tokens (8192) - Support longer code outputs'));
+  log.log(chalk.gray('  • Frequency penalty (0.1) - Reduce repetitive patterns\n'));
+
+  const { enableCoding } = await prompts({
+    type: 'confirm',
+    name: 'enableCoding',
+    message: 'Enable coding-optimized settings for all models?',
+    initial: true,
+  });
+
+  return enableCoding ?? true;
+}
+
+/**
+ * Select models to enable (filtered by region, with coding recommendations)
  */
 async function selectModels(
+  region: string,
   options: CLIOptions,
   log: ReturnType<typeof createLogger>
 ): Promise<string[]> {
+  // Get models available in this region (exclude dedicated-only by default)
+  const regionModels = getModelsByRegion(region as OCIGenAIRegion, false);
+  const recommendedModels = getCodingRecommendedModels(region as OCIGenAIRegion);
   const allModels = getAllModels();
 
-  // Group models by family for better presentation
-  const modelChoices = [
-    { title: '── Grok (xAI) ──', value: '', disabled: true },
-    { title: 'xai.grok-4-maverick (Fast, 131K)', value: 'xai.grok-4-maverick', selected: true },
-    { title: 'xai.grok-4-scout (131K)', value: 'xai.grok-4-scout', selected: false },
-    { title: 'xai.grok-3 (131K)', value: 'xai.grok-3', selected: false },
-    { title: '── Llama (Meta) ──', value: '', disabled: true },
-    { title: 'meta.llama-3.3-70b-instruct (131K)', value: 'meta.llama-3.3-70b-instruct', selected: true },
-    { title: 'meta.llama-3.2-vision-90b-instruct (Vision, 131K)', value: 'meta.llama-3.2-vision-90b-instruct', selected: false },
-    { title: 'meta.llama-3.1-405b-instruct (131K)', value: 'meta.llama-3.1-405b-instruct', selected: false },
-    { title: '── Command (Cohere) ──', value: '', disabled: true },
-    { title: 'cohere.command-plus-latest (131K)', value: 'cohere.command-plus-latest', selected: false },
-    { title: 'cohere.command-latest (131K)', value: 'cohere.command-latest', selected: false },
-    { title: 'cohere.command-a-vision (Vision, 131K)', value: 'cohere.command-a-vision', selected: false },
-    { title: '── Gemini (Google) ──', value: '', disabled: true },
-    { title: 'google.gemini-2.5-pro (Vision, 1M)', value: 'google.gemini-2.5-pro', selected: false },
-    { title: 'google.gemini-2.5-flash (Vision, 1M)', value: 'google.gemini-2.5-flash', selected: false },
-    { title: '── Quick Options ──', value: '', disabled: true },
-    { title: '✓ Select ALL models', value: 'all', selected: false },
-  ];
+  if (regionModels.length === 0) {
+    log.log(chalk.yellow(`\n⚠️  No on-demand models found for region ${region}`));
+    log.log(chalk.yellow('   This region may only support dedicated AI clusters.\n'));
+
+    // Fall back to showing all models
+    const { useFallback } = await prompts({
+      type: 'confirm',
+      name: 'useFallback',
+      message: 'Show all models anyway? (may not work in this region)',
+      initial: false,
+    });
+
+    if (!useFallback) {
+      return [];
+    }
+  }
+
+  const modelsToShow = regionModels.length > 0 ? regionModels : allModels;
+
+  // Get recommended model IDs for pre-selection
+  const recommendedIds = new Set(recommendedModels.map((m) => m.id));
+
+  // Group models by family
+  const modelsByFamily = new Map<string, typeof modelsToShow>();
+  for (const model of modelsToShow) {
+    const family = model.family;
+    if (!modelsByFamily.has(family)) {
+      modelsByFamily.set(family, []);
+    }
+    modelsByFamily.get(family)!.push(model);
+  }
+
+  // Build choices with family headers
+  const modelChoices: Array<{ title: string; value: string; selected?: boolean; disabled?: boolean; description?: string }> = [];
+
+  const familyNames: Record<string, string> = {
+    grok: '── Grok (xAI) ──',
+    llama: '── Llama (Meta) ──',
+    cohere: '── Command (Cohere) ──',
+    gemini: '── Gemini (Google) ──',
+    openai: '── GPT-OSS (OpenAI) ──',
+  };
+
+  for (const [family, models] of modelsByFamily) {
+    const familyTitle = familyNames[family] || `── ${family} ──`;
+    modelChoices.push({ title: familyTitle, value: '', disabled: true });
+
+    for (const model of models) {
+      const contextStr = model.contextWindow >= 1000000
+        ? `${Math.floor(model.contextWindow / 1000000)}M`
+        : `${Math.floor(model.contextWindow / 1000)}K`;
+      const visionStr = model.capabilities.vision ? '👁 ' : '';
+      const toolsStr = model.capabilities.tools ? '' : '⚠️ no tools';
+      const recommendedStr = recommendedIds.has(model.id) ? '⭐ ' : '';
+
+      // Build description from coding note
+      const codingNote = (model as { codingNote?: string }).codingNote;
+
+      modelChoices.push({
+        title: `${recommendedStr}${model.id} (${visionStr}${contextStr})${toolsStr ? ' ' + toolsStr : ''}`,
+        value: model.id,
+        selected: recommendedIds.has(model.id),
+        description: codingNote,
+      });
+    }
+  }
+
+  // Add quick options
+  modelChoices.push({ title: '── Quick Options ──', value: '', disabled: true });
+  modelChoices.push({ title: '✓ Select ALL models with tool support', value: 'all-tools', selected: false });
+  modelChoices.push({ title: '✓ Select ALL models', value: 'all', selected: false });
+
+  const recommendedCount = recommendedModels.length;
+  log.log(chalk.gray(`\nShowing ${modelsToShow.length} models available in ${region}`));
+  log.log(chalk.cyan(`⭐ = Recommended for coding (${recommendedCount} pre-selected)\n`));
 
   const { selectedModels } = await prompts({
     type: 'multiselect',
@@ -491,7 +673,12 @@ async function selectModels(
 
   // Handle "all" selection
   if (selectedModels.includes('all')) {
-    return allModels.map((m) => m.id);
+    return modelsToShow.map((m) => m.id);
+  }
+
+  // Handle "all with tools" selection
+  if (selectedModels.includes('all-tools')) {
+    return modelsToShow.filter((m) => m.capabilities.tools).map((m) => m.id);
   }
 
   return selectedModels.filter((m: string) => m !== '');
@@ -539,6 +726,13 @@ async function installPackage(log: ReturnType<typeof createLogger>): Promise<voi
   }
 }
 
+// Coding-optimized model settings
+const CODING_SETTINGS = {
+  temperature: 0.2,      // More deterministic, consistent code
+  maxTokens: 8192,       // Support longer code outputs
+  frequencyPenalty: 0.1, // Reduce repetitive patterns
+};
+
 /**
  * Generate opencode.json configuration
  */
@@ -546,6 +740,8 @@ async function generateConfig(
   profileName: string,
   compartmentId: string,
   selectedModels: string[],
+  enableCodingOptimization: boolean,
+  existingConfig: Record<string, unknown> | undefined,
   log: ReturnType<typeof createLogger>
 ): Promise<void> {
   const configSpinner = ora('Generating opencode.json...').start();
@@ -562,25 +758,47 @@ async function generateConfig(
         ...(meta.capabilities.vision && { attachment: true }),
         limit: {
           context: meta.contextWindow,
-          output: 8192,
+          output: enableCodingOptimization ? CODING_SETTINGS.maxTokens : 8192,
         },
+        // Add coding-optimized settings if enabled
+        ...(enableCodingOptimization && {
+          settings: {
+            temperature: CODING_SETTINGS.temperature,
+            frequencyPenalty: CODING_SETTINGS.frequencyPenalty,
+          },
+        }),
       };
     }
   }
 
-  // Build the full OpenCode config
+  // Build the OCI GenAI provider config
+  const ociProviderConfig = {
+    npm: '@acedergren/opencode-oci-genai',
+    name: 'OCI GenAI',
+    options: {
+      compartmentId,
+      configProfile: profileName,
+    },
+    models: modelConfig,
+  };
+
+  // Build the full OpenCode config, preserving other providers if they exist
+  const existingProviders = (existingConfig as { provider?: Record<string, unknown> })?.provider || {};
   const openCodeConfig = {
     $schema: 'https://opencode.ai/config.json',
+    // Preserve other top-level settings from existing config
+    ...(existingConfig && {
+      ...Object.fromEntries(
+        Object.entries(existingConfig).filter(([key]) => key !== '$schema' && key !== 'provider')
+      ),
+    }),
     provider: {
-      'oci-genai': {
-        npm: '@acedergren/opencode-oci-genai',
-        name: 'OCI GenAI',
-        options: {
-          compartmentId,
-          configProfile: profileName,
-        },
-        models: modelConfig,
-      },
+      // Preserve other providers (e.g., anthropic, openai)
+      ...Object.fromEntries(
+        Object.entries(existingProviders).filter(([key]) => key !== 'oci-genai')
+      ),
+      // Add/replace OCI GenAI provider
+      'oci-genai': ociProviderConfig,
     },
   };
 
@@ -592,25 +810,6 @@ async function generateConfig(
     // Ensure directory exists
     if (!fs.existsSync(opencodeDir)) {
       fs.mkdirSync(opencodeDir, { recursive: true });
-    }
-
-    // Check if config already exists
-    if (fs.existsSync(configPath)) {
-      configSpinner.stop();
-
-      const { overwrite } = await prompts({
-        type: 'confirm',
-        name: 'overwrite',
-        message: 'opencode.json already exists. Overwrite?',
-        initial: true,
-      });
-
-      if (!overwrite) {
-        log.log(chalk.yellow('\nConfiguration not saved. You can manually add the OCI provider config.\n'));
-        return;
-      }
-
-      configSpinner.start('Generating opencode.json...');
     }
 
     fs.writeFileSync(configPath, JSON.stringify(openCodeConfig, null, 2));
@@ -626,9 +825,20 @@ async function generateConfig(
  */
 function showSuccessMessage(
   selectedModels: string[],
+  enableCodingOptimization: boolean,
   log: ReturnType<typeof createLogger>
 ): void {
   log.log(chalk.bold.green('\n✓ Setup complete!\n'));
+
+  // Show coding optimization status
+  if (enableCodingOptimization) {
+    log.log(chalk.cyan('🔧 Coding optimization: ENABLED'));
+    log.log(chalk.gray('   • temperature: 0.2 (deterministic)'));
+    log.log(chalk.gray('   • maxTokens: 8192 (long outputs)'));
+    log.log(chalk.gray('   • frequencyPenalty: 0.1 (reduce repetition)\n'));
+  } else {
+    log.log(chalk.gray('🔧 Coding optimization: disabled (using defaults)\n'));
+  }
 
   log.log('Next steps:');
   log.log(`  1. Start OpenCode: ${chalk.cyan('opencode')}`);

@@ -52,7 +52,7 @@
     "@fontsource-variable/inter": "^5.0.18",
     "@fontsource/space-grotesk": "^5.0.18",
     "@tailwindcss/vite": "^4.0.0",
-    "ai": "^4.0.0",
+    "ai": "^6.0.61",
     "better-sqlite3": "^11.8.0",
     "d3": "^7.9.0",
     "drizzle-orm": "^0.38.0",

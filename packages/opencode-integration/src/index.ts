@@ -82,9 +82,7 @@ export interface OpenCodeOCIOptions {
  * });
  * ```
  */
-export default function createOpenCodeOCIProvider(
-  options: OpenCodeOCIOptions
-): ProviderV3 {
+export default function createOpenCodeOCIProvider(options: OpenCodeOCIOptions): ProviderV3 {
   // Build config, preferring explicit options over environment variables
   const config: OCIConfig = {
     // Compartment ID is required for OCI GenAI API calls

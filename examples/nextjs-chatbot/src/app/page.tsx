@@ -1,7 +1,8 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { useState } from 'react';
+import { DefaultChatTransport } from 'ai';
+import { useState, useMemo, type FormEvent } from 'react';
 
 const MODELS = [
   { id: 'meta.llama-3.3-70b-instruct', name: 'Llama 3.3 70B' },
@@ -12,11 +13,31 @@ const MODELS = [
 
 export default function Chat() {
   const [selectedModel, setSelectedModel] = useState(MODELS[0].id);
+  const [input, setInput] = useState('');
 
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: '/api/chat',
-    body: { model: selectedModel },
+  // Create transport with selected model in body
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: '/api/chat',
+        body: { model: selectedModel },
+      }),
+    [selectedModel]
+  );
+
+  const { messages, sendMessage, status } = useChat({
+    transport,
   });
+
+  const isLoading = status === 'streaming' || status === 'submitted';
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (input.trim() && !isLoading) {
+      sendMessage({ text: input });
+      setInput('');
+    }
+  };
 
   return (
     <main className="flex flex-col h-screen max-w-3xl mx-auto p-4">
@@ -49,7 +70,9 @@ export default function Chat() {
             }`}
           >
             <p className="text-xs text-text-secondary mb-1">{m.role === 'user' ? 'You' : 'AI'}</p>
-            <p className="whitespace-pre-wrap">{m.content}</p>
+            <p className="whitespace-pre-wrap">
+              {m.parts?.map((part) => (part.type === 'text' ? part.text : null)).join('') || ''}
+            </p>
           </div>
         ))}
         {isLoading && (
@@ -63,14 +86,14 @@ export default function Chat() {
         <input
           type="text"
           value={input}
-          onChange={handleInputChange}
+          onChange={(e) => setInput(e.target.value)}
           placeholder="Type a message..."
           className="flex-1 bg-surface-raised border border-border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-primary"
           disabled={isLoading}
         />
         <button
           type="submit"
-          disabled={isLoading || !(input ?? '').trim()}
+          disabled={isLoading || !input.trim()}
           className="bg-accent-primary text-white px-6 py-3 rounded-lg font-medium disabled:opacity-50 transition-opacity"
         >
           Send

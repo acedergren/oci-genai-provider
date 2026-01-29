@@ -77,6 +77,7 @@ export type {
   OCIRerankingSettings,
   ModelMetadata,
   RequestOptions,
+  OCIGenAIRegion,
 } from './types';
 
 // ============================================================================
@@ -89,6 +90,9 @@ export {
   getModelMetadata,
   getAllModels,
   getModelsByFamily,
+  getModelsByRegion,
+  getCodingRecommendedModels,
+  isCodingSuitable,
 } from './language-models/registry';
 
 // ============================================================================

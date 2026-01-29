@@ -172,9 +172,7 @@ export class OCILanguageModel implements LanguageModelV3 {
 
       // Add seed parameter if provided
       const chatRequest =
-        options.seed !== undefined
-          ? { ...baseChatRequest, seed: options.seed }
-          : baseChatRequest;
+        options.seed !== undefined ? { ...baseChatRequest, seed: options.seed } : baseChatRequest;
 
       const response = await this.executeWithResilience<OCIChatResponse>(
         () =>
@@ -262,9 +260,7 @@ export class OCILanguageModel implements LanguageModelV3 {
 
       // Add seed parameter if provided
       const chatRequest =
-        options.seed !== undefined
-          ? { ...baseChatRequest, seed: options.seed }
-          : baseChatRequest;
+        options.seed !== undefined ? { ...baseChatRequest, seed: options.seed } : baseChatRequest;
 
       // Note: Retry and timeout only apply to connection establishment.
       // Once streaming starts, the stream handles its own errors.
