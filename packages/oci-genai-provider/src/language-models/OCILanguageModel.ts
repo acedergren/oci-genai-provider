@@ -8,8 +8,9 @@ import type {
 import { GenerativeAiInferenceClient } from 'oci-generativeaiinference';
 import { Region } from 'oci-common';
 import type { OCIConfig, RequestOptions } from '../types';
-import { isValidModelId } from './registry';
+import { isValidModelId, getModelMetadata } from './registry';
 import { convertToOCIMessages } from './converters/messages';
+import { convertToCohereFormat } from './converters/cohere-messages';
 import { mapFinishReason, parseSSEStream } from '../shared/streaming/sse-parser';
 import { createAuthProvider, getRegion, getCompartmentId } from '../auth/index.js';
 import { handleOCIError } from '../shared/errors/index.js';
@@ -30,19 +31,33 @@ const DEFAULT_REQUEST_OPTIONS: Required<RequestOptions> = {
 
 interface OCIChatChoice {
   message?: {
-    content?: Array<{ text?: string }>;
+    content?: Array<{ type?: string; text?: string }>;
   };
   finishReason?: string;
 }
 
-interface OCIChatResponse {
-  chatResponse?: {
-    chatChoice?: OCIChatChoice[];
-    usage?: {
-      promptTokens?: number;
-      completionTokens?: number;
-    };
+interface OCIChatResponseInner {
+  // GENERIC format fields
+  choices?: OCIChatChoice[];
+  chatChoice?: OCIChatChoice[]; // Legacy field name
+  // COHERE format fields
+  text?: string;
+  finishReason?: string;
+  chatHistory?: Array<{ role: string; message: string }>;
+  // Common fields
+  usage?: {
+    promptTokens?: number;
+    completionTokens?: number;
   };
+}
+
+interface OCIChatResponse {
+  // Current OCI API structure (2025+): response wrapped in chatResult
+  chatResult?: {
+    chatResponse?: OCIChatResponseInner;
+  };
+  // Legacy structure (for backward compatibility)
+  chatResponse?: OCIChatResponseInner;
 }
 
 export class OCILanguageModel implements LanguageModelV3 {
@@ -106,6 +121,15 @@ export class OCILanguageModel implements LanguageModelV3 {
   }
 
   /**
+   * Get the appropriate API format for the model.
+   * Cohere models require 'COHERE' format, others use 'GENERIC'.
+   */
+  private getApiFormat(): 'GENERIC' | 'COHERE' {
+    const metadata = getModelMetadata(this.modelId);
+    return metadata?.family === 'cohere' ? 'COHERE' : 'GENERIC';
+  }
+
+  /**
    * Execute an API call with retry and timeout wrappers.
    */
   private async executeWithResilience<T>(
@@ -137,8 +161,21 @@ export class OCILanguageModel implements LanguageModelV3 {
     const messages = convertToOCIMessages(options.prompt);
     const client = await this.getClient();
     const compartmentId = getCompartmentId(this.config);
+    const apiFormat = this.getApiFormat();
 
     try {
+      // Build chatRequest based on API format
+      const baseChatRequest =
+        apiFormat === 'COHERE'
+          ? { apiFormat, ...convertToCohereFormat(messages) }
+          : { apiFormat, messages };
+
+      // Add seed parameter if provided
+      const chatRequest =
+        options.seed !== undefined
+          ? { ...baseChatRequest, seed: options.seed }
+          : baseChatRequest;
+
       const response = await this.executeWithResilience<OCIChatResponse>(
         () =>
           client.chat({
@@ -148,31 +185,50 @@ export class OCILanguageModel implements LanguageModelV3 {
                 servingType: 'ON_DEMAND',
                 modelId: this.modelId,
               },
-              chatRequest: {
-                apiFormat: 'GENERIC',
-                messages,
-              },
+              chatRequest,
             },
           }) as Promise<OCIChatResponse>,
         'OCI chat request'
       );
 
-      const choice = response.chatResponse?.chatChoice?.[0];
-      const textContent = choice?.message?.content?.[0]?.text ?? '';
-      const finishReason = mapFinishReason(choice?.finishReason ?? 'STOP');
+      // Handle both GENERIC and COHERE response formats
+      const chatResponse = response.chatResult?.chatResponse ?? response.chatResponse;
+
+      if (!chatResponse) {
+        throw new Error('No chat response received from OCI');
+      }
+
+      // COHERE format: chatResponse.text
+      // GENERIC format: chatResponse.choices[0].message.content[0].text
+      let textContent: string;
+      let finishReason: string;
+
+      if ('text' in chatResponse && typeof chatResponse.text === 'string') {
+        // Cohere response format
+        textContent = chatResponse.text;
+        finishReason = chatResponse.finishReason ?? 'COMPLETE';
+      } else {
+        // Generic response format
+        const choices = chatResponse.choices ?? chatResponse.chatChoice ?? [];
+        const choice = choices[0];
+        textContent = choice?.message?.content?.[0]?.text ?? '';
+        finishReason = choice?.finishReason ?? 'STOP';
+      }
+
+      const usage = chatResponse.usage;
 
       return {
         content: [{ type: 'text', text: textContent }],
-        finishReason,
+        finishReason: mapFinishReason(finishReason),
         usage: {
           inputTokens: {
-            total: response.chatResponse?.usage?.promptTokens ?? 0,
+            total: usage?.promptTokens ?? 0,
             noCache: undefined,
             cacheRead: undefined,
             cacheWrite: undefined,
           },
           outputTokens: {
-            total: response.chatResponse?.usage?.completionTokens ?? 0,
+            total: usage?.completionTokens ?? 0,
             text: undefined,
             reasoning: undefined,
           },
@@ -195,11 +251,25 @@ export class OCILanguageModel implements LanguageModelV3 {
     const messages = convertToOCIMessages(options.prompt);
     const client = await this.getClient();
     const compartmentId = getCompartmentId(this.config);
+    const apiFormat = this.getApiFormat();
 
     try {
+      // Build chatRequest based on API format
+      const baseChatRequest =
+        apiFormat === 'COHERE'
+          ? { apiFormat, ...convertToCohereFormat(messages), isStream: true }
+          : { apiFormat, messages, isStream: true };
+
+      // Add seed parameter if provided
+      const chatRequest =
+        options.seed !== undefined
+          ? { ...baseChatRequest, seed: options.seed }
+          : baseChatRequest;
+
       // Note: Retry and timeout only apply to connection establishment.
       // Once streaming starts, the stream handles its own errors.
-      const response = await this.executeWithResilience<Response>(
+      // OCI SDK returns ReadableStream<Uint8Array> directly for streaming requests
+      const stream = await this.executeWithResilience<ReadableStream<Uint8Array>>(
         () =>
           client.chat({
             chatDetails: {
@@ -208,29 +278,34 @@ export class OCILanguageModel implements LanguageModelV3 {
                 servingType: 'ON_DEMAND',
                 modelId: this.modelId,
               },
-              chatRequest: {
-                apiFormat: 'GENERIC',
-                messages,
-                isStream: true,
-              },
+              chatRequest,
             },
-          }) as unknown as Promise<Response>,
+          }) as unknown as Promise<ReadableStream<Uint8Array>>,
         'OCI streaming chat request'
       );
 
       // Parse SSE stream and convert to V3 format
-      const sseStream = parseSSEStream(response);
-      let textPartId = 0;
+      const sseStream = parseSSEStream(stream);
+      const textPartId = 'text-0';
+      let isFirstChunk = true;
 
       const v3Stream = new ReadableStream<LanguageModelV3StreamPart>({
         async start(controller): Promise<void> {
           try {
             for await (const part of sseStream) {
               if (part.type === 'text-delta') {
+                // Create text part on first chunk
+                if (isFirstChunk) {
+                  controller.enqueue({
+                    type: 'text-start',
+                    id: textPartId,
+                  });
+                  isFirstChunk = false;
+                }
                 // Convert SSE text-delta to V3 format
                 controller.enqueue({
                   type: 'text-delta',
-                  id: `text-${textPartId++}`,
+                  id: textPartId,
                   delta: part.textDelta,
                 });
               } else if (part.type === 'finish') {
