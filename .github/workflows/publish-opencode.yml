@@ -32,10 +32,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build packages
-        run: pnpm -F "@acedergren/opencode-oci-genai" -F "@acedergren/oci-genai-provider" build
+        run: pnpm -F "@acedergren/opencode-oci-genai" -F "@acedergren/oci-genai-provider" -F "@acedergren/opencode-oci-setup" build
 
       - name: Publish packages
-        run: pnpm -F "@acedergren/oci-genai-provider" -F "@acedergren/opencode-oci-genai" publish --no-git-checks --access public
+        run: pnpm -F "@acedergren/oci-genai-provider" -F "@acedergren/opencode-oci-genai" -F "@acedergren/opencode-oci-setup" publish --no-git-checks --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
