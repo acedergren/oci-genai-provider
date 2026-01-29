@@ -1,0 +1,45 @@
+name: Publish OpenCode Integration
+
+on:
+  push:
+    tags:
+      - 'opencode-v*.*.*'
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: https://npm.pkg.github.com
+
+      - name: Enable Corepack and activate pnpm
+        run: corepack enable && corepack prepare pnpm@latest --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build opencode-integration
+        run: pnpm -F @acedergren/opencode-oci-genai build
+
+      - name: Publish opencode-integration
+        run: pnpm -F @acedergren/opencode-oci-genai publish --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
