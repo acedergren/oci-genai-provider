@@ -70,7 +70,7 @@ describe('OCISpeechModel', () => {
       compartmentId: 'ocid1.compartment.test',
       region: 'us-phoenix-1',
     });
-    expect(model.specificationVersion).toBe('v3');
+    expect(model.specificationVersion).toBe('V3');
     expect(model.provider).toBe('oci-genai');
     expect(model.modelId).toBe('TTS_2_NATURAL');
   });

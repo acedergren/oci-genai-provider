@@ -33,7 +33,7 @@ import type {
  * - Reranking (coming in Plan 5)
  */
 export class OCIGenAIProvider implements ProviderV3 {
-  readonly specificationVersion = 'v3' as const;
+  readonly specificationVersion = 'V3' as const;
 
   constructor(private readonly config: OCIConfig = {}) {}
 

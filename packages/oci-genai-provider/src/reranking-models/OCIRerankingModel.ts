@@ -6,7 +6,7 @@ import { getRerankingModelMetadata, isValidRerankingModelId } from './registry';
 import type { OCIRerankingSettings } from '../types';
 
 export class OCIRerankingModel implements RerankingModelV3 {
-  readonly specificationVersion = 'v3';
+  readonly specificationVersion = 'V3';
   readonly provider = 'oci-genai';
 
   private _client?: GenerativeAiInferenceClient;

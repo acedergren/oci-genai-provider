@@ -7,7 +7,7 @@ import type { OCISpeechSettings } from '../types';
 import type { SpeechModelV3, SpeechModelV3CallOptions } from '@ai-sdk/provider';
 
 export class OCISpeechModel implements SpeechModelV3 {
-  readonly specificationVersion = 'v3';
+  readonly specificationVersion = 'V3';
   readonly provider = 'oci-genai';
   private readonly voice: string;
   private readonly _config: OCISpeechSettings;

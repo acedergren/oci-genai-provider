@@ -40,7 +40,7 @@ describe('OCIEmbeddingModel', () => {
       compartmentId: 'ocid1.compartment.test',
     });
 
-    expect(model.specificationVersion).toBe('v3');
+    expect(model.specificationVersion).toBe('V3');
     expect(model.provider).toBe('oci-genai');
     expect(model.modelId).toBe('cohere.embed-multilingual-v3.0');
   });

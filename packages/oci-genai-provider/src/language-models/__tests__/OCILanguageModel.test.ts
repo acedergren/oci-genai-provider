@@ -178,7 +178,7 @@ describe('OCILanguageModel', () => {
 
     it('should have correct specification version', () => {
       const model = new OCILanguageModel('cohere.command-r-plus', mockConfig);
-      expect(model.specificationVersion).toBe('v3');
+      expect(model.specificationVersion).toBe('V3');
     });
 
     it('should have correct provider identifier', () => {
