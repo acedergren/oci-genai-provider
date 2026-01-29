@@ -189,14 +189,14 @@ describe('OCIEmbeddingModel', () => {
     it('should use custom inputType setting', async () => {
       const model = new OCIEmbeddingModel('cohere.embed-multilingual-v3.0', {
         compartmentId: 'test',
-        inputType: 'QUERY',
+        inputType: 'SEARCH_QUERY',
       });
 
       await model.doEmbed({ values: ['query'] });
 
       expect(mockEmbedText).toHaveBeenCalledWith(
         expect.objectContaining({
-          embedTextDetails: expect.objectContaining({ inputType: 'QUERY' }),
+          embedTextDetails: expect.objectContaining({ inputType: 'SEARCH_QUERY' }),
         })
       );
     });

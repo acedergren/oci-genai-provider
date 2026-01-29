@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 import { RerankingModelV3, RerankingModelV3CallOptions } from '@ai-sdk/provider';
 import { GenerativeAiInferenceClient } from 'oci-generativeaiinference';
+import { Region } from 'oci-common';
 import { createAuthProvider, getCompartmentId, getRegion } from '../auth';
 import { getRerankingModelMetadata, isValidRerankingModelId } from './registry';
 import type { OCIRerankingSettings } from '../types';
@@ -23,18 +23,17 @@ export class OCIRerankingModel implements RerankingModelV3 {
   private async getClient(): Promise<GenerativeAiInferenceClient> {
     if (!this._client) {
       const authProvider = await createAuthProvider(this.config);
-      const region = getRegion(this.config);
+      const regionId = getRegion(this.config);
 
       this._client = new GenerativeAiInferenceClient({
         authenticationDetailsProvider: authProvider,
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (this._client as any).region = region;
+      // Set region using proper OCI Region API
+      this._client.region = Region.fromRegionId(regionId);
 
       if (this.config.endpoint) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (this._client as any).endpoint = this.config.endpoint;
+        this._client.endpoint = this.config.endpoint;
       }
     }
 

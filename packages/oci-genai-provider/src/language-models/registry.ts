@@ -67,10 +67,52 @@ export const MODEL_CATALOG: ModelMetadata[] = [
     contextWindow: 131072,
     speed: 'fast',
   },
-  // Cohere models
+  // Cohere models - latest aliases (recommended)
+  {
+    id: 'cohere.command-plus-latest',
+    name: 'Command R+ Latest',
+    family: 'cohere',
+    capabilities: { streaming: true, tools: true, vision: false },
+    contextWindow: 131072,
+    speed: 'fast',
+  },
+  {
+    id: 'cohere.command-latest',
+    name: 'Command R Latest',
+    family: 'cohere',
+    capabilities: { streaming: true, tools: true, vision: false },
+    contextWindow: 131072,
+    speed: 'fast',
+  },
+  // Cohere models - versioned
+  {
+    id: 'cohere.command-r-plus-08-2024',
+    name: 'Command R+ (Aug 2024)',
+    family: 'cohere',
+    capabilities: { streaming: true, tools: true, vision: false },
+    contextWindow: 131072,
+    speed: 'fast',
+  },
+  {
+    id: 'cohere.command-r-08-2024',
+    name: 'Command R (Aug 2024)',
+    family: 'cohere',
+    capabilities: { streaming: true, tools: true, vision: false },
+    contextWindow: 131072,
+    speed: 'fast',
+  },
+  {
+    id: 'cohere.command-a-03-2025',
+    name: 'Command A (Mar 2025)',
+    family: 'cohere',
+    capabilities: { streaming: true, tools: true, vision: false },
+    contextWindow: 131072,
+    speed: 'fast',
+  },
+  // Cohere models - legacy (retired from on-demand, kept for dedicated clusters)
   {
     id: 'cohere.command-r-plus',
-    name: 'Command R+',
+    name: 'Command R+ (Legacy)',
     family: 'cohere',
     capabilities: { streaming: true, tools: true, vision: false },
     contextWindow: 131072,
@@ -78,7 +120,7 @@ export const MODEL_CATALOG: ModelMetadata[] = [
   },
   {
     id: 'cohere.command-r',
-    name: 'Command R',
+    name: 'Command R (Legacy)',
     family: 'cohere',
     capabilities: { streaming: true, tools: true, vision: false },
     contextWindow: 131072,

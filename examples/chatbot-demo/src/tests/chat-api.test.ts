@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { POST } from './+server';
+import { POST } from '../routes/api/chat/+server';
 
 describe('Chat API Endpoint', () => {
   let mockRequest: Request;
@@ -19,7 +19,7 @@ describe('Chat API Endpoint', () => {
         method: 'POST',
         body: JSON.stringify({
           messages: [],
-          model: 'cohere.command-r-plus',
+          model: 'meta.llama-3.3-70b-instruct',
         }),
         headers: { 'Content-Type': 'application/json' },
       });
@@ -44,7 +44,7 @@ describe('Chat API Endpoint', () => {
       method: 'POST',
       body: JSON.stringify({
         messages: [{ role: 'user', content: 'Hello' }],
-        model: 'cohere.command-r-plus',
+        model: 'meta.llama-3.3-70b-instruct',
       }),
       headers: { 'Content-Type': 'application/json' },
     });
@@ -83,10 +83,10 @@ describe('Chat API Endpoint', () => {
     }
 
     const testModels = [
-      'cohere.command-r-plus',
-      'cohere.command-r',
-      'meta.llama-3.1-70b-instruct',
-      'meta.llama-3.1-405b-instruct',
+      'meta.llama-3.3-70b-instruct',
+      'cohere.command-plus-latest',
+      'cohere.command-a-03-2025',
+      'google.gemini-2.5-flash',
     ];
 
     for (const model of testModels) {

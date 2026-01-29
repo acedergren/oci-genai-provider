@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     });
   }
 
-  const { messages, model: modelId = 'cohere.command-r-plus' } = body;
+  const { messages, model: modelId = 'meta.llama-3.3-70b-instruct' } = body;
 
   if (!Array.isArray(messages)) {
     return new Response(JSON.stringify({ error: 'messages must be an array' }), {
@@ -40,10 +40,10 @@ export async function POST(request: Request) {
   // The provider implements LanguageModelV3 which is compatible at runtime
   const languageModel = provider.languageModel(modelId) as unknown as LanguageModelV1;
 
-  const result = streamText({
+  const result = await streamText({
     model: languageModel,
     messages,
   });
 
-  return result.toDataStreamResponse();
+  return result.toUIMessageStreamResponse();
 }

@@ -1,184 +1,249 @@
-# @acedergren/opencode-oci-genai
+# OpenCode OCI GenAI Provider
 
-> **OpenCode convenience wrapper** for [@acedergren/oci-genai-provider](../oci-genai-provider)
+Integrate Oracle Cloud Infrastructure Generative AI with [OpenCode](https://opencode.ai).
 
-## What is This?
+## Features
 
-This package is an **optional convenience layer** for using the OCI GenAI provider with OpenCode. It's NOT required — you can use the core provider directly.
+- **19+ Language Models**: Access Grok, Llama, Cohere, and Gemini models through OCI
+- **Auto-Discovery**: Uses `~/.oci/config` for credentials - no config duplication
+- **Streaming Support**: Real-time token streaming for responsive chat
+- **Vision Models**: Support for image attachments with Llama Vision and Gemini
 
-**Use this package if you want**:
+## Quick Start
 
-- ✅ Default export factory function for OpenCode config
-- ✅ Automatic environment variable loading
-- ✅ Configuration validation with helpful errors
-- ✅ Model registry generation
-- ✅ OCI-specific helpers
-
-**Use the core provider directly if you**:
-
-- Want to configure everything yourself
-- Don't need the convenience helpers
-- Are using OpenCode's standard provider config
-
-## Installation
+### 1. Install Package
 
 ```bash
+cd ~/.config/opencode
 npm install @acedergren/opencode-oci-genai
 ```
 
-## Usage
+### 2. Configure OCI Credentials
 
-### As OpenCode Provider
+Ensure you have OCI credentials configured:
 
-Add to `opencode.json`:
+```bash
+# Check if OCI config exists
+cat ~/.oci/config
+
+# If not, set up OCI CLI
+oci setup config
+```
+
+### 3. Set Environment Variables
+
+```bash
+# Add to ~/.bashrc or ~/.zshrc
+export OCI_COMPARTMENT_ID=ocid1.compartment.oc1..aaaaaaa...
+export OCI_CONFIG_PROFILE=DEFAULT  # or your profile name
+```
+
+### 4. Create Configuration
+
+Create `~/.config/opencode/opencode.json`:
 
 ```json
 {
+  "$schema": "https://opencode.ai/config.json",
   "provider": {
     "oci-genai": {
       "npm": "@acedergren/opencode-oci-genai",
+      "name": "OCI GenAI",
       "options": {
-        "compartmentId": "ocid1.compartment.oc1...",
-        "configProfile": "FRANKFURT"
+        "compartmentId": "{env:OCI_COMPARTMENT_ID}",
+        "configProfile": "{env:OCI_CONFIG_PROFILE}"
+      },
+      "models": {
+        "xai.grok-4-maverick": {
+          "name": "Grok 4 Maverick",
+          "limit": { "context": 131072, "output": 8192 }
+        },
+        "meta.llama-3.3-70b-instruct": {
+          "name": "Llama 3.3 70B",
+          "limit": { "context": 131072, "output": 8192 }
+        }
       }
     }
   }
 }
 ```
 
-The package exports a default factory function that OpenCode will invoke.
+### 5. Start OpenCode
 
-### Direct Usage (Alternative)
-
-You can also use this package programmatically:
-
-```typescript
-import opencode from '@acedergren/opencode-oci-genai';
-
-const provider = opencode({
-  compartmentId: process.env.OCI_COMPARTMENT_ID,
-  region: 'eu-frankfurt-1',
-});
-
-// Use with Vercel AI SDK
-const model = provider.model('cohere.command-r-plus');
+```bash
+opencode
+# Select "OCI GenAI" provider
+# Choose a model and start chatting!
 ```
 
-### Re-exported Core Provider API
+## Configuration Options
 
-Everything from the core provider is re-exported:
+| Option | Required | Description |
+|--------|----------|-------------|
+| `compartmentId` | Yes | OCI Compartment OCID for API calls |
+| `configProfile` | No | Profile name from `~/.oci/config` (default: `DEFAULT`) |
+| `region` | No | Override region from profile (usually not needed) |
 
-```typescript
-import { oci, getAllModels, getModelMetadata } from '@acedergren/opencode-oci-genai';
+## Available Models
 
-// Use exactly like the core provider
-const result = await generateText({
-  model: oci('xai.grok-4-maverick'),
-  prompt: 'Hello!',
-});
+### Grok (xAI)
+- `xai.grok-4-maverick` - Fast, 131K context
+- `xai.grok-4-scout` - Balanced, 131K context
+- `xai.grok-3` - Previous generation
+
+### Llama (Meta)
+- `meta.llama-3.3-70b-instruct` - Latest Llama, 131K context
+- `meta.llama-3.2-vision-90b-instruct` - Vision support, 131K context
+- `meta.llama-3.1-405b-instruct` - Largest Llama, 131K context
+
+### Command (Cohere)
+- `cohere.command-plus-latest` - Command R+, 131K context
+- `cohere.command-latest` - Command R, 131K context
+- `cohere.command-a-vision` - Vision support, 131K context
+
+### Gemini (Google)
+- `google.gemini-2.5-pro` - Best quality, 1M context, vision
+- `google.gemini-2.5-flash` - Fast, 1M context, vision
+
+## Automated Setup
+
+For a guided setup experience, use the setup CLI:
+
+```bash
+npx @acedergren/opencode-oci-setup
 ```
 
-## Configuration
+This will:
+1. Discover profiles from `~/.oci/config`
+2. Validate your credentials
+3. List available compartments
+4. Generate `opencode.json` automatically
 
-### Type Definition
+## Troubleshooting
 
-```typescript
-interface OpenCodeOCIConfig extends OCIConfig {
-  // Required
-  compartmentId?: string;
+### "Missing compartmentId" Error
 
-  // Optional
-  region?: string;
-  profile?: string;
-  auth?: 'config_file' | 'instance_principal' | 'resource_principal';
+Set the environment variable:
+```bash
+export OCI_COMPARTMENT_ID=ocid1.compartment.oc1..aaaaaaa...
+```
 
-  // OpenCode metadata
-  enabled?: boolean;
-  displayName?: string;
-  description?: string;
-  priority?: number;
+Or add it directly to `opencode.json`:
+```json
+"options": {
+  "compartmentId": "ocid1.compartment.oc1..aaaaaaa..."
 }
 ```
 
-### Configuration Precedence
+### Authentication Failures
 
-1. **User config** (highest priority)
-2. **Environment variables**
-3. **Defaults**
+Verify OCI credentials work:
+```bash
+oci iam user get --user-id me
+```
 
-### Environment Variables
+Check that your profile has the correct region:
+```bash
+cat ~/.oci/config
+```
+
+### Model Not Available
+
+Not all models are available in all regions. Check the [OCI GenAI Regions](https://docs.oracle.com/iaas/generative-ai/overview.htm) documentation.
+
+Common regions with GenAI support:
+- `eu-frankfurt-1` - Germany
+- `us-ashburn-1` - US East
+- `us-chicago-1` - US Midwest
+
+### Profile Not Found
+
+If your profile isn't being recognized:
+
+1. Check `~/.oci/config` exists and has the correct profile
+2. Verify `OCI_CONFIG_PROFILE` env var matches exactly
+3. Check for typos in the profile name (case-sensitive)
+
+## Advanced Configuration
+
+### Project-Local Configuration
+
+Create `opencode.json` in your project root for project-specific settings:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "oci-genai": {
+      "npm": "@acedergren/opencode-oci-genai",
+      "name": "OCI GenAI",
+      "options": {
+        "compartmentId": "{env:OCI_COMPARTMENT_ID}",
+        "configProfile": "FRANKFURT",
+        "region": "eu-frankfurt-1"
+      },
+      "models": {
+        "meta.llama-3.3-70b-instruct": {
+          "name": "Llama 3.3 70B",
+          "limit": { "context": 131072, "output": 8192 }
+        }
+      }
+    }
+  }
+}
+```
+
+### Multiple Profiles
+
+Use different profiles for different regions:
 
 ```bash
-OCI_COMPARTMENT_ID=ocid1.compartment.oc1...
-OCI_REGION=eu-frankfurt-1
-OCI_CONFIG_PROFILE=DEFAULT
+# Frankfurt profile
+export OCI_CONFIG_PROFILE=FRANKFURT
+
+# Or Ashburn profile
+export OCI_CONFIG_PROFILE=ASHBURN
 ```
 
 ## API Reference
 
-### Default Export
+The package exports utilities for programmatic use:
 
 ```typescript
-export default function opencode(options?: OpenCodeOCIConfig): OCIProvider;
+import {
+  createOCI,
+  oci,
+  getAllModels,
+  getModelMetadata,
+  parseOCIConfig,
+  validateCredentials,
+  discoverCompartments,
+} from '@acedergren/opencode-oci-genai';
+
+// Create custom provider
+const provider = createOCI({
+  compartmentId: 'ocid1.compartment...',
+  profile: 'FRANKFURT',
+});
+
+// Use default provider
+const model = oci.languageModel('xai.grok-4-maverick');
+
+// List all available models
+const models = getAllModels();
+
+// Parse OCI config
+const config = parseOCIConfig();
+console.log(config.profiles);
+
+// Validate credentials
+const result = await validateCredentials('FRANKFURT');
+console.log(result.userName);
+
+// Discover compartments
+const compartments = await discoverCompartments('FRANKFURT');
+console.log(compartments);
 ```
-
-The factory function OpenCode invokes. Returns a Vercel AI SDK provider.
-
-### Configuration Helpers
-
-```typescript
-export {
-  validateConfig, // Validate configuration
-  loadConfigFromEnv, // Load from environment
-  mergeConfigs, // Merge configs with precedence
-} from './config';
-```
-
-### Model Registry
-
-```typescript
-export {
-  getOpenCodeModelRegistry, // Get all models in OpenCode format
-  getModelRegistryByFamily, // Get models by family
-} from './models';
-```
-
-### Core Provider Re-exports
-
-```typescript
-export * from '@acedergren/oci-genai-provider';
-export { createOCI, oci } from '@acedergren/oci-genai-provider';
-```
-
-Everything from the core provider is available.
-
-## What This Package Does NOT Do
-
-- ❌ Implement a different provider (uses core provider)
-- ❌ Wrap the OCI SDK (core provider does that)
-- ❌ Provide OpenCode CLI commands
-- ❌ Replace the core provider
-
-It's purely a convenience layer for OpenCode users.
-
-## When to Use the Core Provider Instead
-
-Use `@acedergren/oci-genai-provider` directly if:
-
-- You're not using OpenCode
-- You're using OpenCode but want full control
-- You don't need the convenience helpers
-- You're building a framework/tool on Vercel AI SDK
-
-## Documentation
-
-- [OpenCode Integration Guide](../../docs/guides/opencode-integration/README.md) - How to use this with OpenCode
-- [Core Provider Documentation](../oci-genai-provider/README.md) - Main provider API
-- [Vercel AI SDK Documentation](https://sdk.vercel.ai/docs) - AI SDK reference
-
-## Development
-
-Part of the monorepo. See root README for development setup.
 
 ## License
 

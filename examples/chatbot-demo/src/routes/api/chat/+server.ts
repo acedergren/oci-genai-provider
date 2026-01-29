@@ -19,12 +19,30 @@ export const POST: RequestHandler = async ({ request }) => {
 
     const { messages, model: modelId } = await request.json();
 
-    const result = streamText({
-      model: provider.languageModel(modelId),
-      messages,
-    });
+    console.log('📨 Received messages:', JSON.stringify(messages, null, 2));
 
-    return result.toUIMessageStreamResponse();
+    // Convert UIMessage format (with parts) to CoreMessage format (with content)
+    const convertedMessages = messages.map((msg: any) => ({
+      role: msg.role,
+      content: msg.parts
+        ? msg.parts.map((part: any) => part.text).join('')
+        : msg.content || '',
+    }));
+
+    console.log('✅ Converted messages:', JSON.stringify(convertedMessages, null, 2));
+
+    try {
+      const result = await streamText({
+        model: provider.languageModel(modelId),
+        messages: convertedMessages,
+      });
+
+      console.log('🚀 StreamText result obtained, returning response...');
+      return result.toUIMessageStreamResponse();
+    } catch (streamError) {
+      console.error('❌ StreamText error:', streamError);
+      throw streamError;
+    }
   } catch (error) {
     console.error('Chat API error:', error);
     return new Response(
