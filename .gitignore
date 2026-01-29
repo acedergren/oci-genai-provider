@@ -64,7 +64,6 @@ Thumbs.db
 .pnp.*
 package-lock.json
 yarn.lock
-pnpm-lock.yaml
 
 # Misc
 .claude/debug/
