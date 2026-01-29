@@ -34,8 +34,10 @@ jobs:
       - name: Build packages
         run: pnpm -F "@acedergren/opencode-oci-genai" -F "@acedergren/oci-genai-provider" build
 
-      - name: Publish opencode-integration
-        run: cd packages/opencode-integration && pnpm publish --no-git-checks
+      - name: Publish packages
+        run: |
+          cd packages/oci-genai-provider && pnpm publish --no-git-checks
+          cd ../opencode-integration && pnpm publish --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
