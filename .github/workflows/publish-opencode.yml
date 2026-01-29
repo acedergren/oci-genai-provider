@@ -31,11 +31,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build opencode-integration
-        run: pnpm -F @acedergren/opencode-oci-genai build
+      - name: Build packages
+        run: pnpm -F "@acedergren/opencode-oci-genai" -F "@acedergren/oci-genai-provider" build
 
       - name: Publish opencode-integration
-        run: pnpm -F @acedergren/opencode-oci-genai publish --no-git-checks
+        run: cd packages/opencode-integration && pnpm publish --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
