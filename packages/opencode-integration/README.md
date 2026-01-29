@@ -2,6 +2,8 @@
 
 Integrate Oracle Cloud Infrastructure Generative AI with [OpenCode](https://opencode.ai).
 
+> **Published Version:** `@acedergren/opencode-oci-genai@0.1.0` on [GitHub Packages](https://github.com/acedergren/oci-genai-provider/packages)
+
 ## Features
 
 - **19+ Language Models**: Access Grok, Llama, Cohere, and Gemini models through OCI
@@ -11,11 +13,21 @@ Integrate Oracle Cloud Infrastructure Generative AI with [OpenCode](https://open
 
 ## Quick Start
 
-### 1. Install Package
+### 1. OpenCode Auto-Installation (Recommended)
+
+OpenCode will automatically download and install this package when you add it to your configuration.
+
+Alternatively, you can manually install it:
 
 ```bash
 cd ~/.config/opencode
 npm install @acedergren/opencode-oci-genai
+```
+
+**Note:** This package is published to the GitHub Packages registry. If you get a 404 error, ensure you have npm configured to access GitHub Packages:
+
+```bash
+npm config set @acedergren:registry https://npm.pkg.github.com
 ```
 
 ### 2. Configure OCI Credentials
