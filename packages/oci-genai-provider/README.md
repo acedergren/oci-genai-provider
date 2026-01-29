@@ -72,6 +72,24 @@ const result = await generateText({
 console.log(result.text);
 ```
 
+## Feature Support
+
+This provider supports most Vercel AI SDK v6 features for text generation. See [FEATURES.md](./FEATURES.md) for complete details.
+
+### Supported ✅
+- Streaming and non-streaming generation
+- Temperature, topP, topK, penalties
+- Seed parameter (best-effort determinism)
+- Multiple model families (Llama, Gemini, Cohere, Grok)
+- Retry logic and timeout control
+
+### Not Supported ❌
+- Tool/function calling (OCI API limitation)
+- Multi-modal input (vision, audio, documents)
+- JSON mode (pending AI SDK integration)
+
+For detailed information on each feature, see [FEATURES.md](./FEATURES.md).
+
 ## Authentication
 
 ### Option 1: OCI Config File (Recommended)
@@ -155,6 +173,22 @@ const result = streamText({
 for await (const chunk of result.textStream) {
   process.stdout.write(chunk);
 }
+```
+
+### Deterministic Generation
+
+Use the seed parameter for more consistent outputs (best-effort):
+
+```typescript
+const result = await model.doGenerate({
+  prompt: [
+    { role: 'user', content: [{ type: 'text', text: 'Generate a random story' }] }
+  ],
+  seed: 42,
+  temperature: 0.7,
+});
+
+// Repeated calls with same seed produce similar (not identical) results
 ```
 
 See [Language Models Documentation](./docs/language-models.md) for complete reference.
