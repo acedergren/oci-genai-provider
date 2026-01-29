@@ -2,6 +2,8 @@
 
 This directory contains GitHub Actions workflows for CI/CD automation.
 
+> **Note**: All workflows use self-hosted runners (gha01, gha02) for cost optimization and faster execution.
+
 ## Overview
 
 | Workflow        | Trigger                 | Purpose                 | Time     | Runner                  |
