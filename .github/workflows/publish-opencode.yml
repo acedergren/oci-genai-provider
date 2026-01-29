@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      contents: read
+      contents: write
       packages: write
 
     steps:
@@ -29,7 +29,19 @@ jobs:
         run: corepack enable && corepack prepare pnpm@latest --activate
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
+
+      - name: Commit updated lockfile
+        run: |
+          if git diff --quiet pnpm-lock.yaml; then
+            echo "lockfile unchanged"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add pnpm-lock.yaml
+            git commit -m "chore: update pnpm-lock.yaml with AI SDK 6.0.0 dependencies"
+            git push
+          fi
 
       - name: Build packages
         run: pnpm -F "@acedergren/opencode-oci-genai" -F "@acedergren/oci-genai-provider" -F "@acedergren/opencode-oci-setup" build
