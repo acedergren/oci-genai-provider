@@ -46,8 +46,8 @@
     "test:unit": "jest --testPathPattern=__tests__ --testPathIgnorePatterns=integration"
   },
   "dependencies": {
-    "@ai-sdk/provider": "^6.0.0",
-    "@ai-sdk/provider-utils": "^6.0.0",
+    "@ai-sdk/provider": "^3.0.5",
+    "@ai-sdk/provider-utils": "^4.0.10",
     "eventsource-parser": "^3.0.0",
     "oci-common": "^2.94.0",
     "oci-generativeaiinference": "^2.94.0",

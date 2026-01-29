@@ -11,8 +11,8 @@
   "dependencies": {
     "@acedergren/oci-genai-provider": "workspace:*",
     "@ai-sdk/react": "^3.0.59",
-    "ai": "^6.0.57",
-    "next": "^15.0.0",
+    "ai": "^6.0.61",
+    "next": "^16.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
@@ -21,8 +21,8 @@
     "@types/node": "^20.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "eslint": "^8.56.0",
-    "eslint-config-next": "^15.1.0",
+    "eslint": "^9.39.2",
+    "eslint-config-next": "^16.1.6",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.0"
   }

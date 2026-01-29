@@ -42,10 +42,7 @@ export async function discoverCompartments(
   profileName = 'DEFAULT',
   includeRoot = true
 ): Promise<OCICompartment[]> {
-  const authProvider = new common.ConfigFileAuthenticationDetailsProvider(
-    undefined,
-    profileName
-  );
+  const authProvider = new common.ConfigFileAuthenticationDetailsProvider(undefined, profileName);
 
   const identityClient = new identity.IdentityClient({
     authenticationDetailsProvider: authProvider,

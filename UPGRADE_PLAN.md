@@ -6,13 +6,54 @@
 ## Executive Summary
 
 This monorepo has several major dependency upgrades available:
-- **Security Fixes**: 3 vulnerabilities (esbuild, Next.js, cookie)
+
+- **Security Fixes**: 6 vulnerabilities (eslint, Next.js, ai, jsondiffpatch, esbuild, cookie)
 - **Major Upgrades**: Jest 29→30, Vitest 2→4, Vite 6→7, Zod 3→4, OpenAI SDK 4→6
 - **Minor Updates**: AI SDK, @types/node, and others
+
+## Dependabot Alert Alignment (Jan 2026)
+
+Open alerts and required fixes:
+
+- **eslint** < 9.26.0 (direct in `examples/nextjs-chatbot` and transitive)
+- **next** vulnerable range (channel-specific patch required)
+- **ai** < 5.0.52 (direct in `examples/fraud-analyst-agent`)
+- **jsondiffpatch** < 0.7.2 (transitive)
+- **esbuild** <= 0.24.2 (transitive)
+- **cookie** < 0.7.0 (transitive)
+
+## Cascading Effects Analysis
+
+Expected ripple effects by dependency:
+
+- **eslint 9.x**: requires flat config migration; may require `eslint-config-next` and `@typescript-eslint/*` alignment; CI lint scripts may need updates.
+- **next** patch: may require matching `eslint-config-next` version; channel must match (15 stable vs 15 canary vs 16 beta).
+- **esbuild 0.25.0**: usually pulled via Vite/Vitest; may require Vite major bump and plugin compatibility updates.
+- **cookie 0.7.0**: often via `@sveltejs/kit`; may require SvelteKit bump, which cascades into Vite/plugin updates.
+- **ai 5.0.52**: patch-level; low risk, but re-baseline any example tests using file uploads.
+- **jsondiffpatch 0.7.2**: low risk; verify HTML formatter output in any example UI/tests.
+
+## Cascading Effects Handling Plan
+
+1. **Discovery**
+   - Identify transitive owners: `pnpm why esbuild`, `pnpm why cookie`, `pnpm why jsondiffpatch`.
+   - Confirm Next.js channel in `examples/nextjs-chatbot` (15 stable vs 15 canary vs 16 beta).
+2. **Direct fixes first (low risk)**
+   - Upgrade `eslint` to 9.26.0 and migrate to flat config.
+   - Upgrade `ai` to 5.0.52.
+   - Upgrade `next` to patched version matching channel.
+3. **Transitive fixes (upgrade or override)**
+   - Prefer upstream bumps (Vite/Vitest/SvelteKit) to pull fixed `esbuild` and `cookie`.
+   - If blocked, add `pnpm.overrides` for `esbuild@0.25.0`, `cookie@0.7.0`, `jsondiffpatch@0.7.2` and document removal criteria.
+4. **Validation**
+   - Run targeted tests and lint/build for affected examples and packages after each phase.
+5. **Documentation**
+   - Record any config migrations and temporary overrides with follow-up tasks.
 
 ## Prioritized Upgrade Strategy
 
 ### Phase 1: Security Fixes (IMMEDIATE)
+
 **Goal**: Resolve security vulnerabilities
 
 1. **esbuild** (via Vite/Vitest transitive dependency)
@@ -34,6 +75,7 @@ This monorepo has several major dependency upgrades available:
    - Risk: Low (transitive dependency)
 
 ### Phase 2: Testing Framework Upgrades
+
 **Goal**: Modernize testing infrastructure
 
 1. **Jest 29 → 30** (packages/oci-genai-provider)
@@ -49,6 +91,7 @@ This monorepo has several major dependency upgrades available:
    - Risk: Medium
 
 ### Phase 3: Build Tools & Framework Updates
+
 **Goal**: Upgrade build tooling
 
 1. **Vite 6 → 7** (examples/chatbot-demo)
@@ -63,6 +106,7 @@ This monorepo has several major dependency upgrades available:
    - Risk: Medium (configuration changes)
 
 ### Phase 4: Core Dependencies
+
 **Goal**: Update runtime dependencies
 
 1. **Zod 3 → 4** (packages/oci-genai-provider)
@@ -76,6 +120,7 @@ This monorepo has several major dependency upgrades available:
    - Risk: High (major version skip)
 
 ### Phase 5: Minor Updates (LOW PRIORITY)
+
 **Goal**: Stay current with patch/minor releases
 
 - AI SDK 6.0.57 → 6.0.58 (all examples)
@@ -87,6 +132,7 @@ This monorepo has several major dependency upgrades available:
 ## Upgrade Sequence
 
 ### Week 1: Security & Stability
+
 ```bash
 # Day 1-2: Next.js security patch
 cd examples/nextjs-chatbot
@@ -101,6 +147,7 @@ pnpm test
 ```
 
 ### Week 2: Testing Framework
+
 ```bash
 # Day 1-3: Jest 30 upgrade
 cd packages/oci-genai-provider
@@ -116,6 +163,7 @@ pnpm test
 ```
 
 ### Week 3: Build Tools
+
 ```bash
 # Day 1-2: ESLint 9 migration
 cd examples/nextjs-chatbot
@@ -131,6 +179,7 @@ pnpm add -D @testing-library/svelte@^5.0.0
 ```
 
 ### Week 4: Core Dependencies
+
 ```bash
 # Day 1-3: Zod 4 migration
 cd packages/oci-genai-provider
@@ -148,26 +197,31 @@ pnpm test
 ## Breaking Change Mitigation
 
 ### Jest 29 → 30
+
 - Update test configuration format
 - Check for removed APIs (expect.toMatchInlineSnapshot changes)
 - Verify transformer configurations
 
 ### Vitest 2 → 4
+
 - Update vitest.config.ts
 - Check for changed assertion APIs
 - Verify UI plugin compatibility
 
 ### Vite 6 → 7
+
 - Update vite.config.ts
 - Check plugin compatibility
 - Verify SSR configuration
 
 ### Zod 3 → 4
+
 - Review schema definitions
 - Update error handling
 - Check for deprecated methods
 
 ### OpenAI SDK 4 → 6
+
 - Major API restructuring expected
 - Update client initialization
 - Revise request/response handling
@@ -175,6 +229,7 @@ pnpm test
 ## Testing Strategy
 
 ### Pre-Upgrade Baseline
+
 ```bash
 # Run full test suite
 pnpm test
@@ -190,6 +245,7 @@ pnpm test:coverage > baseline-coverage.txt
 ```
 
 ### Per-Phase Testing
+
 ```bash
 # After each upgrade:
 1. Unit tests: pnpm test --filter=<package>
@@ -199,6 +255,7 @@ pnpm test:coverage > baseline-coverage.txt
 ```
 
 ### Post-Upgrade Validation
+
 ```bash
 # Full regression suite
 pnpm test
@@ -213,6 +270,7 @@ diff baseline-coverage.txt post-upgrade-coverage.txt
 ## Rollback Plan
 
 ### Git Strategy
+
 ```bash
 # Create upgrade branch
 git checkout -b upgrade/security-fixes
@@ -228,6 +286,7 @@ pnpm install
 ```
 
 ### Package Lock Management
+
 ```bash
 # Backup lock file before each phase
 cp pnpm-lock.yaml pnpm-lock.yaml.backup
@@ -239,15 +298,15 @@ pnpm install --frozen-lockfile
 
 ## Risk Assessment
 
-| Upgrade | Risk Level | Impact | Mitigation |
-|---------|-----------|--------|------------|
-| Next.js 15.5→15.6 | Low | Security fix | Test deploy flow |
-| Vite 6→7 | Medium | Build process | Review changelog, test dev/prod builds |
-| Jest 29→30 | Medium | Test suite | Incremental migration, codemods |
-| Vitest 2→4 | Medium | Test suite | Check plugin compatibility |
-| Zod 3→4 | High | Runtime validation | Thorough testing, gradual rollout |
-| OpenAI 4→6 | High | API compatibility | Major refactoring needed |
-| ESLint 8→9 | Medium | Developer experience | Flat config migration |
+| Upgrade           | Risk Level | Impact               | Mitigation                             |
+| ----------------- | ---------- | -------------------- | -------------------------------------- |
+| Next.js 15.5→15.6 | Low        | Security fix         | Test deploy flow                       |
+| Vite 6→7          | Medium     | Build process        | Review changelog, test dev/prod builds |
+| Jest 29→30        | Medium     | Test suite           | Incremental migration, codemods        |
+| Vitest 2→4        | Medium     | Test suite           | Check plugin compatibility             |
+| Zod 3→4           | High       | Runtime validation   | Thorough testing, gradual rollout      |
+| OpenAI 4→6        | High       | API compatibility    | Major refactoring needed               |
+| ESLint 8→9        | Medium     | Developer experience | Flat config migration                  |
 
 ## Success Criteria
 

@@ -4,12 +4,16 @@ import { isValidModelId, getModelMetadata, getAllModels, getModelsByFamily } fro
 describe('Model Registry', () => {
   describe('isValidModelId', () => {
     describe('Grok models', () => {
-      it('should validate xai.grok-4-maverick', () => {
-        expect(isValidModelId('xai.grok-4-maverick')).toBe(true);
+      it('should validate xai.grok-code-fast-1', () => {
+        expect(isValidModelId('xai.grok-code-fast-1')).toBe(true);
       });
 
-      it('should validate xai.grok-4-scout', () => {
-        expect(isValidModelId('xai.grok-4-scout')).toBe(true);
+      it('should validate xai.grok-4.1-fast', () => {
+        expect(isValidModelId('xai.grok-4.1-fast')).toBe(true);
+      });
+
+      it('should validate xai.grok-4-fast', () => {
+        expect(isValidModelId('xai.grok-4-fast')).toBe(true);
       });
 
       it('should validate xai.grok-3', () => {
@@ -30,8 +34,8 @@ describe('Model Registry', () => {
         expect(isValidModelId('meta.llama-3.3-70b-instruct')).toBe(true);
       });
 
-      it('should validate meta.llama-3.2-vision-90b-instruct', () => {
-        expect(isValidModelId('meta.llama-3.2-vision-90b-instruct')).toBe(true);
+      it('should validate meta.llama-3.2-90b-vision-instruct', () => {
+        expect(isValidModelId('meta.llama-3.2-90b-vision-instruct')).toBe(true);
       });
 
       it('should validate meta.llama-3.1-405b-instruct', () => {
@@ -44,16 +48,16 @@ describe('Model Registry', () => {
         expect(isValidModelId('cohere.command-r-plus')).toBe(true);
       });
 
-      it('should validate cohere.command-a', () => {
-        expect(isValidModelId('cohere.command-a')).toBe(true);
+      it('should validate cohere.command-a-03-2025', () => {
+        expect(isValidModelId('cohere.command-a-03-2025')).toBe(true);
       });
 
-      it('should validate cohere.command-a-reasoning', () => {
-        expect(isValidModelId('cohere.command-a-reasoning')).toBe(true);
+      it('should validate cohere.command-a-reasoning-08-2025', () => {
+        expect(isValidModelId('cohere.command-a-reasoning-08-2025')).toBe(true);
       });
 
-      it('should validate cohere.command-a-vision', () => {
-        expect(isValidModelId('cohere.command-a-vision')).toBe(true);
+      it('should validate cohere.command-a-vision-07-2025', () => {
+        expect(isValidModelId('cohere.command-a-vision-07-2025')).toBe(true);
       });
     });
 
@@ -77,8 +81,8 @@ describe('Model Registry', () => {
   });
 
   describe('getModelMetadata', () => {
-    it('should return Grok 4 Maverick metadata', () => {
-      const metadata = getModelMetadata('xai.grok-4-maverick');
+    it('should return Grok Code Fast metadata', () => {
+      const metadata = getModelMetadata('xai.grok-code-fast-1');
       expect(metadata).toBeDefined();
       expect(metadata?.family).toBe('grok');
       expect(metadata?.capabilities.streaming).toBe(true);
@@ -94,7 +98,7 @@ describe('Model Registry', () => {
     });
 
     it('should return Llama Vision metadata', () => {
-      const metadata = getModelMetadata('meta.llama-3.2-vision-90b-instruct');
+      const metadata = getModelMetadata('meta.llama-3.2-90b-vision-instruct');
       expect(metadata?.capabilities.vision).toBe(true);
     });
 

@@ -1,5 +1,5 @@
 import { createOCI } from '@acedergren/oci-genai-provider';
-import { streamText, type LanguageModelV1 } from 'ai';
+import { streamText } from 'ai';
 
 // Create provider instance with environment configuration
 const provider = createOCI({
@@ -36,9 +36,9 @@ export async function POST(request: Request) {
     });
   }
 
-  // Type assertion needed due to AI SDK v1/v3 type mismatch
-  // The provider implements LanguageModelV3 which is compatible at runtime
-  const languageModel = provider.languageModel(modelId) as unknown as LanguageModelV1;
+  // Provider implements LanguageModelV3 - cast to any for AI SDK compatibility
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const languageModel = provider.languageModel(modelId) as any;
 
   const result = await streamText({
     model: languageModel,

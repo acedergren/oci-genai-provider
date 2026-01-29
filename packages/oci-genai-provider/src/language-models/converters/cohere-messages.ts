@@ -28,7 +28,7 @@ export function convertToCohereFormat(messages: OCIMessage[]): CohereChatRequest
   }
 
   // Find the last user message
-  const lastUserIndex = messages.map(m => m.role).lastIndexOf('USER');
+  const lastUserIndex = messages.map((m) => m.role).lastIndexOf('USER');
 
   if (lastUserIndex === -1) {
     throw new Error('At least one USER message is required');
@@ -37,8 +37,8 @@ export function convertToCohereFormat(messages: OCIMessage[]): CohereChatRequest
   // Extract the current message (last user message)
   const currentMessage = messages[lastUserIndex];
   const messageText = currentMessage.content
-    .filter(c => c.type === 'TEXT')
-    .map(c => c.text)
+    .filter((c) => c.type === 'TEXT')
+    .map((c) => c.text)
     .join('\n');
 
   // Convert previous messages to chat_history (excluding system messages for now)
@@ -53,8 +53,8 @@ export function convertToCohereFormat(messages: OCIMessage[]): CohereChatRequest
     }
 
     const text = msg.content
-      .filter(c => c.type === 'TEXT')
-      .map(c => c.text)
+      .filter((c) => c.type === 'TEXT')
+      .map((c) => c.text)
       .join('\n');
 
     chat_history.push({

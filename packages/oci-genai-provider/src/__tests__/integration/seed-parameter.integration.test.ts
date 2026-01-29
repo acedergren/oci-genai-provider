@@ -9,14 +9,14 @@
 /* eslint-disable @typescript-eslint/await-thenable */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '@jest/globals';
 import { streamText } from 'ai';
 import { createOCI } from '../../index';
 
 // Check if we have credentials available
 const hasCredentials = !!process.env.OCI_COMPARTMENT_ID;
 
-describe.skipIf(!hasCredentials)('Seed Parameter Integration Tests', () => {
+(hasCredentials ? describe : describe.skip)('Seed Parameter Integration Tests', () => {
   const provider = createOCI({
     compartmentId: process.env.OCI_COMPARTMENT_ID,
     region: 'eu-frankfurt-1',

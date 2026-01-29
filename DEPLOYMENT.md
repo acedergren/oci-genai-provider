@@ -22,61 +22,95 @@ The OCI GenAI provider uses the official Oracle Cloud SDK (`oci-generativeaiinfe
 
 Cloudflare Workers edge runtime lacks these capabilities, making Docker the only viable option.
 
-## Docker Deployment Architecture
+## Architecture: Cloudflare Tunnel + Docker
 
 ```
-                    ┌─────────────────────────────────────────┐
-                    │           Cloudflare (Optional)         │
-                    │  ┌─────────────┐  ┌─────────────────┐  │
-                    │  │  CF Access  │  │  DNS/Proxy      │  │
-                    │  │   (Auth)    │  │                 │  │
-                    │  └──────┬──────┘  └────────┬────────┘  │
-                    └─────────┼──────────────────┼───────────┘
-                              │                  │
-                              ▼                  ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                         app01 (Docker Host)                     │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                    Traefik Proxy                         │   │
-│  │  (TLS termination, routing, Let's Encrypt)              │   │
-│  └────┬────────────┬────────────┬────────────┬─────────────┘   │
-│       │            │            │            │                  │
-│  ┌────▼────┐  ┌────▼────┐  ┌────▼────┐  ┌────▼────┐            │
-│  │ SvelteKit│  │  Next.js │  │ RAG Demo│  │STT Demo│            │
-│  │  :5173   │  │  :3000   │  │  :3001  │  │  :3002 │            │
-│  └──────────┘  └──────────┘  └─────────┘  └────────┘            │
-│       │            │            │            │                  │
-│  ┌────┴────────────┴────────────┴────────────┴─────────────┐   │
-│  │            Shared Volume: /secrets/oci                   │   │
-│  │  (OCI API Key + Config - mounted read-only)              │   │
-│  └─────────────────────────────────────────────────────────┘   │
+│                    Cloudflare Edge                              │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐ │
+│  │  CF Access  │  │    DNS      │  │   Tunnel Routing        │ │
+│  │   (Auth)    │  │             │  │                         │ │
+│  └──────┬──────┘  └──────┬──────┘  │ chat.example.com →      │ │
+│         │                │         │   chatbot-sveltekit:3000│ │
+│         │                │         │ chat-next.example.com → │ │
+│         │                │         │   chatbot-nextjs:3000   │ │
+│         └────────────────┴─────────┴───────────┬─────────────┘ │
+└────────────────────────────────────────────────┼───────────────┘
+                                                 │
+                          Encrypted Tunnel (outbound only)
+                                                 │
+┌────────────────────────────────────────────────┼───────────────┐
+│                   app01 (Docker Host)          ▼               │
+│  ┌─────────────────────────────────────────────────────────┐  │
+│  │                    cloudflared                           │  │
+│  │            (Tunnel daemon - no ports exposed)            │  │
+│  └────┬────────────────────┬───────────────────────────────┘  │
+│       │                    │                                   │
+│  ┌────▼────────┐     ┌─────▼───────┐                          │
+│  │  SvelteKit  │     │   Next.js   │                          │
+│  │    :3000    │     │    :3000    │                          │
+│  └─────────────┘     └─────────────┘                          │
+│       │                    │                                   │
+│  ┌────┴────────────────────┴───────────────────────────────┐  │
+│  │         Shared Volume: /opt/secrets/oci                  │  │
+│  │    (OCI API Key + Config - mounted read-only)            │  │
+│  └─────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+**Benefits:**
+- No inbound ports exposed (zero attack surface)
+- TLS handled by Cloudflare (no cert management)
+- Built-in DDoS protection
+- Easy Cloudflare Access integration for authentication
+
+## Cloudflare Tunnel Setup
+
+### 1. Create Tunnel in Zero Trust Dashboard
+
+1. Go to [Cloudflare Zero Trust](https://one.dash.cloudflare.com)
+2. Navigate to **Networks → Tunnels**
+3. Click **Create a tunnel**
+4. Name it (e.g., `oci-genai-demos`)
+5. Copy the tunnel token
+
+### 2. Configure Public Hostnames
+
+In the tunnel configuration, add public hostnames:
+
+| Public Hostname | Service | Path |
+|-----------------|---------|------|
+| `chat.example.com` | `http://chatbot-sveltekit:3000` | (empty) |
+| `chat-next.example.com` | `http://chatbot-nextjs:3000` | (empty) |
+
+### 3. Add Cloudflare Access (Authentication)
+
+1. Go to **Access → Applications**
+2. Click **Add an application** → Self-hosted
+3. Configure:
+   - **Application name:** OCI GenAI Chat
+   - **Session duration:** 24 hours
+   - **Application domain:** `chat.example.com`
+4. Add policy:
+   - **Policy name:** Allow Team
+   - **Action:** Allow
+   - **Include:** Emails ending in `@yourcompany.com`
+5. Repeat for each hostname
+
 ## Docker Compose Configuration
 
-```yaml
-# docker-compose.yml
-version: '3.8'
+The `docker-compose.yml` in the repo is pre-configured for Cloudflare Tunnel:
 
+```yaml
 services:
-  traefik:
-    image: traefik:v3.0
-    command:
-      - "--api.insecure=false"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
-      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
-    ports:
-      - "443:443"
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "letsencrypt:/letsencrypt"
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
     networks:
-      - web
+      - internal
+    restart: unless-stopped
 
   chatbot-sveltekit:
     build:
@@ -85,19 +119,11 @@ services:
     environment:
       - OCI_COMPARTMENT_ID=${OCI_COMPARTMENT_ID}
       - OCI_REGION=${OCI_REGION:-eu-frankfurt-1}
-      - OCI_CONFIG_FILE=/secrets/oci/config
-      - OCI_KEY_FILE=/secrets/oci/key.pem
+      - OCI_CONFIG_PROFILE=${OCI_CONFIG_PROFILE:-FRANKFURT}
     volumes:
-      - oci-secrets:/secrets/oci:ro
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.chatbot-svelte.rule=Host(`chat.example.com`)"
-      - "traefik.http.routers.chatbot-svelte.entrypoints=websecure"
-      - "traefik.http.routers.chatbot-svelte.tls.certresolver=letsencrypt"
-      - "traefik.http.services.chatbot-svelte.loadbalancer.server.port=5173"
+      - ${OCI_CONFIG_PATH:-/opt/secrets/oci}:/home/sveltekit/.oci:ro
     networks:
-      - web
-    restart: unless-stopped
+      - internal
 
   chatbot-nextjs:
     build:
@@ -106,264 +132,171 @@ services:
     environment:
       - OCI_COMPARTMENT_ID=${OCI_COMPARTMENT_ID}
       - OCI_REGION=${OCI_REGION:-eu-frankfurt-1}
-      - OCI_CONFIG_FILE=/secrets/oci/config
-      - OCI_KEY_FILE=/secrets/oci/key.pem
+      - OCI_CONFIG_PROFILE=${OCI_CONFIG_PROFILE:-FRANKFURT}
     volumes:
-      - oci-secrets:/secrets/oci:ro
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.chatbot-next.rule=Host(`chat-next.example.com`)"
-      - "traefik.http.routers.chatbot-next.entrypoints=websecure"
-      - "traefik.http.routers.chatbot-next.tls.certresolver=letsencrypt"
-      - "traefik.http.services.chatbot-next.loadbalancer.server.port=3000"
+      - ${OCI_CONFIG_PATH:-/opt/secrets/oci}:/home/nextjs/.oci:ro
     networks:
-      - web
-    restart: unless-stopped
-
-  rag-demo:
-    build:
-      context: .
-      dockerfile: examples/rag-demo/Dockerfile
-    environment:
-      - OCI_COMPARTMENT_ID=${OCI_COMPARTMENT_ID}
-      - OCI_REGION=${OCI_REGION:-eu-frankfurt-1}
-      - OCI_CONFIG_FILE=/secrets/oci/config
-      - OCI_KEY_FILE=/secrets/oci/key.pem
-    volumes:
-      - oci-secrets:/secrets/oci:ro
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.rag.rule=Host(`rag.example.com`)"
-      - "traefik.http.routers.rag.entrypoints=websecure"
-      - "traefik.http.routers.rag.tls.certresolver=letsencrypt"
-      - "traefik.http.services.rag.loadbalancer.server.port=3001"
-    networks:
-      - web
-    restart: unless-stopped
+      - internal
 
 networks:
-  web:
-    external: true
-
-volumes:
-  letsencrypt:
-  oci-secrets:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /opt/secrets/oci
+  internal:
+    name: oci-genai-internal
 ```
 
 ## Environment File (.env)
 
 ```bash
-# .env (on app01)
-OCI_COMPARTMENT_ID=ocid1.compartment.oc1..xxx
+# OCI Configuration (Required)
+OCI_COMPARTMENT_ID=ocid1.compartment.oc1..xxxxx
 OCI_REGION=eu-frankfurt-1
 OCI_CONFIG_PROFILE=FRANKFURT
-ACME_EMAIL=admin@example.com
+
+# Path to OCI credentials on the Docker host
+OCI_CONFIG_PATH=/opt/secrets/oci
+
+# Cloudflare Tunnel Token (from Zero Trust dashboard)
+CLOUDFLARE_TUNNEL_TOKEN=eyJhIjoixxxxxxxxxx...
 ```
 
-## Dockerfile Templates
+## OCI Credentials Setup
 
-### SvelteKit Chatbot
-
-```dockerfile
-# examples/chatbot-demo/Dockerfile
-FROM node:22-alpine AS builder
-
-WORKDIR /app
-COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
-COPY packages/oci-genai-provider ./packages/oci-genai-provider
-COPY examples/chatbot-demo ./examples/chatbot-demo
-
-RUN corepack enable && pnpm install --frozen-lockfile
-RUN pnpm build --filter @acedergren/oci-genai-provider
-RUN pnpm build --filter @acedergren/chatbot-demo
-
-FROM node:22-alpine AS runner
-WORKDIR /app
-ENV NODE_ENV=production
-
-COPY --from=builder /app/examples/chatbot-demo/build ./build
-COPY --from=builder /app/examples/chatbot-demo/package.json ./
-COPY --from=builder /app/node_modules ./node_modules
-
-EXPOSE 5173
-CMD ["node", "build"]
-```
-
-### Next.js Chatbot
-
-```dockerfile
-# examples/nextjs-chatbot/Dockerfile
-FROM node:22-alpine AS builder
-
-WORKDIR /app
-COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
-COPY packages/oci-genai-provider ./packages/oci-genai-provider
-COPY examples/nextjs-chatbot ./examples/nextjs-chatbot
-
-RUN corepack enable && pnpm install --frozen-lockfile
-RUN pnpm build --filter @acedergren/oci-genai-provider
-RUN pnpm build --filter nextjs-chatbot-demo
-
-FROM node:22-alpine AS runner
-WORKDIR /app
-ENV NODE_ENV=production
-
-COPY --from=builder /app/examples/nextjs-chatbot/.next/standalone ./
-COPY --from=builder /app/examples/nextjs-chatbot/.next/static ./.next/static
-COPY --from=builder /app/examples/nextjs-chatbot/public ./public
-
-EXPOSE 3000
-CMD ["node", "server.js"]
-```
-
-## Authentication Options
-
-### Option 1: Cloudflare Access (Recommended)
-
-Configure Cloudflare Access for each hostname:
-1. Add Access Application for `chat.example.com`
-2. Set policy to allow specific users/groups
-3. Cloudflare handles authentication before requests reach Docker
-
-**Pros:** Zero-trust, no code changes, centralized auth
-**Cons:** Requires Cloudflare tunnel or exposed port
-
-### Option 2: Traefik BasicAuth Middleware
-
-```yaml
-# Add to docker-compose.yml labels
-- "traefik.http.middlewares.auth.basicauth.users=admin:$$apr1$$xxx"
-- "traefik.http.routers.chatbot-svelte.middlewares=auth"
-```
-
-**Pros:** Simple, works locally
-**Cons:** Less secure, no SSO
-
-### Option 3: OAuth2 Proxy
-
-Add oauth2-proxy container for Google/GitHub SSO:
-
-```yaml
-oauth2-proxy:
-  image: quay.io/oauth2-proxy/oauth2-proxy:latest
-  environment:
-    - OAUTH2_PROXY_PROVIDER=google
-    - OAUTH2_PROXY_CLIENT_ID=${OAUTH_CLIENT_ID}
-    - OAUTH2_PROXY_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
-    - OAUTH2_PROXY_COOKIE_SECRET=${COOKIE_SECRET}
-```
-
-**Pros:** Real SSO, flexible
-**Cons:** More complex setup
-
-## Secrets Management
-
-### OCI Credentials Setup on app01
+### On app01
 
 ```bash
 # Create secrets directory
 sudo mkdir -p /opt/secrets/oci
 sudo chmod 700 /opt/secrets/oci
 
-# Copy OCI config (modify paths inside config)
+# Copy OCI config
 sudo cp ~/.oci/config /opt/secrets/oci/config
-sudo cp ~/.oci/oci_api_key.pem /opt/secrets/oci/key.pem
+sudo cp ~/.oci/oci_api_key.pem /opt/secrets/oci/oci_api_key.pem
 
-# Edit config to use container paths
-sudo sed -i 's|~/.oci/|/secrets/oci/|g' /opt/secrets/oci/config
+# Update key_file path in config for container use
+sudo sed -i 's|key_file=.*|key_file=/home/sveltekit/.oci/oci_api_key.pem|g' /opt/secrets/oci/config
+
 sudo chmod 600 /opt/secrets/oci/*
 ```
 
-### OCI Config for Docker
+### OCI Config Example
 
 ```ini
 # /opt/secrets/oci/config
-[DEFAULT]
+[FRANKFURT]
 user=ocid1.user.oc1..xxx
-fingerprint=xx:xx:xx:xx
+fingerprint=xx:xx:xx:xx:xx:xx:xx:xx
 tenancy=ocid1.tenancy.oc1..xxx
 region=eu-frankfurt-1
-key_file=/secrets/oci/key.pem
+key_file=/home/sveltekit/.oci/oci_api_key.pem
 ```
 
 ## Deployment Steps
 
-### 1. Initial Setup on app01
+### 1. Clone and Configure
 
 ```bash
 # Clone repository
 git clone https://github.com/acedergren/opencode-oci-genai.git /opt/opencode-oci-genai
 cd /opt/opencode-oci-genai
 
-# Create Docker network
-docker network create web
-
-# Setup secrets
-sudo mkdir -p /opt/secrets/oci
-# Copy and configure OCI credentials as shown above
-
 # Create .env file
 cp .env.example .env
-# Edit .env with your values
+nano .env  # Add your values
+```
+
+### 2. Setup OCI Credentials
+
+```bash
+sudo mkdir -p /opt/secrets/oci
+sudo cp ~/.oci/config /opt/secrets/oci/
+sudo cp ~/.oci/oci_api_key.pem /opt/secrets/oci/
+sudo chmod 600 /opt/secrets/oci/*
+```
+
+### 3. Build and Deploy
+
+```bash
+# Build containers
+docker compose build
 
 # Start services
 docker compose up -d
+
+# Verify
+docker compose logs -f
 ```
 
-### 2. DNS Configuration
+### 4. Configure Cloudflare Tunnel Routes
 
-Point these domains to app01's IP:
-- `chat.example.com` -> SvelteKit chatbot
-- `chat-next.example.com` -> Next.js chatbot
-- `rag.example.com` -> RAG demo
+In Zero Trust dashboard, add public hostnames pointing to:
+- `chatbot-sveltekit:3000`
+- `chatbot-nextjs:3000`
 
-### 3. Cloudflare Access Setup (if using)
-
-1. Add app01 to Cloudflare tunnel OR allow port 443 inbound
-2. Create Access Application for each hostname
-3. Configure authentication policy (email domain, IdP, etc.)
-
-## Monitoring & Logs
+## Monitoring & Operations
 
 ```bash
-# View logs
+# View all logs
+docker compose logs -f
+
+# View specific service
 docker compose logs -f chatbot-sveltekit
 
-# Check container status
+# Check status
 docker compose ps
 
 # Restart a service
 docker compose restart chatbot-sveltekit
 
-# Update after code changes
+# Update and redeploy
 git pull
-docker compose build --no-cache chatbot-sveltekit
-docker compose up -d chatbot-sveltekit
+docker compose build --no-cache
+docker compose up -d
+
+# Check tunnel status
+docker compose logs cloudflared
+```
+
+## Troubleshooting
+
+### Tunnel Not Connecting
+
+```bash
+# Check cloudflared logs
+docker compose logs cloudflared
+
+# Verify token
+echo $CLOUDFLARE_TUNNEL_TOKEN | head -c 20
+```
+
+### OCI Authentication Errors
+
+```bash
+# Test OCI config inside container
+docker compose exec chatbot-sveltekit cat /home/sveltekit/.oci/config
+
+# Verify key file exists
+docker compose exec chatbot-sveltekit ls -la /home/sveltekit/.oci/
+```
+
+### Service Not Reachable
+
+```bash
+# Check service is running
+docker compose ps
+
+# Test internal connectivity
+docker compose exec cloudflared wget -O- http://chatbot-sveltekit:3000
 ```
 
 ## Demo Status Summary
 
 | Demo | Local | Docker Ready | Notes |
 |------|-------|--------------|-------|
-| chatbot-demo | ✅ | Needs Dockerfile | SvelteKit, streaming works |
-| nextjs-chatbot | ✅ | Needs Dockerfile | Next.js 15, streaming works |
+| chatbot-demo | ✅ | ✅ Dockerfile | SvelteKit, streaming works |
+| nextjs-chatbot | ✅ | ✅ Dockerfile | Next.js 15, streaming works |
 | rag-demo | ✅ | Needs Dockerfile | Embeddings work |
 | cli-tool | ✅ | N/A | CLI only |
 | stt-demo | ⚠️ | Needs Dockerfile | No sample audio |
 | rag-reranking-demo | ❌ | N/A | Models retired |
-
-## Next Steps
-
-1. Create Dockerfiles for each demo
-2. Test Docker builds locally
-3. Configure DNS and Cloudflare Access
-4. Deploy to app01
-5. Add monitoring/alerting
 
 ---
 *Last updated: 2026-01-29*
