@@ -33,22 +33,18 @@ describe('SSE Parser', () => {
   describe('SSE data format', () => {
     it('should recognize text delta event structure', () => {
       const sseData = {
-        chatResponse: {
-          chatChoice: [{ message: { content: [{ text: 'Hello' }] } }],
+        message: {
+          content: [{ text: 'Hello' }],
         },
       };
-      expect(sseData.chatResponse.chatChoice[0].message.content[0].text).toBe('Hello');
+      expect(sseData.message.content[0].text).toBe('Hello');
     });
 
     it('should recognize finish event structure', () => {
       const sseData = {
-        chatResponse: {
-          chatChoice: [{ finishReason: 'STOP' }],
-          usage: { promptTokens: 5, completionTokens: 3 },
-        },
+        finishReason: 'STOP',
       };
-      expect(sseData.chatResponse.chatChoice[0].finishReason).toBe('STOP');
-      expect(sseData.chatResponse.usage.promptTokens).toBe(5);
+      expect(sseData.finishReason).toBe('STOP');
     });
 
     it('should yield text-delta parts', () => {
@@ -99,9 +95,7 @@ describe('SSE Parser', () => {
     it('should parse 1000 events in under 100ms', async () => {
       const events: string[] = [];
       for (let i = 0; i < 1000; i++) {
-        events.push(
-          `event: message\ndata: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"token${i}"}]}}]}}\n\n`
-        );
+        events.push(`event: message\ndata: {"message":{"content":[{"text":"token${i}"}]}}\n\n`);
       }
       const sseText = events.join('');
 
@@ -132,7 +126,7 @@ describe('SSE Parser', () => {
   describe('parseSSEStream', () => {
     it('should parse text delta from stream', async () => {
       const sseText = `event: message
-data: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"Hello"}]}}]}}
+data: {"message":{"content":[{"text":"Hello"}]}}
 
 `;
       const encoder = new TextEncoder();
@@ -159,7 +153,7 @@ data: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"Hello"}]}}]
 
     it('should parse finish event from stream', async () => {
       const sseText = `event: message
-data: {"chatResponse":{"chatChoice":[{"finishReason":"STOP"}],"usage":{"promptTokens":10,"completionTokens":5}}}
+data: {"finishReason":"STOP"}
 
 `;
       const encoder = new TextEncoder();
@@ -181,7 +175,7 @@ data: {"chatResponse":{"chatChoice":[{"finishReason":"STOP"}],"usage":{"promptTo
       expect(finishPart).toBeDefined();
       if (finishPart?.type === 'finish') {
         expect(finishPart.finishReason).toEqual({ unified: 'stop', raw: 'STOP' });
-        expect(finishPart.usage.promptTokens).toBe(10);
+        expect(finishPart.usage.promptTokens).toBe(0);
       }
     });
 
@@ -260,7 +254,7 @@ data: {invalid json}
 
     it('should handle multiple consecutive newlines', async () => {
       const sseText = `event: message
-data: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"test"}]}}]}}
+data: {"message":{"content":[{"text":"test"}]}}
 
 
 `;
@@ -285,7 +279,7 @@ data: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"test"}]}}]}
     });
 
     it('should handle mixed line endings (CRLF vs LF)', async () => {
-      const sseText = `event: message\r\ndata: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"test"}]}}]}}\r\n\r\n`;
+      const sseText = `event: message\r\ndata: {"message":{"content":[{"text":"test"}]}}\r\n\r\n`;
       const encoder = new TextEncoder();
       const stream = new ReadableStream({
         start(controller): void {
@@ -322,10 +316,10 @@ data: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"test"}]}}]}
 
     it('should yield remaining parts after stream completes', async () => {
       const sseText = `event: message
-data: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"first"}]}}]}}
+data: {"message":{"content":[{"text":"first"}]}}
 
 event: message
-data: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"second"}]}}]}}
+data: {"message":{"content":[{"text":"second"}]}}
 
 `;
       const encoder = new TextEncoder();
@@ -357,9 +351,7 @@ data: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"second"}]}}
       // Create a large number of events that are parsed but may be buffered
       const events: string[] = [];
       for (let i = 0; i < 100; i++) {
-        events.push(
-          `event: message\ndata: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"token${i}"}]}}]}}\n\n`
-        );
+        events.push(`event: message\ndata: {"message":{"content":[{"text":"token${i}"}]}}\n\n`);
       }
       const sseText = events.join('');
 
@@ -386,7 +378,7 @@ data: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"second"}]}}
 
     it('should handle events with whitespace in data fields', async () => {
       const sseText = `event: message
-data:   {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"  spaced  "}]}}]}}
+data:   {"message":{"content":[{"text":"  spaced  "}]}}
 
 `;
       const encoder = new TextEncoder();
@@ -413,7 +405,7 @@ data:   {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"  spaced 
 
     it('should handle [DONE] marker correctly', async () => {
       const sseText = `event: message
-data: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"final"}]}}]}}
+data: {"message":{"content":[{"text":"final"}]}}
 
 event: message
 data: [DONE]
@@ -437,6 +429,120 @@ data: [DONE]
       // Only the first text part should be yielded, [DONE] is ignored
       expect(parts).toHaveLength(1);
       expect(parts[0].type).toBe('text-delta');
+    });
+
+    it('should parse GENERIC format tool calls from stream', async () => {
+      const sseText = `event: message
+data: {"message":{"toolCalls":[{"id":"call_123","type":"FUNCTION","function":{"name":"get_weather","arguments":"{\\"city\\":\\"London\\"}"}}]}}
+
+`;
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller): void {
+          controller.enqueue(encoder.encode(sseText));
+          controller.close();
+        },
+      });
+
+      const response = new Response(stream);
+      const parts: StreamPart[] = [];
+
+      for await (const part of parseSSEStream(response)) {
+        parts.push(part);
+      }
+
+      expect(parts).toHaveLength(1);
+      expect(parts[0].type).toBe('tool-call');
+      if (parts[0].type === 'tool-call') {
+        expect(parts[0].toolCallId).toBe('call_123');
+        expect(parts[0].toolName).toBe('get_weather');
+        expect(parts[0].input).toBe('{"city":"London"}');
+      }
+    });
+
+    it('should parse COHERE format tool calls from stream', async () => {
+      const sseText = `event: message
+data: {"toolCalls":[{"name":"search","parameters":{"query":"test"}}]}
+
+`;
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller): void {
+          controller.enqueue(encoder.encode(sseText));
+          controller.close();
+        },
+      });
+
+      const response = new Response(stream);
+      const parts: StreamPart[] = [];
+
+      for await (const part of parseSSEStream(response)) {
+        parts.push(part);
+      }
+
+      expect(parts).toHaveLength(1);
+      expect(parts[0].type).toBe('tool-call');
+      if (parts[0].type === 'tool-call') {
+        expect(parts[0].toolName).toBe('search');
+        expect(parts[0].input).toBe('{"query":"test"}');
+      }
+    });
+
+    it('should parse multiple tool calls from stream', async () => {
+      const sseText = `event: message
+data: {"message":{"toolCalls":[{"id":"call_1","type":"FUNCTION","function":{"name":"tool_a","arguments":"{}"}},{"id":"call_2","type":"FUNCTION","function":{"name":"tool_b","arguments":"{}"}}]}}
+
+`;
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller): void {
+          controller.enqueue(encoder.encode(sseText));
+          controller.close();
+        },
+      });
+
+      const response = new Response(stream);
+      const parts: StreamPart[] = [];
+
+      for await (const part of parseSSEStream(response)) {
+        parts.push(part);
+      }
+
+      expect(parts).toHaveLength(2);
+      expect(parts[0].type).toBe('tool-call');
+      expect(parts[1].type).toBe('tool-call');
+      if (parts[0].type === 'tool-call' && parts[1].type === 'tool-call') {
+        expect(parts[0].toolName).toBe('tool_a');
+        expect(parts[1].toolName).toBe('tool_b');
+      }
+    });
+
+    it('should parse text followed by tool calls', async () => {
+      const sseText = `event: message
+data: {"message":{"content":[{"text":"Let me check"}]}}
+
+event: message
+data: {"message":{"toolCalls":[{"id":"call_1","type":"FUNCTION","function":{"name":"get_weather","arguments":"{}"}}]}}
+
+`;
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller): void {
+          controller.enqueue(encoder.encode(sseText));
+          controller.close();
+        },
+      });
+
+      const response = new Response(stream);
+      const parts: StreamPart[] = [];
+
+      for await (const part of parseSSEStream(response)) {
+        parts.push(part);
+      }
+
+      expect(parts).toHaveLength(2);
+      expect(parts[0].type).toBe('text-delta');
+      expect(parts[1].type).toBe('tool-call');
     });
   });
 });

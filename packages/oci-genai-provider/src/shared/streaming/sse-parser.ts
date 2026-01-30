@@ -22,15 +22,31 @@ export function mapFinishReason(reason: string): LanguageModelV3FinishReason {
 
 /**
  * OCI streaming format (2025+):
- * Text chunk: {"index":0,"message":{"role":"ASSISTANT","content":[{"type":"TEXT","text":"..."}]},"pad":"..."}
- * Finish:     {"message":{"role":"ASSISTANT"},"finishReason":"stop","pad":"..."}
+ * Text chunk:  {"index":0,"message":{"role":"ASSISTANT","content":[{"type":"TEXT","text":"..."}]},"pad":"..."}
+ * Tool call:   {"message":{"role":"ASSISTANT","toolCalls":[{"id":"...","type":"FUNCTION","function":{"name":"...","arguments":"..."}}]},...}
+ * Finish:      {"message":{"role":"ASSISTANT"},"finishReason":"stop","pad":"..."}
  */
+interface OCIStreamToolCall {
+  id?: string;
+  type?: string;
+  function?: {
+    name?: string;
+    arguments?: string;
+  };
+  // Cohere format
+  name?: string;
+  parameters?: Record<string, unknown>;
+}
+
 interface OCIStreamChunk {
   index?: number;
   message?: {
     role?: string;
     content?: Array<{ type?: string; text?: string }>;
+    toolCalls?: OCIStreamToolCall[];
   };
+  // Cohere format: tool calls at top level
+  toolCalls?: OCIStreamToolCall[];
   finishReason?: string;
   pad?: string;
 }
@@ -40,7 +56,8 @@ interface OCIStreamChunk {
  * Accepts either a ReadableStream directly (new OCI SDK behavior) or a Response object.
  */
 export async function* parseSSEStream(
-  input: ReadableStream<Uint8Array> | Response
+  input: ReadableStream<Uint8Array> | Response,
+  options?: { includeRawChunks?: boolean }
 ): AsyncGenerator<StreamPart> {
   // Handle both ReadableStream and Response objects
   const stream = input instanceof ReadableStream ? input : input.body;
@@ -53,6 +70,8 @@ export async function* parseSSEStream(
   const parts: StreamPart[] = [];
   let yieldedIndex = 0;
 
+  const includeRawChunks = options?.includeRawChunks ?? false;
+
   const parser = createParser({
     onEvent: (event: EventSourceMessage) => {
       const data = event.data;
@@ -61,6 +80,13 @@ export async function* parseSSEStream(
       try {
         const parsed = JSON.parse(data) as OCIStreamChunk;
 
+        if (includeRawChunks) {
+          parts.push({
+            type: 'raw',
+            rawValue: parsed,
+          });
+        }
+
         // Check for text delta in the new OCI format
         const textContent = parsed.message?.content?.[0]?.text;
         if (textContent) {
@@ -68,6 +94,31 @@ export async function* parseSSEStream(
             type: 'text-delta',
             textDelta: textContent,
           });
+        }
+
+        // Check for tool calls (GENERIC or COHERE format)
+        const toolCalls = parsed.message?.toolCalls ?? parsed.toolCalls;
+        if (toolCalls && toolCalls.length > 0) {
+          for (const toolCall of toolCalls) {
+            // GENERIC format: { id, type: 'FUNCTION', function: { name, arguments } }
+            // COHERE format: { name, parameters }
+            if (toolCall.function?.name) {
+              parts.push({
+                type: 'tool-call',
+                toolCallId: toolCall.id ?? `tool-call-${Date.now()}`,
+                toolName: toolCall.function.name,
+                input: toolCall.function.arguments ?? '{}',
+              });
+            } else if (toolCall.name) {
+              // Cohere format
+              parts.push({
+                type: 'tool-call',
+                toolCallId: `tool-call-${Date.now()}`,
+                toolName: toolCall.name,
+                input: JSON.stringify(toolCall.parameters ?? {}),
+              });
+            }
+          }
         }
 
         // Check for finish (OCI returns lowercase 'stop')
@@ -83,7 +134,12 @@ export async function* parseSSEStream(
           });
         }
       } catch {
-        // Ignore malformed JSON
+        if (includeRawChunks) {
+          parts.push({
+            type: 'raw',
+            rawValue: data,
+          });
+        }
       }
     },
   });
