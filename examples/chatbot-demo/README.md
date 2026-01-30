@@ -4,9 +4,10 @@ A beautiful, minimal chatbot demo showcasing the OCI GenAI Provider with Vercel 
 
 ## Features
 
-- 🎨 Bioluminescence/Golden Hour design aesthetic
+- 🎨 Oracle Branding & Modern UI
 - ⚡ Real-time streaming responses
-- 🔄 Model switching (Cohere, Llama)
+- 🔄 Model switching (Grok, Llama, Gemini, Cohere)
+- 🧠 Reasoning/Thinking Trace support
 - 📱 Mobile responsive
 - ♿ Accessible (WCAG AA)
 
@@ -14,8 +15,8 @@ A beautiful, minimal chatbot demo showcasing the OCI GenAI Provider with Vercel 
 
 ### Prerequisites
 
-- Node.js 18+
-- pnpm 8+
+- Node.js 20+
+- pnpm 9+
 - OCI account with GenAI access
 
 ### Installation
@@ -30,7 +31,6 @@ cp .env.example .env
 # Edit .env with your OCI credentials
 # OCI_COMPARTMENT_ID=ocid1.compartment.oc1...
 # OCI_REGION=eu-frankfurt-1
-# OCI_CONFIG_PROFILE=DEFAULT
 ```
 
 ### Development
@@ -39,7 +39,7 @@ cp .env.example .env
 pnpm dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173)
+Open [http://localhost:8765](http://localhost:8765)
 
 ### Build
 
@@ -48,36 +48,12 @@ pnpm build
 pnpm preview
 ```
 
-## Environment Variables
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `OCI_COMPARTMENT_ID` | OCI compartment OCID | `ocid1.compartment.oc1...` |
-| `OCI_REGION` | OCI region | `eu-frankfurt-1` |
-| `OCI_CONFIG_PROFILE` | OCI config profile | `DEFAULT` |
-
-## Architecture
-
-```
-┌─────────────────────────────────────┐
-│  Header (model selector)            │
-├─────────────────────────────────────┤
-│                                     │
-│  Chat Messages (scrollable)         │
-│    - User message (right, accent)   │
-│    - AI message (left, neutral)     │
-│                                     │
-├─────────────────────────────────────┤
-│  Input + Send Button                │
-└─────────────────────────────────────┘
-```
-
 ## Tech Stack
 
-- **Framework**: SvelteKit
-- **AI SDK**: Vercel AI SDK
+- **Framework**: SvelteKit 2 (Svelte 5)
+- **AI SDK**: Vercel AI SDK v4+
 - **Provider**: @acedergren/oci-genai-provider
-- **Styling**: Tailwind CSS 4
+- **Styling**: Tailwind CSS 4.1 + shadcn-svelte
 - **Fonts**: Inter Variable, Space Grotesk
 
 ## License
