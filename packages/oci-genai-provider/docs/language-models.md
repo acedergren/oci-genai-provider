@@ -17,7 +17,7 @@ All language models support streaming and tool calling.
 
 #### Command R
 
-- **Model ID:** `cohere.command-r`
+- **Model ID:** `cohere.command-r-08-2024`
 - **Context Window:** 128,000 tokens
 - **Best For:** General purpose, instruction following
 - **Cost:** Lower
@@ -58,9 +58,9 @@ All language models support streaming and tool calling.
 
 ### xAI Grok Models
 
-#### Grok 4 Maverick
+#### Grok 4
 
-- **Model ID:** `xai.grok-4-maverick`
+- **Model ID:** `xai.grok-4`
 - **Context Window:** 131,072 tokens
 - **Best For:** Most capable, longest context
 - **Cost:** Higher
@@ -125,6 +125,102 @@ const focused = await generateText({
   prompt: 'Summarize this text...',
   temperature: 0.2, // Lower = more focused
 });
+```
+
+### Tool Calling
+
+Tool calling allows models to invoke external functions. Supported models:
+- **Cohere:** Command R, Command R+
+- **Meta Llama:** 3.1+, 3.2+, 3.3+
+- **xAI:** Grok models
+- **Google:** Gemini models
+
+```typescript
+import { oci } from '@acedergren/oci-genai-provider';
+import { generateText, tool } from 'ai';
+import { z } from 'zod';
+
+const result = await generateText({
+  model: oci.languageModel('cohere.command-r-plus'),
+  prompt: "What's the weather in London?",
+  tools: {
+    weather: tool({
+      description: 'Get current weather for a location',
+      parameters: z.object({
+        city: z.string().describe('City name'),
+        unit: z.enum(['celsius', 'fahrenheit']).optional(),
+      }),
+      execute: async ({ city, unit = 'celsius' }) => {
+        // Call your weather API
+        return { temperature: 15, condition: 'cloudy', city, unit };
+      },
+    }),
+  },
+});
+
+// The model may call the weather tool
+console.log(result.text);
+console.log(result.toolCalls); // Array of tool calls made
+console.log(result.toolResults); // Results from tool executions
+```
+
+### Tool Calling with Streaming
+
+```typescript
+import { streamText, tool } from 'ai';
+import { z } from 'zod';
+
+const result = streamText({
+  model: oci.languageModel('meta.llama-3.3-70b-instruct'),
+  prompt: 'Search for the latest news about AI',
+  tools: {
+    search: tool({
+      description: 'Search the web',
+      parameters: z.object({
+        query: z.string(),
+      }),
+      execute: async ({ query }) => {
+        // Your search implementation
+        return { results: ['Article 1', 'Article 2'] };
+      },
+    }),
+  },
+});
+
+for await (const part of result.fullStream) {
+  if (part.type === 'text-delta') {
+    process.stdout.write(part.textDelta);
+  } else if (part.type === 'tool-call') {
+    console.log('Tool called:', part.toolName, part.args);
+  } else if (part.type === 'tool-result') {
+    console.log('Tool result:', part.result);
+  }
+}
+```
+
+### Multi-Turn Tool Conversations
+
+```typescript
+import { generateText, tool } from 'ai';
+
+// First turn: model decides to call a tool
+const turn1 = await generateText({
+  model: oci.languageModel('cohere.command-r-plus'),
+  messages: [
+    { role: 'user', content: "What's the weather like in Paris and Tokyo?" },
+  ],
+  tools: {
+    weather: tool({
+      description: 'Get weather for a city',
+      parameters: z.object({ city: z.string() }),
+      execute: async ({ city }) => ({ temp: 20, city }),
+    }),
+  },
+  maxSteps: 3, // Allow multiple tool call rounds
+});
+
+// With maxSteps, the SDK handles the tool call loop automatically
+console.log(turn1.text); // Final response after tool calls
 ```
 
 ## See Also
