@@ -39,6 +39,40 @@ export interface RequestOptions {
 }
 
 /**
+ * Serving mode for OCI GenAI inference.
+ */
+export type OCIServingType = 'ON_DEMAND' | 'DEDICATED';
+
+export interface OCIServingMode {
+  /** Serving type for OCI inference. */
+  type: OCIServingType;
+  /** Model OCID for on-demand serving. */
+  modelId?: string;
+  /** Endpoint OCID for dedicated serving. */
+  endpointId?: string;
+}
+
+/**
+ * Provider options for OCI-specific overrides per call.
+ */
+export interface OCIProviderOptions {
+  /** Override compartment OCID for the call. */
+  compartmentId?: string;
+  /** Override client endpoint for the call. */
+  endpoint?: string;
+  /** Override serving mode (on-demand vs dedicated). */
+  servingMode?: OCIServingMode;
+  /** Override request timeout/retry behavior. */
+  requestOptions?: RequestOptions;
+  /** Constrains effort on reasoning for reasoning models (Generic format). */
+  reasoningEffort?: 'none' | 'minimal' | 'low' | 'medium' | 'high';
+  /** Enable reasoning/thinking for Cohere models. */
+  thinking?: boolean;
+  /** Token budget for reasoning/thinking (Cohere models). */
+  tokenBudget?: number;
+}
+
+/**
  * Authentication method for OCI
  */
 export type OCIAuthMethod =
@@ -103,6 +137,11 @@ export interface OCIConfig {
   endpoint?: string;
 
   /**
+   * Serving mode for inference (on-demand or dedicated endpoint).
+   */
+  servingMode?: OCIServingMode;
+
+  /**
    * Default request options for retry and timeout behavior.
    * These can be overridden per-request.
    */
@@ -138,6 +177,8 @@ export interface ModelMetadata {
     streaming: boolean;
     tools: boolean;
     vision: boolean;
+    /** Whether the model supports reasoning/thinking traces */
+    reasoning?: boolean;
   };
   contextWindow: number;
   speed: 'very-fast' | 'fast' | 'medium' | 'slow';

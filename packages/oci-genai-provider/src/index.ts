@@ -93,6 +93,7 @@ export {
   getModelsByRegion,
   getCodingRecommendedModels,
   isCodingSuitable,
+  supportsReasoning,
 } from './language-models/registry';
 
 // ============================================================================
