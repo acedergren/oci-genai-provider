@@ -2,11 +2,14 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: ['src/cli.ts'],
-  format: ['cjs'],
+  format: ['esm'],
   clean: true,
   bundle: true,
   noExternal: [
     '@acedergren/oci-genai-provider',
+    '@opentui/react',
+    '@opentui/core',
+    'yoga-layout-prebuilt',
     'ai',
     'pino',
     'commander',
