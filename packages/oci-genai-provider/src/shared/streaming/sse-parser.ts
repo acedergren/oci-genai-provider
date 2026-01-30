@@ -42,13 +42,23 @@ interface OCIStreamChunk {
   index?: number;
   message?: {
     role?: string;
-    content?: Array<{ type?: string; text?: string }>;
+    content?: Array<{ type?: string; text?: string; thinking?: string }>;
     toolCalls?: OCIStreamToolCall[];
+    reasoningContent?: string;
   };
   // Cohere format: tool calls at top level
   toolCalls?: OCIStreamToolCall[];
   finishReason?: string;
   pad?: string;
+  usage?: {
+    promptTokens?: number;
+    completionTokens?: number;
+    completionTokensDetails?: {
+      reasoningTokens?: number;
+      acceptedPredictionTokens?: number;
+      rejectedPredictionTokens?: number;
+    };
+  };
 }
 
 /**
@@ -57,7 +67,7 @@ interface OCIStreamChunk {
  */
 export async function* parseSSEStream(
   input: ReadableStream<Uint8Array> | Response,
-  options?: { includeRawChunks?: boolean }
+  options?: { includeRawChunks?: boolean; apiFormat?: 'GENERIC' | 'COHERE' | 'COHEREV2' }
 ): AsyncGenerator<StreamPart> {
   // Handle both ReadableStream and Response objects
   const stream = input instanceof ReadableStream ? input : input.body;
@@ -87,21 +97,42 @@ export async function* parseSSEStream(
           });
         }
 
-        // Check for text delta in the new OCI format
-        const textContent = parsed.message?.content?.[0]?.text;
-        if (textContent) {
+        // Check for reasoning delta (Generic or CohereV2 format)
+        if (parsed.message?.reasoningContent) {
           parts.push({
-            type: 'text-delta',
-            textDelta: textContent,
+            type: 'reasoning-delta',
+            reasoningDelta: parsed.message.reasoningContent,
           });
+        }
+
+        if (parsed.message?.content) {
+          for (const part of parsed.message.content) {
+            if (part.type === 'THINKING' && part.thinking) {
+              parts.push({
+                type: 'reasoning-delta',
+                reasoningDelta: part.thinking,
+              });
+            }
+          }
+        }
+
+        // Check for text delta
+        const contentParts = parsed.message?.content;
+        if (contentParts) {
+          for (const part of contentParts) {
+            if ((part.type === 'TEXT' || !part.type) && part.text) {
+              parts.push({
+                type: 'text-delta',
+                textDelta: part.text,
+              });
+            }
+          }
         }
 
         // Check for tool calls (GENERIC or COHERE format)
         const toolCalls = parsed.message?.toolCalls ?? parsed.toolCalls;
         if (toolCalls && toolCalls.length > 0) {
           for (const toolCall of toolCalls) {
-            // GENERIC format: { id, type: 'FUNCTION', function: { name, arguments } }
-            // COHERE format: { name, parameters }
             if (toolCall.function?.name) {
               parts.push({
                 type: 'tool-call',
@@ -110,7 +141,6 @@ export async function* parseSSEStream(
                 input: toolCall.function.arguments ?? '{}',
               });
             } else if (toolCall.name) {
-              // Cohere format
               parts.push({
                 type: 'tool-call',
                 toolCallId: `tool-call-${Date.now()}`,
@@ -121,15 +151,20 @@ export async function* parseSSEStream(
           }
         }
 
-        // Check for finish (OCI returns lowercase 'stop')
+        // Check for finish
         const finishReason = parsed.finishReason;
         if (finishReason) {
+          const usage = parsed.usage;
+          const tokenDetails = usage?.completionTokensDetails;
           parts.push({
             type: 'finish',
             finishReason: mapFinishReason(finishReason.toUpperCase()),
             usage: {
-              promptTokens: 0,
-              completionTokens: 0,
+              promptTokens: usage?.promptTokens ?? 0,
+              completionTokens: usage?.completionTokens ?? 0,
+              reasoningTokens: tokenDetails?.reasoningTokens,
+              acceptedPredictionTokens: tokenDetails?.acceptedPredictionTokens,
+              rejectedPredictionTokens: tokenDetails?.rejectedPredictionTokens,
             },
           });
         }

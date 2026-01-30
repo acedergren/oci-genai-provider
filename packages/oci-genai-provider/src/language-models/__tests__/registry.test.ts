@@ -1,5 +1,11 @@
 import { describe, it, expect } from '@jest/globals';
-import { isValidModelId, getModelMetadata, getAllModels, getModelsByFamily } from '../registry';
+import {
+  isValidModelId,
+  getModelMetadata,
+  getAllModels,
+  getModelsByFamily,
+  supportsReasoning,
+} from '../registry';
 
 describe('Model Registry', () => {
   describe('isValidModelId', () => {
@@ -8,12 +14,20 @@ describe('Model Registry', () => {
         expect(isValidModelId('xai.grok-code-fast-1')).toBe(true);
       });
 
-      it('should validate xai.grok-4.1-fast', () => {
-        expect(isValidModelId('xai.grok-4.1-fast')).toBe(true);
+      it('should validate xai.grok-4-1-fast-reasoning', () => {
+        expect(isValidModelId('xai.grok-4-1-fast-reasoning')).toBe(true);
       });
 
-      it('should validate xai.grok-4-fast', () => {
-        expect(isValidModelId('xai.grok-4-fast')).toBe(true);
+      it('should validate xai.grok-4-1-fast-non-reasoning', () => {
+        expect(isValidModelId('xai.grok-4-1-fast-non-reasoning')).toBe(true);
+      });
+
+      it('should validate xai.grok-4-fast-reasoning', () => {
+        expect(isValidModelId('xai.grok-4-fast-reasoning')).toBe(true);
+      });
+
+      it('should validate xai.grok-4-fast-non-reasoning', () => {
+        expect(isValidModelId('xai.grok-4-fast-non-reasoning')).toBe(true);
       });
 
       it('should validate xai.grok-3', () => {
@@ -48,16 +62,24 @@ describe('Model Registry', () => {
         expect(isValidModelId('cohere.command-r-plus')).toBe(true);
       });
 
+      it('should validate cohere.command-plus-latest', () => {
+        expect(isValidModelId('cohere.command-plus-latest')).toBe(true);
+      });
+
+      it('should validate cohere.command-latest', () => {
+        expect(isValidModelId('cohere.command-latest')).toBe(true);
+      });
+
       it('should validate cohere.command-a-03-2025', () => {
         expect(isValidModelId('cohere.command-a-03-2025')).toBe(true);
       });
 
-      it('should validate cohere.command-a-reasoning-08-2025', () => {
-        expect(isValidModelId('cohere.command-a-reasoning-08-2025')).toBe(true);
+      it('should validate cohere.command-a-reasoning', () => {
+        expect(isValidModelId('cohere.command-a-reasoning')).toBe(true);
       });
 
-      it('should validate cohere.command-a-vision-07-2025', () => {
-        expect(isValidModelId('cohere.command-a-vision-07-2025')).toBe(true);
+      it('should validate cohere.command-a-vision', () => {
+        expect(isValidModelId('cohere.command-a-vision')).toBe(true);
       });
     });
 
@@ -163,6 +185,48 @@ describe('Model Registry', () => {
       // @ts-expect-error - Testing invalid family
       const result = getModelsByFamily('unknown');
       expect(result).toHaveLength(0);
+    });
+  });
+
+  describe('supportsReasoning', () => {
+    describe('reasoning-capable models', () => {
+      it('should return true for xai.grok-4-1-fast-reasoning', () => {
+        expect(supportsReasoning('xai.grok-4-1-fast-reasoning')).toBe(true);
+      });
+
+      it('should return true for xai.grok-4-fast-reasoning', () => {
+        expect(supportsReasoning('xai.grok-4-fast-reasoning')).toBe(true);
+      });
+
+      it('should return true for cohere.command-a-reasoning-08-2025', () => {
+        expect(supportsReasoning('cohere.command-a-reasoning-08-2025')).toBe(true);
+      });
+
+      it('should return true for cohere.command-a-reasoning', () => {
+        expect(supportsReasoning('cohere.command-a-reasoning')).toBe(true);
+      });
+    });
+
+    describe('non-reasoning models', () => {
+      it('should return false for meta.llama-3.3-70b-instruct', () => {
+        expect(supportsReasoning('meta.llama-3.3-70b-instruct')).toBe(false);
+      });
+
+      it('should return false for cohere.command-r-plus', () => {
+        expect(supportsReasoning('cohere.command-r-plus')).toBe(false);
+      });
+
+      it('should return false for google.gemini-2.5-flash', () => {
+        expect(supportsReasoning('google.gemini-2.5-flash')).toBe(false);
+      });
+
+      it('should return false for xai.grok-4-1-fast-non-reasoning', () => {
+        expect(supportsReasoning('xai.grok-4-1-fast-non-reasoning')).toBe(false);
+      });
+    });
+
+    it('should return false for invalid model ID', () => {
+      expect(supportsReasoning('invalid.model')).toBe(false);
     });
   });
 });

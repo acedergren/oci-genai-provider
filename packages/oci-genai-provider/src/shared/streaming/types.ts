@@ -5,6 +5,11 @@ export interface TextDeltaPart {
   textDelta: string;
 }
 
+export interface ReasoningDeltaPart {
+  type: 'reasoning-delta';
+  reasoningDelta: string;
+}
+
 export interface ToolCallPart {
   type: 'tool-call';
   toolCallId: string;
@@ -18,6 +23,11 @@ export interface FinishPart {
   usage: {
     promptTokens: number;
     completionTokens: number;
+    reasoningTokens?: number;
+    /** Number of prediction tokens accepted by the model */
+    acceptedPredictionTokens?: number;
+    /** Number of prediction tokens rejected by the model */
+    rejectedPredictionTokens?: number;
   };
 }
 
@@ -26,7 +36,7 @@ export interface RawPart {
   rawValue: unknown;
 }
 
-export type StreamPart = TextDeltaPart | ToolCallPart | FinishPart | RawPart;
+export type StreamPart = TextDeltaPart | ReasoningDeltaPart | ToolCallPart | FinishPart | RawPart;
 
 /**
  * Unified finish reason values matching AI SDK v3 spec.

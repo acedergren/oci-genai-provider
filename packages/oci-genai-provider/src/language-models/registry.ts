@@ -17,7 +17,7 @@ export type OCIGenAIRegion =
   | 'ca-toronto-1';
 
 // Regions where each model family is available (based on OCI docs Jan 2026)
-const GROK_REGIONS: OCIGenAIRegion[] = ['us-chicago-1', 'us-ashburn-1', 'us-sanjose-1'];
+const GROK_REGIONS: OCIGenAIRegion[] = ['us-chicago-1', 'us-ashburn-1'];
 const GEMINI_REGIONS: OCIGenAIRegion[] = ['us-chicago-1', 'eu-frankfurt-1', 'us-ashburn-1'];
 const COHERE_REGIONS: OCIGenAIRegion[] = [
   'us-chicago-1',
@@ -59,6 +59,10 @@ interface ExtendedModelMetadata extends ModelMetadata {
   codingRecommended?: boolean;
   /** Why this model is good/bad for coding */
   codingNote?: string;
+  /** Override capabilities to include reasoning */
+  capabilities: ModelMetadata['capabilities'] & {
+    reasoning?: boolean;
+  };
 }
 
 export const MODEL_CATALOG: ExtendedModelMetadata[] = [
@@ -77,10 +81,10 @@ export const MODEL_CATALOG: ExtendedModelMetadata[] = [
     codingNote: 'Purpose-built for code generation and understanding',
   },
   {
-    id: 'xai.grok-4.1-fast',
-    name: 'Grok 4.1 Fast',
+    id: 'xai.grok-4-1-fast-reasoning',
+    name: 'Grok 4.1 Fast Reasoning',
     family: 'grok',
-    capabilities: { streaming: true, tools: true, vision: false },
+    capabilities: { streaming: true, tools: true, vision: false, reasoning: true },
     contextWindow: 2000000,
     speed: 'very-fast',
     regions: GROK_REGIONS,
@@ -88,8 +92,26 @@ export const MODEL_CATALOG: ExtendedModelMetadata[] = [
     codingNote: '2M context window - ideal for large codebases',
   },
   {
-    id: 'xai.grok-4-fast',
-    name: 'Grok 4 Fast',
+    id: 'xai.grok-4-1-fast-non-reasoning',
+    name: 'Grok 4.1 Fast (Non-Reasoning)',
+    family: 'grok',
+    capabilities: { streaming: true, tools: true, vision: false },
+    contextWindow: 2000000,
+    speed: 'very-fast',
+    regions: GROK_REGIONS,
+  },
+  {
+    id: 'xai.grok-4-fast-reasoning',
+    name: 'Grok 4 Fast Reasoning',
+    family: 'grok',
+    capabilities: { streaming: true, tools: true, vision: false, reasoning: true },
+    contextWindow: 131072,
+    speed: 'very-fast',
+    regions: GROK_REGIONS,
+  },
+  {
+    id: 'xai.grok-4-fast-non-reasoning',
+    name: 'Grok 4 Fast (Non-Reasoning)',
     family: 'grok',
     capabilities: { streaming: true, tools: true, vision: false },
     contextWindow: 131072,
@@ -269,6 +291,24 @@ export const MODEL_CATALOG: ExtendedModelMetadata[] = [
     codingNote: '256K context, latest Cohere model with tool support',
   },
   {
+    id: 'cohere.command-plus-latest',
+    name: 'Command+ (Latest)',
+    family: 'cohere',
+    capabilities: { streaming: true, tools: true, vision: false },
+    contextWindow: 128000,
+    speed: 'fast',
+    regions: COHERE_REGIONS,
+  },
+  {
+    id: 'cohere.command-latest',
+    name: 'Command (Latest)',
+    family: 'cohere',
+    capabilities: { streaming: true, tools: true, vision: false },
+    contextWindow: 128000,
+    speed: 'fast',
+    regions: COHERE_REGIONS,
+  },
+  {
     id: 'cohere.command-r-plus-08-2024',
     name: 'Command R+ (Aug 2024)',
     family: 'cohere',
@@ -290,16 +330,34 @@ export const MODEL_CATALOG: ExtendedModelMetadata[] = [
     id: 'cohere.command-a-reasoning-08-2025',
     name: 'Command A Reasoning',
     family: 'cohere',
-    capabilities: { streaming: true, tools: true, vision: false },
+    capabilities: { streaming: true, tools: true, vision: false, reasoning: true },
     contextWindow: 256000,
     speed: 'medium',
     regions: COHERE_REGIONS,
-    dedicatedOnly: true,
-    codingNote: 'Dedicated clusters only - enhanced reasoning',
+    codingNote: 'Enhanced reasoning for complex logic',
   },
   {
     id: 'cohere.command-a-vision-07-2025',
     name: 'Command A Vision',
+    family: 'cohere',
+    capabilities: { streaming: true, tools: true, vision: true },
+    contextWindow: 128000,
+    speed: 'medium',
+    regions: COHERE_REGIONS,
+  },
+  {
+    id: 'cohere.command-a-reasoning',
+    name: 'Command A Reasoning (Legacy)',
+    family: 'cohere',
+    capabilities: { streaming: true, tools: true, vision: false, reasoning: true },
+    contextWindow: 256000,
+    speed: 'medium',
+    regions: COHERE_REGIONS,
+    dedicatedOnly: true,
+  },
+  {
+    id: 'cohere.command-a-vision',
+    name: 'Command A Vision (Legacy)',
     family: 'cohere',
     capabilities: { streaming: true, tools: true, vision: true },
     contextWindow: 131072,
@@ -419,4 +477,14 @@ export function isCodingSuitable(modelId: string): boolean {
   if (!model) return false;
   // Must have tool support
   return model.capabilities.tools;
+}
+
+/**
+ * Check if a model supports reasoning/thinking traces
+ * @param modelId - Model ID to check
+ * @returns true if the model supports reasoning capabilities
+ */
+export function supportsReasoning(modelId: string): boolean {
+  const model = MODEL_CATALOG.find((m) => m.id === modelId);
+  return model?.capabilities.reasoning ?? false;
 }

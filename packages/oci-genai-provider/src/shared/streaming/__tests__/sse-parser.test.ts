@@ -544,5 +544,99 @@ data: {"message":{"toolCalls":[{"id":"call_1","type":"FUNCTION","function":{"nam
       expect(parts[0].type).toBe('text-delta');
       expect(parts[1].type).toBe('tool-call');
     });
+
+    it('should parse finish event with prediction token details', async () => {
+      const sseText = `event: message
+data: {"finishReason":"STOP","usage":{"promptTokens":100,"completionTokens":50,"completionTokensDetails":{"reasoningTokens":20,"acceptedPredictionTokens":15,"rejectedPredictionTokens":5}}}
+
+`;
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller): void {
+          controller.enqueue(encoder.encode(sseText));
+          controller.close();
+        },
+      });
+
+      const response = new Response(stream);
+      const parts: StreamPart[] = [];
+
+      for await (const part of parseSSEStream(response)) {
+        parts.push(part);
+      }
+
+      expect(parts).toHaveLength(1);
+      const finishPart = parts[0];
+      expect(finishPart.type).toBe('finish');
+      if (finishPart.type === 'finish') {
+        expect(finishPart.usage.promptTokens).toBe(100);
+        expect(finishPart.usage.completionTokens).toBe(50);
+        expect(finishPart.usage.reasoningTokens).toBe(20);
+        expect(finishPart.usage.acceptedPredictionTokens).toBe(15);
+        expect(finishPart.usage.rejectedPredictionTokens).toBe(5);
+      }
+    });
+
+    it('should handle finish event without prediction token details', async () => {
+      const sseText = `event: message
+data: {"finishReason":"STOP","usage":{"promptTokens":50,"completionTokens":25}}
+
+`;
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller): void {
+          controller.enqueue(encoder.encode(sseText));
+          controller.close();
+        },
+      });
+
+      const response = new Response(stream);
+      const parts: StreamPart[] = [];
+
+      for await (const part of parseSSEStream(response)) {
+        parts.push(part);
+      }
+
+      expect(parts).toHaveLength(1);
+      const finishPart = parts[0];
+      expect(finishPart.type).toBe('finish');
+      if (finishPart.type === 'finish') {
+        expect(finishPart.usage.promptTokens).toBe(50);
+        expect(finishPart.usage.completionTokens).toBe(25);
+        expect(finishPart.usage.reasoningTokens).toBeUndefined();
+        expect(finishPart.usage.acceptedPredictionTokens).toBeUndefined();
+        expect(finishPart.usage.rejectedPredictionTokens).toBeUndefined();
+      }
+    });
+
+    it('should handle partial prediction token details', async () => {
+      const sseText = `event: message
+data: {"finishReason":"STOP","usage":{"promptTokens":75,"completionTokens":30,"completionTokensDetails":{"acceptedPredictionTokens":10}}}
+
+`;
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller): void {
+          controller.enqueue(encoder.encode(sseText));
+          controller.close();
+        },
+      });
+
+      const response = new Response(stream);
+      const parts: StreamPart[] = [];
+
+      for await (const part of parseSSEStream(response)) {
+        parts.push(part);
+      }
+
+      expect(parts).toHaveLength(1);
+      const finishPart = parts[0];
+      expect(finishPart.type).toBe('finish');
+      if (finishPart.type === 'finish') {
+        expect(finishPart.usage.acceptedPredictionTokens).toBe(10);
+        expect(finishPart.usage.rejectedPredictionTokens).toBeUndefined();
+        expect(finishPart.usage.reasoningTokens).toBeUndefined();
+      }
+    });
   });
 });
