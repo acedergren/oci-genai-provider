@@ -2,11 +2,16 @@ import type {
   LanguageModelV3Prompt,
   LanguageModelV3ToolCallPart,
   LanguageModelV3ToolResultPart,
+  LanguageModelV3FilePart,
+  LanguageModelV3TextPart,
 } from '@ai-sdk/provider';
 
 export interface OCIMessage {
   role: 'USER' | 'ASSISTANT' | 'SYSTEM' | 'TOOL';
-  content: Array<{ type: 'TEXT'; text: string }>;
+  content: Array<
+    | { type: 'TEXT'; text: string; imageUrl?: never }
+    | { type: 'IMAGE'; imageUrl: { url: string }; text?: never }
+  >;
   toolCalls?: Array<{
     id: string;
     type: 'FUNCTION';
@@ -50,68 +55,97 @@ export function convertToOCIMessages(prompt: LanguageModelV3Prompt): OCIMessage[
       };
     }
 
-    // Handle tool messages with tool-result parts
-    if (role === 'tool' && Array.isArray(message.content)) {
-      const toolResultPart = message.content.find(
-        (part): part is LanguageModelV3ToolResultPart => part.type === 'tool-result'
-      );
+    // Handle array content
+    if (Array.isArray(message.content)) {
+      // Handle tool messages with tool-result parts
+      if (role === 'tool') {
+        const toolResultPart = message.content.find(
+          (part): part is LanguageModelV3ToolResultPart => part.type === 'tool-result'
+        );
 
-      if (toolResultPart) {
-        const outputText = extractToolResultText(toolResultPart);
-        return {
-          role: ociRole,
-          toolCallId: toolResultPart.toolCallId,
-          content: [{ type: 'TEXT' as const, text: outputText }],
-        };
+        if (toolResultPart) {
+          const outputText = extractToolResultText(toolResultPart);
+          return {
+            role: ociRole,
+            toolCallId: toolResultPart.toolCallId,
+            content: [{ type: 'TEXT' as const, text: outputText }],
+          };
+        }
       }
-    }
 
-    // Handle assistant messages with tool-call parts
-    if (role === 'assistant' && Array.isArray(message.content)) {
-      const toolCallParts = message.content.filter(
-        (part): part is LanguageModelV3ToolCallPart => part.type === 'tool-call'
-      );
-
-      if (toolCallParts.length > 0) {
-        const textParts = message.content
-          .filter((part) => part.type === 'text')
-          .map((part) => ({
-            type: 'TEXT' as const,
-            text: (part as { text: string }).text,
-          }));
-
-        return {
-          role: ociRole,
-          content: textParts,
-          toolCalls: toolCallParts.map((part) => ({
+      // Extract tool calls for assistant role
+      let toolCalls: OCIMessage['toolCalls'] | undefined = undefined;
+      if (role === 'assistant') {
+        const toolCallParts = message.content.filter(
+          (part): part is LanguageModelV3ToolCallPart => part.type === 'tool-call'
+        );
+        if (toolCallParts.length > 0) {
+          toolCalls = toolCallParts.map((part) => ({
             id: part.toolCallId,
             type: 'FUNCTION' as const,
             function: {
               name: part.toolName,
-              // AI SDK v3 uses 'input' which can be any type, stringify it
               arguments:
                 typeof part.input === 'string' ? part.input : JSON.stringify(part.input ?? {}),
             },
-          })),
-        };
+          }));
+        }
       }
-    }
 
-    // Handle array content - single-pass conversion to text parts
-    const textParts = Array.isArray(message.content)
-      ? message.content.reduce<Array<{ type: 'TEXT'; text: string }>>((acc, part) => {
+      // Convert all content parts (excluding tool-call/tool-result as they are handled above)
+      const content = message.content
+        .map((part) => {
           if (part.type === 'text') {
-            acc.push({ type: 'TEXT' as const, text: part.text });
+            return convertTextPartToOCIContent(part);
           }
-          return acc;
-        }, [])
-      : [];
+          if (part.type === 'file') {
+            return convertFilePartToOCIContent(part);
+          }
+          return null;
+        })
+        .filter((part): part is NonNullable<typeof part> => part !== null);
+
+      const result: OCIMessage = {
+        role: ociRole,
+        content,
+      };
+
+      if (toolCalls) {
+        result.toolCalls = toolCalls;
+      }
+
+      return result;
+    }
 
     return {
       role: ociRole,
-      content: textParts,
+      content: [],
     };
   });
+}
+
+function convertTextPartToOCIContent(part: LanguageModelV3TextPart): OCIMessage['content'][number] {
+  return { type: 'TEXT', text: part.text };
+}
+
+function convertFilePartToOCIContent(
+  part: LanguageModelV3FilePart
+): OCIMessage['content'][number] | null {
+  if (part.mediaType && part.mediaType.startsWith('image/')) {
+    let url = '';
+    if (part.data instanceof Uint8Array) {
+      const base64 = Buffer.from(part.data).toString('base64');
+      url = `data:${part.mediaType};base64,${base64}`;
+    } else if (typeof part.data === 'string') {
+      url = part.data.startsWith('data:')
+        ? part.data
+        : `data:${part.mediaType};base64,${part.data}`;
+    } else if (part.data instanceof URL) {
+      url = part.data.toString(); // instanceof narrows type, cast unnecessary
+    }
+    return { type: 'IMAGE', imageUrl: { url } };
+  }
+  return null;
 }
 
 /**
