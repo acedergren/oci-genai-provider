@@ -12,7 +12,7 @@ import { InvalidResponseDataError, NoSuchModelError } from '@ai-sdk/provider';
 import { GenerativeAiInferenceClient, models as OCIModel } from 'oci-generativeaiinference';
 import { Region } from 'oci-common';
 import type { OCIConfig, RequestOptions } from '../types';
-import { isValidModelId, getModelMetadata } from './registry';
+import { isValidModelId, getModelMetadata, supportsReasoning } from './registry';
 import { convertToOCIMessages } from './converters/messages';
 import { convertToCohereFormat } from './converters/cohere-messages';
 import {
@@ -209,6 +209,24 @@ export class OCILanguageModel implements LanguageModelV3 {
         type: 'unsupported',
         feature: 'tools',
         details: `Model ${this.modelId} does not support tool calling. Supported: Llama 3.1+, Cohere Command R/R+, Grok, Gemini.`,
+      });
+    }
+
+    // Add reasoning model validation
+    const modelSupportsReasoning = supportsReasoning(this.modelId);
+    if (ociOptions?.reasoningEffort && !modelSupportsReasoning) {
+      warnings.push({
+        type: 'unsupported',
+        feature: 'reasoningEffort',
+        details: `Model ${this.modelId} does not support reasoning. Use a reasoning model like xai.grok-4-1-fast-reasoning or cohere.command-a-reasoning-08-2025.`,
+      });
+    }
+
+    if (ociOptions?.thinking && !modelSupportsReasoning) {
+      warnings.push({
+        type: 'unsupported',
+        feature: 'thinking',
+        details: `Model ${this.modelId} does not support thinking/reasoning. Use a reasoning model like cohere.command-a-reasoning-08-2025.`,
       });
     }
 
@@ -412,11 +430,47 @@ export class OCILanguageModel implements LanguageModelV3 {
     const apiFormat = this.getApiFormat();
     const warnings: SharedV3Warning[] = [];
 
+    // Add JSON response format warning (matching doGenerate)
+    if (options.responseFormat?.type === 'json') {
+      warnings.push({
+        type: 'unsupported',
+        feature: 'responseFormat.json',
+        details: 'OCI response format JSON is not supported in this provider.',
+      });
+    }
+
     const modelSupportsTools = supportsToolCalling(this.modelId);
     const hasTools = options.tools && options.tools.length > 0;
     const functionTools = hasTools
       ? (options.tools!.filter((t) => t.type === 'function') as LanguageModelV3FunctionTool[])
       : [];
+
+    // Add tools warning for unsupported models (matching doGenerate)
+    if (hasTools && !modelSupportsTools) {
+      warnings.push({
+        type: 'unsupported',
+        feature: 'tools',
+        details: `Model ${this.modelId} does not support tool calling. Supported: Llama 3.1+, Cohere Command R/R+, Grok, Gemini.`,
+      });
+    }
+
+    // Add reasoning model validation (matching doGenerate)
+    const modelSupportsReasoning = supportsReasoning(this.modelId);
+    if (ociOptions?.reasoningEffort && !modelSupportsReasoning) {
+      warnings.push({
+        type: 'unsupported',
+        feature: 'reasoningEffort',
+        details: `Model ${this.modelId} does not support reasoning. Use a reasoning model like xai.grok-4-1-fast-reasoning or cohere.command-a-reasoning-08-2025.`,
+      });
+    }
+
+    if (ociOptions?.thinking && !modelSupportsReasoning) {
+      warnings.push({
+        type: 'unsupported',
+        feature: 'thinking',
+        details: `Model ${this.modelId} does not support thinking/reasoning. Use a reasoning model like cohere.command-a-reasoning-08-2025.`,
+      });
+    }
 
     try {
       const commonParams = {
@@ -613,7 +667,7 @@ export class OCILanguageModel implements LanguageModelV3 {
                 }
               }
             } catch (error) {
-              controller.enqueue({ type: 'error', error });
+              controller.enqueue({ type: 'error', error: handleOCIError(error) });
             } finally {
               controller.close();
             }
