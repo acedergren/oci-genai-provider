@@ -9,7 +9,7 @@ import type {
   SharedV3Warning,
 } from '@ai-sdk/provider';
 import { InvalidResponseDataError, NoSuchModelError } from '@ai-sdk/provider';
-import { GenerativeAiInferenceClient } from 'oci-generativeaiinference';
+import { GenerativeAiInferenceClient, models as OCIModel } from 'oci-generativeaiinference';
 import { Region } from 'oci-common';
 import type { OCIConfig, RequestOptions } from '../types';
 import { isValidModelId, getModelMetadata } from './registry';
@@ -33,41 +33,57 @@ import {
   resolveServingMode,
 } from '../shared/provider-options';
 import { resolveRequestOptions } from '../shared/request-options';
+import {
+  toOCIReasoningEffort,
+  createThinkingConfig,
+  type OCIApiFormat,
+  type OCIUsageStats,
+} from '../shared/oci-sdk-types';
 
 interface OCIChatChoice {
   message?: {
-    content?: Array<{ type?: string; text?: string }>;
+    content?: Array<{
+      type?: string;
+      text?: string;
+      thinking?: string;
+      imageUrl?: { url: string };
+    }>;
     toolCalls?: OCIToolCall[];
+    reasoningContent?: string;
   };
   finishReason?: string;
 }
 
 interface OCIChatResponseInner {
-  // GENERIC format fields
   choices?: OCIChatChoice[];
-  chatChoice?: OCIChatChoice[]; // Legacy field name
-  // COHERE format fields
+  chatChoice?: OCIChatChoice[];
   text?: string;
   finishReason?: string;
   chatHistory?: Array<{ role: string; message: string }>;
-  toolCalls?: OCIToolCall[]; // Cohere tool calls at response level
-  // Common fields
+  toolCalls?: OCIToolCall[];
   usage?: {
     promptTokens?: number;
     completionTokens?: number;
+    completionTokensDetails?: {
+      reasoningTokens?: number;
+    };
   };
 }
 
 interface OCIChatResponse {
   opcRequestId?: string;
-  // Current OCI API structure (2025+): response wrapped in chatResult
   chatResult?: {
     modelId?: string;
     chatResponse?: OCIChatResponseInner;
   };
-  // Legacy structure (for backward compatibility)
   chatResponse?: OCIChatResponseInner;
+  headers?: { entries(): IterableIterator<[string, string]> };
 }
+
+type ChatRequest =
+  | OCIModel.GenericChatRequest
+  | OCIModel.CohereChatRequest
+  | OCIModel.CohereChatRequestV2;
 
 export class OCILanguageModel implements LanguageModelV3 {
   readonly specificationVersion = 'v3';
@@ -86,7 +102,6 @@ export class OCILanguageModel implements LanguageModelV3 {
         modelType: 'languageModel',
       });
     }
-    // Client initialization moved to getClient()
   }
 
   private async getClient(endpointOverride?: string): Promise<GenerativeAiInferenceClient> {
@@ -101,7 +116,6 @@ export class OCILanguageModel implements LanguageModelV3 {
           authenticationDetailsProvider: authProvider,
         });
 
-        // Set region using proper OCI Region API
         client.region = Region.fromRegionId(regionId);
 
         if (resolvedEndpoint) {
@@ -125,37 +139,34 @@ export class OCILanguageModel implements LanguageModelV3 {
     return this._client;
   }
 
-  /**
-   * Get effective request options by merging defaults with config and per-request options.
-   */
   private getRequestOptions(perRequestOptions?: RequestOptions): Required<RequestOptions> {
     return resolveRequestOptions(this.config.requestOptions, perRequestOptions);
   }
 
-  /**
-   * Get the appropriate API format for the model.
-   * Cohere models require 'COHERE' format, others use 'GENERIC'.
-   */
-  private getApiFormat(): 'GENERIC' | 'COHERE' {
+  private getApiFormat(): OCIApiFormat {
     const metadata = getModelMetadata(this.modelId);
-    return metadata?.family === 'cohere' ? 'COHERE' : 'GENERIC';
+    if (metadata?.family === 'cohere') {
+      if (
+        this.modelId.includes('-03-2025') ||
+        this.modelId.includes('-07-2025') ||
+        this.modelId.includes('-08-2025')
+      ) {
+        return 'COHEREV2';
+      }
+      return 'COHERE';
+    }
+    return 'GENERIC';
   }
 
-  /**
-   * Execute an API call with retry and timeout wrappers.
-   */
   private async executeWithResilience<T>(
     operation: () => Promise<T>,
     operationName: string,
     requestOptions?: RequestOptions
   ): Promise<T> {
     const options = this.getRequestOptions(requestOptions);
-
-    // Create the operation with timeout
     const withTimeoutOperation = (): Promise<T> =>
       withTimeout(operation(), options.timeoutMs, operationName);
 
-    // If retry is enabled, wrap with retry logic
     if (options.retry.enabled) {
       return withRetry(withTimeoutOperation, {
         maxRetries: options.retry.maxRetries,
@@ -165,7 +176,6 @@ export class OCILanguageModel implements LanguageModelV3 {
       });
     }
 
-    // Otherwise, just execute with timeout
     return withTimeoutOperation();
   }
 
@@ -188,7 +198,6 @@ export class OCILanguageModel implements LanguageModelV3 {
       });
     }
 
-    // Check tool calling support for this model
     const modelSupportsTools = supportsToolCalling(this.modelId);
     const hasTools = options.tools && options.tools.length > 0;
     const functionTools = hasTools
@@ -203,16 +212,7 @@ export class OCILanguageModel implements LanguageModelV3 {
       });
     }
 
-    if (options.toolChoice && options.toolChoice.type !== 'auto' && !modelSupportsTools) {
-      warnings.push({
-        type: 'unsupported',
-        feature: 'toolChoice',
-        details: `Model ${this.modelId} does not support tool choice options.`,
-      });
-    }
-
     try {
-      // Build chatRequest based on API format
       const commonParams = {
         maxTokens: options.maxOutputTokens,
         temperature: options.temperature,
@@ -222,37 +222,89 @@ export class OCILanguageModel implements LanguageModelV3 {
         presencePenalty: options.presencePenalty,
       };
 
-      // Convert tools if model supports them
       const toolParams =
         modelSupportsTools && functionTools.length > 0
           ? {
               tools: convertToOCITools(functionTools, apiFormat),
-              ...(options.toolChoice ? { toolChoice: convertToOCIToolChoice(options.toolChoice) } : {}),
+              ...(options.toolChoice
+                ? { toolChoice: convertToOCIToolChoice(options.toolChoice) }
+                : {}),
             }
           : {};
 
-      const baseChatRequest =
-        apiFormat === 'COHERE'
-          ? {
-              apiFormat,
-              ...convertToCohereFormat(messages),
-              ...commonParams,
-              ...toolParams,
-              stopSequences: options.stopSequences,
-            }
-          : {
-              apiFormat,
-              messages,
-              ...commonParams,
-              ...toolParams,
-              stop: options.stopSequences,
-            };
+      let chatRequest: ChatRequest;
+      if (apiFormat === 'COHEREV2') {
+        chatRequest = {
+          apiFormat,
+          messages: messages.map((m) => {
+            const content: OCIModel.CohereContentV2[] = m.content.map((c) => {
+              if (c.type === 'IMAGE') {
+                return {
+                  type: 'IMAGE_URL',
+                  imageUrl: c.imageUrl as OCIModel.CohereImageUrlV2,
+                } as OCIModel.CohereImageContentV2;
+              }
+              return { type: 'TEXT', text: c.text ?? '' } as OCIModel.CohereTextContentV2;
+            });
+            return {
+              role: m.role === 'ASSISTANT' ? 'CHATBOT' : m.role,
+              content,
+            } as OCIModel.CohereMessageV2;
+          }),
+          ...commonParams,
+          ...toolParams,
+          stopSequences: options.stopSequences,
+        } as OCIModel.CohereChatRequestV2;
+      } else if (apiFormat === 'COHERE') {
+        chatRequest = {
+          apiFormat,
+          ...convertToCohereFormat(messages),
+          ...commonParams,
+          ...toolParams,
+          stopSequences: options.stopSequences,
+        } as OCIModel.CohereChatRequest;
+      } else {
+        chatRequest = {
+          apiFormat,
+          messages: messages.map((m) => ({
+            role: m.role,
+            content: m.content.map((c) => {
+              if (c.type === 'IMAGE') {
+                return {
+                  type: 'IMAGE',
+                  imageUrl: c.imageUrl,
+                };
+              }
+              return {
+                type: 'TEXT',
+                text: c.text ?? '',
+              };
+            }) as OCIModel.ChatContent[],
+          })) as OCIModel.Message[],
+          ...commonParams,
+          ...toolParams,
+          stop: options.stopSequences,
+        } as OCIModel.GenericChatRequest;
+      }
 
-      // Add seed parameter if provided
-      const chatRequest =
-        options.seed !== undefined ? { ...baseChatRequest, seed: options.seed } : baseChatRequest;
+      if (ociOptions?.reasoningEffort && apiFormat === 'GENERIC') {
+        // Cast to SDK enum type - our string literal matches the enum value
+        (chatRequest as OCIModel.GenericChatRequest).reasoningEffort = toOCIReasoningEffort(
+          ociOptions.reasoningEffort
+        ) as OCIModel.GenericChatRequest.ReasoningEffort;
+      }
 
-      const response = await this.executeWithResilience<OCIChatResponse>(
+      if (ociOptions?.thinking && (apiFormat === 'COHEREV2' || apiFormat === 'COHERE')) {
+        // Cast to SDK type - our config structure matches CohereThinkingV2
+        (chatRequest as OCIModel.CohereChatRequestV2).thinking =
+          createThinkingConfig(true, ociOptions.tokenBudget) as OCIModel.CohereThinkingV2;
+      }
+
+      if (options.seed !== undefined) {
+        chatRequest.seed = options.seed;
+      }
+
+      const response = (await this.executeWithResilience<unknown>(
         () =>
           client.chat({
             chatDetails: {
@@ -264,12 +316,11 @@ export class OCILanguageModel implements LanguageModelV3 {
               ),
               chatRequest,
             },
-          }) as Promise<OCIChatResponse>,
+          }),
         'OCI chat request',
         ociOptions?.requestOptions
-      );
+      )) as OCIChatResponse;
 
-      // Handle both GENERIC and COHERE response formats
       const chatResponse = response.chatResult?.chatResponse ?? response.chatResponse;
 
       if (!chatResponse) {
@@ -279,60 +330,61 @@ export class OCILanguageModel implements LanguageModelV3 {
         });
       }
 
-      // COHERE format: chatResponse.text
-      // GENERIC format: chatResponse.choices[0].message.content[0].text
-      let textContent: string;
+      const content: LanguageModelV3Content[] = [];
       let finishReason: string;
       let toolCalls: OCIToolCall[] | undefined;
 
       if ('text' in chatResponse && typeof chatResponse.text === 'string') {
-        // Cohere response format
-        textContent = chatResponse.text;
+        content.push({ type: 'text', text: chatResponse.text });
         finishReason = chatResponse.finishReason ?? 'COMPLETE';
         toolCalls = chatResponse.toolCalls;
       } else {
-        // Generic response format
         const choices = chatResponse.choices ?? chatResponse.chatChoice ?? [];
         const choice = choices[0];
-        textContent = choice?.message?.content?.[0]?.text ?? '';
+        const msg = choice?.message;
+
+        if (msg?.reasoningContent) {
+          content.push({ type: 'reasoning', text: msg.reasoningContent });
+        }
+
+        if (msg?.content) {
+          for (const part of msg.content) {
+            if (part.type === 'TEXT' || (!part.type && part.text)) {
+              content.push({ type: 'text', text: part.text ?? '' });
+            } else if (part.type === 'THINKING' || (!part.type && part.thinking)) {
+              content.push({ type: 'reasoning', text: part.thinking ?? '' });
+            }
+          }
+        }
+
         finishReason = choice?.finishReason ?? 'STOP';
-        toolCalls = choice?.message?.toolCalls;
+        toolCalls = msg?.toolCalls;
       }
 
-      // Build content parts: text + tool calls
-      const content: LanguageModelV3Content[] = [];
-
-      if (textContent) {
-        content.push({ type: 'text', text: textContent });
-      }
-
-      // Convert tool calls to AI SDK format
       if (toolCalls && toolCalls.length > 0 && modelSupportsTools) {
-        const sdkToolCalls = convertFromOCIToolCalls(toolCalls, apiFormat);
-        content.push(...sdkToolCalls);
+        content.push(...convertFromOCIToolCalls(toolCalls, apiFormat));
       }
 
-      const usage = chatResponse.usage;
+      const ociUsage = chatResponse.usage as OCIUsageStats | undefined;
+      const reasoningTokens = ociUsage?.completionTokensDetails?.reasoningTokens;
 
       return {
         content: content.length > 0 ? content : [{ type: 'text', text: '' }],
         finishReason: mapFinishReason(finishReason),
         usage: {
           inputTokens: {
-            total: usage?.promptTokens ?? 0,
+            total: ociUsage?.promptTokens ?? 0,
             noCache: undefined,
             cacheRead: undefined,
             cacheWrite: undefined,
           },
           outputTokens: {
-            total: usage?.completionTokens ?? 0,
+            total: ociUsage?.completionTokens ?? 0,
             text: undefined,
-            reasoning: undefined,
+            reasoning: reasoningTokens,
           },
         },
         warnings,
-        // Stringify messages for AI SDK observability/logging
-        // Performance overhead: ~5-10ms, acceptable for debugging/tracing
         request: { body: JSON.stringify(messages) },
         response: {
           id: response.opcRequestId,
@@ -341,10 +393,7 @@ export class OCILanguageModel implements LanguageModelV3 {
           body: response,
         },
         providerMetadata: {
-          oci: {
-            requestId: response.opcRequestId,
-            modelId: response.chatResult?.modelId,
-          },
+          oci: { requestId: response.opcRequestId, modelId: response.chatResult?.modelId },
         },
       };
     } catch (error) {
@@ -363,39 +412,13 @@ export class OCILanguageModel implements LanguageModelV3 {
     const apiFormat = this.getApiFormat();
     const warnings: SharedV3Warning[] = [];
 
-    if (options.responseFormat?.type === 'json') {
-      warnings.push({
-        type: 'unsupported',
-        feature: 'responseFormat.json',
-        details: 'OCI response format JSON is not supported in this provider.',
-      });
-    }
-
-    // Check tool calling support for this model
     const modelSupportsTools = supportsToolCalling(this.modelId);
     const hasTools = options.tools && options.tools.length > 0;
     const functionTools = hasTools
       ? (options.tools!.filter((t) => t.type === 'function') as LanguageModelV3FunctionTool[])
       : [];
 
-    if (hasTools && !modelSupportsTools) {
-      warnings.push({
-        type: 'unsupported',
-        feature: 'tools',
-        details: `Model ${this.modelId} does not support tool calling. Supported: Llama 3.1+, Cohere Command R/R+, Grok, Gemini.`,
-      });
-    }
-
-    if (options.toolChoice && options.toolChoice.type !== 'auto' && !modelSupportsTools) {
-      warnings.push({
-        type: 'unsupported',
-        feature: 'toolChoice',
-        details: `Model ${this.modelId} does not support tool choice options.`,
-      });
-    }
-
     try {
-      // Build chatRequest based on API format
       const commonParams = {
         maxTokens: options.maxOutputTokens,
         temperature: options.temperature,
@@ -403,46 +426,90 @@ export class OCILanguageModel implements LanguageModelV3 {
         topK: options.topK,
         frequencyPenalty: options.frequencyPenalty,
         presencePenalty: options.presencePenalty,
+        isStream: true,
       };
 
-      // Convert tools if model supports them
       const toolParams =
         modelSupportsTools && functionTools.length > 0
           ? {
               tools: convertToOCITools(functionTools, apiFormat),
-              ...(options.toolChoice ? { toolChoice: convertToOCIToolChoice(options.toolChoice) } : {}),
+              ...(options.toolChoice
+                ? { toolChoice: convertToOCIToolChoice(options.toolChoice) }
+                : {}),
             }
           : {};
 
-      const baseChatRequest =
-        apiFormat === 'COHERE'
-          ? {
-              apiFormat,
-              ...convertToCohereFormat(messages),
-              ...commonParams,
-              ...toolParams,
-              stopSequences: options.stopSequences,
-              isStream: true,
-            }
-          : {
-              apiFormat,
-              messages,
-              ...commonParams,
-              ...toolParams,
-              stop: options.stopSequences,
-              isStream: true,
-            };
+      let chatRequest: ChatRequest;
+      if (apiFormat === 'COHEREV2') {
+        chatRequest = {
+          apiFormat,
+          messages: messages.map((m) => {
+            const content: OCIModel.CohereContentV2[] = m.content.map((c) => {
+              if (c.type === 'IMAGE') {
+                return {
+                  type: 'IMAGE_URL',
+                  imageUrl: c.imageUrl as OCIModel.CohereImageUrlV2,
+                } as OCIModel.CohereImageContentV2;
+              }
+              return { type: 'TEXT', text: c.text ?? '' } as OCIModel.CohereTextContentV2;
+            });
+            return {
+              role: m.role === 'ASSISTANT' ? 'CHATBOT' : m.role,
+              content,
+            } as OCIModel.CohereMessageV2;
+          }),
+          ...commonParams,
+          ...toolParams,
+          stopSequences: options.stopSequences,
+        } as OCIModel.CohereChatRequestV2;
+      } else if (apiFormat === 'COHERE') {
+        chatRequest = {
+          apiFormat,
+          ...convertToCohereFormat(messages),
+          ...commonParams,
+          ...toolParams,
+          stopSequences: options.stopSequences,
+        } as OCIModel.CohereChatRequest;
+      } else {
+        chatRequest = {
+          apiFormat,
+          messages: messages.map((m) => ({
+            role: m.role,
+            content: m.content.map((c) => {
+              if (c.type === 'IMAGE') {
+                return {
+                  type: 'IMAGE',
+                  imageUrl: c.imageUrl,
+                };
+              }
+              return {
+                type: 'TEXT',
+                text: c.text ?? '',
+              };
+            }) as OCIModel.ChatContent[],
+          })) as OCIModel.Message[],
+          ...commonParams,
+          ...toolParams,
+          stop: options.stopSequences,
+        } as OCIModel.GenericChatRequest;
+      }
 
-      // Add seed parameter if provided
-      const chatRequest =
-        options.seed !== undefined ? { ...baseChatRequest, seed: options.seed } : baseChatRequest;
+      if (ociOptions?.reasoningEffort && apiFormat === 'GENERIC') {
+        // Cast to SDK enum type - our string literal matches the enum value
+        (chatRequest as OCIModel.GenericChatRequest).reasoningEffort = toOCIReasoningEffort(
+          ociOptions.reasoningEffort
+        ) as OCIModel.GenericChatRequest.ReasoningEffort;
+      }
 
-      // Note: Retry and timeout only apply to connection establishment.
-      // Once streaming starts, the stream handles its own errors.
-      // OCI SDK returns ReadableStream<Uint8Array> directly for streaming requests
-      const streamResponse = await this.executeWithResilience<
-        ReadableStream<Uint8Array> | Response
-      >(
+      if (ociOptions?.thinking && (apiFormat === 'COHEREV2' || apiFormat === 'COHERE')) {
+        // Cast to SDK type - our config structure matches CohereThinkingV2
+        (chatRequest as OCIModel.CohereChatRequestV2).thinking =
+          createThinkingConfig(true, ociOptions.tokenBudget) as OCIModel.CohereThinkingV2;
+      }
+
+      if (options.seed !== undefined) chatRequest.seed = options.seed;
+
+      const response = (await this.executeWithResilience<unknown>(
         () =>
           client.chat({
             chatDetails: {
@@ -454,114 +521,108 @@ export class OCILanguageModel implements LanguageModelV3 {
               ),
               chatRequest,
             },
-          }) as unknown as Promise<ReadableStream<Uint8Array>>,
-        'OCI streaming chat request',
+          }),
+        'OCI chat stream',
         ociOptions?.requestOptions
-      );
+      )) as {
+        body?: ReadableStream<Uint8Array>;
+        headers?: { entries(): IterableIterator<[string, string]> };
+      };
 
-      // Parse SSE stream and convert to V3 format
-      const responseHeaders =
-        streamResponse instanceof Response
-          ? Object.fromEntries(streamResponse.headers.entries())
-          : undefined;
-      const sseStream = parseSSEStream(streamResponse, {
+      const streamInput = response.body ?? (response as unknown as ReadableStream<Uint8Array>);
+
+      if (!streamInput) {
+        throw new Error('No stream received from OCI.');
+      }
+
+      const stream = parseSSEStream(streamInput, {
         includeRawChunks: options.includeRawChunks,
-      });
-      const textPartId = 'text-0';
-      let isFirstChunk = true;
-      let textEnded = false;
-      let toolCallIndex = 0;
-
-      const v3Stream = new ReadableStream<LanguageModelV3StreamPart>({
-        async start(controller): Promise<void> {
-          try {
-            controller.enqueue({
-              type: 'stream-start',
-              warnings,
-            });
-            for await (const part of sseStream) {
-              if (part.type === 'text-delta') {
-                // Create text part on first chunk
-                if (isFirstChunk) {
-                  controller.enqueue({
-                    type: 'text-start',
-                    id: textPartId,
-                  });
-                  isFirstChunk = false;
-                }
-                // Convert SSE text-delta to V3 format
-                controller.enqueue({
-                  type: 'text-delta',
-                  id: textPartId,
-                  delta: part.textDelta,
-                });
-              } else if (part.type === 'tool-call') {
-                // End text part before tool calls if needed
-                if (!isFirstChunk && !textEnded) {
-                  controller.enqueue({
-                    type: 'text-end',
-                    id: textPartId,
-                  });
-                  textEnded = true;
-                }
-                // Emit complete tool call (OCI doesn't stream tool call arguments incrementally)
-                toolCallIndex++;
-                controller.enqueue({
-                  type: 'tool-call',
-                  toolCallId: part.toolCallId,
-                  toolName: part.toolName,
-                  input: part.input,
-                });
-              } else if (part.type === 'finish') {
-                // Convert SSE finish to V3 format
-                if (!isFirstChunk && !textEnded) {
-                  controller.enqueue({
-                    type: 'text-end',
-                    id: textPartId,
-                  });
-                  textEnded = true;
-                }
-                controller.enqueue({
-                  type: 'finish',
-                  finishReason: part.finishReason,
-                  usage: {
-                    inputTokens: {
-                      total: part.usage.promptTokens,
-                      noCache: undefined,
-                      cacheRead: undefined,
-                      cacheWrite: undefined,
-                    },
-                    outputTokens: {
-                      total: part.usage.completionTokens,
-                      text: undefined,
-                      reasoning: undefined,
-                    },
-                  },
-                });
-              } else if (part.type === 'raw') {
-                controller.enqueue({
-                  type: 'raw',
-                  rawValue: part.rawValue,
-                });
-              }
-            }
-            controller.close();
-          } catch (error) {
-            controller.enqueue({
-              type: 'error',
-              error: handleOCIError(error),
-            });
-            controller.close();
-          }
-        },
       });
 
       return {
-        stream: v3Stream,
-        // Stringify messages for AI SDK observability/logging
-        // Performance overhead: ~5-10ms, acceptable for debugging/tracing
+        stream: new ReadableStream<LanguageModelV3StreamPart>({
+          async start(controller) {
+            controller.enqueue({ type: 'stream-start', warnings });
+
+            let hasText = false;
+            let hasReasoning = false;
+            const textId = `text-${Date.now()}`;
+            const reasoningId = `reasoning-${Date.now()}`;
+
+            try {
+              for await (const part of stream) {
+                switch (part.type) {
+                  case 'text-delta':
+                    if (!hasText) {
+                      controller.enqueue({ type: 'text-start', id: textId });
+                      hasText = true;
+                    }
+                    controller.enqueue({
+                      type: 'text-delta',
+                      delta: part.textDelta,
+                      id: textId,
+                    });
+                    break;
+                  case 'reasoning-delta':
+                    if (!hasReasoning) {
+                      controller.enqueue({ type: 'reasoning-start', id: reasoningId });
+                      hasReasoning = true;
+                    }
+                    controller.enqueue({
+                      type: 'reasoning-delta',
+                      delta: part.reasoningDelta,
+                      id: reasoningId,
+                    });
+                    break;
+                  case 'tool-call':
+                    controller.enqueue({
+                      type: 'tool-call',
+                      toolCallId: part.toolCallId,
+                      toolName: part.toolName,
+                      input: part.input,
+                    });
+                    break;
+                  case 'finish':
+                    if (hasText) {
+                      controller.enqueue({ type: 'text-end', id: textId });
+                    }
+                    if (hasReasoning) {
+                      controller.enqueue({ type: 'reasoning-end', id: reasoningId });
+                    }
+                    controller.enqueue({
+                      type: 'finish',
+                      finishReason: part.finishReason,
+                      usage: {
+                        inputTokens: {
+                          total: part.usage.promptTokens,
+                          noCache: undefined,
+                          cacheRead: undefined,
+                          cacheWrite: undefined,
+                        },
+                        outputTokens: {
+                          total: part.usage.completionTokens,
+                          text: undefined,
+                          reasoning: part.usage.reasoningTokens,
+                        },
+                      },
+                    });
+                    break;
+                  case 'raw':
+                    controller.enqueue({ type: 'raw', rawValue: part.rawValue });
+                    break;
+                }
+              }
+            } catch (error) {
+              controller.enqueue({ type: 'error', error });
+            } finally {
+              controller.close();
+            }
+          },
+        }),
         request: { body: JSON.stringify(messages) },
-        response: responseHeaders ? { headers: responseHeaders } : undefined,
+        response: {
+          headers: response.headers ? Object.fromEntries(response.headers.entries()) : undefined,
+        },
       };
     } catch (error) {
       throw handleOCIError(error);

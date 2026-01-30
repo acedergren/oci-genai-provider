@@ -26,4 +26,5 @@ export const Region = {
   EU_FRANKFURT_1: 'eu-frankfurt-1',
   EU_STOCKHOLM_1: 'eu-stockholm-1',
   US_ASHBURN_1: 'us-ashburn-1',
+  fromRegionId: (regionId: string): { regionId: string } => ({ regionId }),
 };
