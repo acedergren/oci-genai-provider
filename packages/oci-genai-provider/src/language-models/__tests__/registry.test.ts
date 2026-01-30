@@ -216,8 +216,8 @@ describe('Model Registry', () => {
         expect(supportsReasoning('cohere.command-r-plus')).toBe(false);
       });
 
-      it('should return false for google.gemini-2.5-flash', () => {
-        expect(supportsReasoning('google.gemini-2.5-flash')).toBe(false);
+      it('should return true for google.gemini-2.5-flash (supports reasoning)', () => {
+        expect(supportsReasoning('google.gemini-2.5-flash')).toBe(true);
       });
 
       it('should return false for xai.grok-4-1-fast-non-reasoning', () => {
