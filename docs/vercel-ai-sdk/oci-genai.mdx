@@ -1,0 +1,159 @@
+---
+title: OCI Generative AI
+description: OCI Generative AI provider for the AI SDK
+---
+
+# OCI Generative AI
+
+[Oracle Cloud Infrastructure (OCI) Generative AI](https://www.oracle.com/artificial-intelligence/generative-ai/generative-ai-service/) is a fully managed service that provides a set of state-of-the-art, customizable large language models (LLMs) that cover a wide range of use cases.
+
+The OCI Generative AI provider for the AI SDK enables seamless integration with models from xAI, Meta, Cohere, and Google. It supports:
+
+- **Universal Model Access**: Access Grok, Llama, Command, and Gemini models through a single provider.
+- **Enterprise-Grade Infrastructure**: Highly available and secure OCI infrastructure.
+- **Data Residency**: Support for multiple regions including EU (Frankfurt, Stockholm) and US (Ashburn, Phoenix).
+- **Comprehensive AI Services**: Beyond text generation, it supports embeddings, speech synthesis, transcription, and reranking.
+
+Learn more about OCI Generative AI in the [OCI Documentation](https://docs.oracle.com/en-us/iaas/Content/generative-ai/home.htm).
+
+## Setup
+
+The OCI Generative AI provider is available in the `@acedergren/oci-genai-provider` module. You can install it with:
+
+<Tabs items={['pnpm', 'npm', 'yarn', 'bun']}>
+  <Tab>
+    <Snippet text="pnpm add @acedergren/oci-genai-provider ai" dark />
+  </Tab>
+  <Tab>
+    <Snippet text="npm install @acedergren/oci-genai-provider ai" dark />
+  </Tab>
+  <Tab>
+    <Snippet text="yarn add @acedergren/oci-genai-provider ai" dark />
+  </Tab>
+  <Tab>
+    <Snippet text="bun add @acedergren/oci-genai-provider ai" dark />
+  </Tab>
+</Tabs>
+
+## Provider Instance
+
+To create an OCI Generative AI provider instance, use the `createOCI` function:
+
+```typescript
+import { createOCI } from '@acedergren/oci-genai-provider';
+
+const oci = createOCI({
+  compartmentId: 'YOUR_OCI_COMPARTMENT_OCID',
+  region: 'us-phoenix-1', // optional, defaults to OCI_REGION env var or config file
+});
+```
+
+### Authentication
+
+The provider supports multiple authentication methods:
+
+1. **OCI Config File (Default)**: Uses `~/.oci/config`. Set `OCI_CONFIG_PROFILE` to specify a profile.
+2. **Instance Principal**: For code running on OCI Compute instances.
+3. **Resource Principal**: For code running in OCI Functions or other services.
+
+Ensure you have set the `OCI_COMPARTMENT_ID` environment variable or passed it in the configuration.
+
+## Language Models
+
+OCI Generative AI supports a variety of models. Use `oci.languageModel()` to create a model instance:
+
+```typescript
+// xAI Grok 4
+const grok = oci.languageModel('xai.grok-4');
+
+// Meta Llama 3.3
+const llama = oci.languageModel('meta.llama-3.3-70b-instruct');
+
+// Cohere Command R+
+const command = oci.languageModel('cohere.command-r-plus');
+```
+
+### Available Models
+
+| Family            | Model ID                      | Context |
+| :---------------- | :---------------------------- | :------ |
+| **xAI Grok**      | `xai.grok-4`                  | 131K    |
+| **Meta Llama**    | `meta.llama-3.3-70b-instruct` | 128K    |
+| **Cohere**        | `cohere.command-r-plus`       | 128K    |
+| **Google Gemini** | `google.gemini-2.5-flash`     | 1M      |
+
+You can find the full list of available models in the [OCI Models documentation](https://docs.oracle.com/en-us/iaas/Content/generative-ai/chat-models.htm).
+
+## Embedding Models
+
+You can create embedding models using `oci.embeddingModel()`:
+
+```typescript
+const embeddingModel = oci.embeddingModel('cohere.embed-multilingual-v3.0');
+```
+
+| Model ID                          | Dimensions |
+| :-------------------------------- | :--------- |
+| `cohere.embed-multilingual-v3.0`  | 1024       |
+| `cohere.embed-english-v3.0`       | 1024       |
+| `cohere.embed-english-light-v3.0` | 384        |
+
+## Examples
+
+### `generateText`
+
+```javascript
+import { oci } from '@acedergren/oci-genai-provider';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: oci.languageModel('xai.grok-4'),
+  prompt: 'What is OCI Generative AI?',
+});
+
+console.log(text);
+```
+
+### `streamText`
+
+```javascript
+import { oci } from '@acedergren/oci-genai-provider';
+import { streamText } from 'ai';
+
+const result = streamText({
+  model: oci.languageModel('meta.llama-3.3-70b-instruct'),
+  prompt: 'Write a short story about bioluminescence.',
+});
+
+for await (const chunk of result.textStream) {
+  process.stdout.write(chunk);
+}
+```
+
+## Advanced Features
+
+### Speech and Transcription
+
+This provider also supports OCI Speech services for synthesis (TTS) and transcription (STT) in supported regions (e.g., `us-phoenix-1`):
+
+```typescript
+// Speech Synthesis (TTS)
+const speechModel = oci.speechModel('oci-tts-standard');
+
+// Transcription (STT)
+const transcriptionModel = oci.transcriptionModel('oci-stt-standard');
+```
+
+### Reranking
+
+Improve your search results using Cohere Rerank models:
+
+```typescript
+const rerankModel = oci.rerankingModel('cohere.rerank-v3.5');
+```
+
+## Additional Resources
+
+- [GitHub Repository](https://github.com/acedergren/oci-genai-provider)
+- [OCI Generative AI Documentation](https://docs.oracle.com/en-us/iaas/Content/generative-ai/home.htm)
+- [OCI Console](https://cloud.oracle.com/generative-ai)
