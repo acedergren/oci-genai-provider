@@ -28,11 +28,12 @@ module.exports = {
     'json',
   ],
   coverageDirectory: '<rootDir>/coverage',
+  // Don't apply the .js -> no extension mapping to node_modules
   moduleNameMapper: {
-    '^(\.{1,2}/.*)\.js$': '$1',
+    '^(\\.{1,2}/(?!.*node_modules).*)\\.js$': '$1',
   },
   transform: {
-    '^.+\.tsx?$': [
+    '^.+\\.tsx?$': [
       'ts-jest',
       {
         useESM: false,

@@ -3,6 +3,8 @@
  * Provides specific error classes for different failure scenarios.
  */
 
+import { APICallError, AISDKError } from '@ai-sdk/provider';
+
 export interface OCIGenAIErrorOptions {
   cause?: Error;
 }
@@ -114,6 +116,25 @@ export class ModelNotFoundError extends OCIGenAIError {
   }
 }
 
+export interface ValidationErrorOptions extends OCIGenAIErrorOptions {
+  issues?: unknown[];
+}
+
+/**
+ * Error thrown when validation of user-provided input fails.
+ * These errors are NOT retryable - input needs to be corrected.
+ */
+export class OCIValidationError extends OCIGenAIError {
+  override readonly name: string = 'OCIValidationError';
+  override readonly retryable = false;
+  readonly details?: Record<string, unknown>;
+
+  constructor(message: string, details?: Record<string, unknown>) {
+    super(message, undefined, false);
+    this.details = details;
+  }
+}
+
 /**
  * Check if an HTTP status code indicates a retryable error.
  */
@@ -124,20 +145,34 @@ export function isRetryableStatusCode(statusCode: number): boolean {
 /**
  * Handle and wrap OCI errors with additional context.
  */
-export function handleOCIError(error: unknown): OCIGenAIError {
-  // Return as-is if already wrapped
-  if (error instanceof OCIGenAIError) {
+export function handleOCIError(error: unknown): AISDKError {
+  if (AISDKError.isInstance(error)) {
     return error;
   }
 
-  // Extract status code if available
-  const statusCode = (error as { statusCode?: number })?.statusCode;
-  const retryable = statusCode ? isRetryableStatusCode(statusCode) : false;
+  if (error instanceof OCIGenAIError) {
+    return new APICallError({
+      message: error.message,
+      url: 'oci-genai',
+      requestBodyValues: undefined,
+      statusCode: error.statusCode,
+      responseHeaders: error.statusCode ? { status: String(error.statusCode) } : undefined,
+      responseBody: undefined,
+      cause: error.cause,
+      isRetryable: error.retryable,
+    });
+  }
 
-  // Extract original message
+  const statusCode =
+    (error as { statusCode?: number })?.statusCode ?? (error as { status?: number })?.status;
+  const retryable = statusCode ? isRetryableStatusCode(statusCode) : false;
+  const responseHeaders = (error as { responseHeaders?: Record<string, string> })?.responseHeaders;
+  const opcRequestId = (error as { opcRequestId?: string })?.opcRequestId;
+  const responseBody = (error as { responseBody?: string })?.responseBody;
+  const url = (error as { url?: string })?.url ?? 'oci-genai';
+
   let message = error instanceof Error ? error.message : String(error);
 
-  // Add contextual help based on status code
   if (statusCode === 401) {
     message += '\nCheck OCI authentication configuration.';
   } else if (statusCode === 403) {
@@ -148,5 +183,15 @@ export function handleOCIError(error: unknown): OCIGenAIError {
     message += '\nRate limit exceeded. Implement retry with backoff.';
   }
 
-  return new OCIGenAIError(message, statusCode, retryable);
+  return new APICallError({
+    message,
+    url,
+    requestBodyValues: undefined,
+    statusCode,
+    responseHeaders:
+      responseHeaders ?? (opcRequestId ? { 'opc-request-id': opcRequestId } : undefined),
+    responseBody,
+    cause: error,
+    isRetryable: retryable,
+  });
 }
