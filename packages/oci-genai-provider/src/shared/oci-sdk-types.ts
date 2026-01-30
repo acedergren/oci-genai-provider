@@ -74,10 +74,7 @@ export interface OCIThinkingConfig {
 /**
  * Creates a thinking configuration for Cohere models.
  */
-export function createThinkingConfig(
-  enabled: boolean,
-  tokenBudget?: number
-): OCIThinkingConfig {
+export function createThinkingConfig(enabled: boolean, tokenBudget?: number): OCIThinkingConfig {
   return {
     type: enabled ? 'ENABLED' : 'DISABLED',
     tokenBudget,
