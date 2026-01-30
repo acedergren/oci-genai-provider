@@ -3,6 +3,7 @@ import type {
   LanguageModelV3ToolChoice,
   LanguageModelV3ToolCall,
 } from '@ai-sdk/provider';
+import type { OCIApiFormat } from '../../shared/oci-sdk-types';
 
 /**
  * OCI GENERIC format tool definition (FunctionDefinition)
@@ -84,9 +85,9 @@ export type OCIToolCall = OCIFunctionCall | OCICohereToolCall;
  */
 export function convertToOCITools(
   tools: LanguageModelV3FunctionTool[],
-  apiFormat: 'GENERIC' | 'COHERE'
+  apiFormat: OCIApiFormat
 ): OCIToolDefinition[] {
-  if (apiFormat === 'COHERE') {
+  if (apiFormat === 'COHERE' || apiFormat === 'COHEREV2') {
     return tools.map((tool) => convertToCohereToolFormat(tool));
   }
   return tools.map((tool) => convertToGenericToolFormat(tool));
@@ -155,9 +156,9 @@ export function convertToOCIToolChoice(choice: LanguageModelV3ToolChoice): OCITo
  */
 export function convertFromOCIToolCalls(
   toolCalls: OCIToolCall[],
-  apiFormat: 'GENERIC' | 'COHERE'
+  apiFormat: OCIApiFormat
 ): LanguageModelV3ToolCall[] {
-  if (apiFormat === 'COHERE') {
+  if (apiFormat === 'COHERE' || apiFormat === 'COHEREV2') {
     return toolCalls.map((call, index) =>
       convertFromCohereToolCall(call as OCICohereToolCall, index)
     );
