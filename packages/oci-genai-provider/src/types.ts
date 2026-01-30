@@ -269,3 +269,6 @@ export interface OCIRerankingSettings extends OCIConfig {
   /** Include document text in response */
   returnDocuments?: boolean;
 }
+
+// Re-export OCIRealtimeSettings from the realtime module for convenience
+export type { OCIRealtimeSettings } from './realtime/types';

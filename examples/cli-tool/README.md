@@ -1,4 +1,4 @@
-# OCI GenAI CLI Tool
+# OCI TUI
 
 A simple command-line interface for chatting with OCI GenAI models.
 
@@ -54,6 +54,15 @@ pnpm dev --no-stream "Generate a haiku"
 - `meta.llama-3.1-70b-instruct`
 - `meta.llama-3.1-405b-instruct`
 
-## Learn More
+### Create Standalone Executable
+
+If you have [Bun](https://bun.sh) installed, you can create a single standalone binary:
+
+```bash
+pnpm bundle
+./oci-tui --help
+```
+
+This creates an `oci-tui` binary that includes all dependencies.
 
 - [OCI GenAI Provider Documentation](../../docs/getting-started/README.md)

@@ -1,6 +1,6 @@
 import { createParser, type EventSourceMessage } from 'eventsource-parser';
 import type { LanguageModelV3FinishReason } from '@ai-sdk/provider';
-import type { StreamPart, UnifiedFinishReason } from './types';
+import type { StreamPart, UnifiedFinishReason, FinishPart } from './types';
 
 const FINISH_REASON_MAP: Record<string, UnifiedFinishReason> = {
   STOP: 'stop',
@@ -80,6 +80,12 @@ export async function* parseSSEStream(
   const parts: StreamPart[] = [];
   let yieldedIndex = 0;
 
+  // Buffer for finish event to combine reason and usage
+  let lastFinishReason: UnifiedFinishReason = 'stop';
+  let lastRawFinishReason = 'STOP';
+  let lastUsage: FinishPart['usage'] = { promptTokens: 0, completionTokens: 0 };
+  let hasFinishOrUsage = false;
+
   const includeRawChunks = options?.includeRawChunks ?? false;
 
   const parser = createParser({
@@ -151,22 +157,30 @@ export async function* parseSSEStream(
           }
         }
 
-        // Check for finish
-        const finishReason = parsed.finishReason;
-        if (finishReason) {
-          const usage = parsed.usage;
-          const tokenDetails = usage?.completionTokensDetails;
-          parts.push({
-            type: 'finish',
-            finishReason: mapFinishReason(finishReason.toUpperCase()),
-            usage: {
-              promptTokens: usage?.promptTokens ?? 0,
-              completionTokens: usage?.completionTokens ?? 0,
-              reasoningTokens: tokenDetails?.reasoningTokens,
-              acceptedPredictionTokens: tokenDetails?.acceptedPredictionTokens,
-              rejectedPredictionTokens: tokenDetails?.rejectedPredictionTokens,
-            },
-          });
+        // Buffer finish and usage
+        if (parsed.finishReason || parsed.usage) {
+          hasFinishOrUsage = true;
+          if (parsed.finishReason) {
+            lastRawFinishReason = parsed.finishReason.toUpperCase();
+            lastFinishReason = FINISH_REASON_MAP[lastRawFinishReason] ?? 'stop';
+          }
+          if (parsed.usage) {
+            const usage = parsed.usage;
+            const tokenDetails = usage.completionTokensDetails;
+            lastUsage = {
+              promptTokens:
+                usage.promptTokens ?? (usage as any).promptTokenCount ?? lastUsage.promptTokens,
+              completionTokens:
+                usage.completionTokens ??
+                (usage as any).completionTokenCount ??
+                lastUsage.completionTokens,
+              reasoningTokens: tokenDetails?.reasoningTokens ?? lastUsage.reasoningTokens,
+              acceptedPredictionTokens:
+                tokenDetails?.acceptedPredictionTokens ?? lastUsage.acceptedPredictionTokens,
+              rejectedPredictionTokens:
+                tokenDetails?.rejectedPredictionTokens ?? lastUsage.rejectedPredictionTokens,
+            };
+          }
         }
       } catch {
         if (includeRawChunks) {
@@ -187,10 +201,22 @@ export async function* parseSSEStream(
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     parser.feed(decoder.decode(result.value, { stream: true }));
 
-    // Yield any parts that were parsed (O(1) per yield)
+    // Yield any parts that were parsed
     while (yieldedIndex < parts.length) {
       yield parts[yieldedIndex++];
     }
+  }
+
+  // Yield the combined finish event at the very end
+  if (hasFinishOrUsage) {
+    yield {
+      type: 'finish',
+      finishReason: {
+        unified: lastFinishReason,
+        raw: lastRawFinishReason,
+      },
+      usage: lastUsage,
+    };
   }
 
   // Yield any remaining parts

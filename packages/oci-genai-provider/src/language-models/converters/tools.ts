@@ -94,11 +94,18 @@ export function convertToOCITools(
 }
 
 function convertToGenericToolFormat(tool: LanguageModelV3FunctionTool): OCIFunctionDefinition {
+  const parameters = (tool.inputSchema as Record<string, unknown>) || {};
+
+  // Ensure the schema has a type 'object'
+  if (!parameters.type) {
+    parameters.type = 'object';
+  }
+
   return {
     type: 'FUNCTION',
     name: tool.name,
     description: tool.description ?? '',
-    parameters: tool.inputSchema as Record<string, unknown>,
+    parameters,
   };
 }
 
