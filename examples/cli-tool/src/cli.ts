@@ -5,6 +5,7 @@ import {
   getModelMetadata,
   supportsReasoning,
 } from '@acedergren/oci-genai-provider';
+import { startTui } from './tui.js';
 import { generateText, streamText, type LanguageModel, tool } from 'ai';
 import { z } from 'zod';
 import { execSync } from 'node:child_process';
@@ -102,14 +103,6 @@ function renderStatusBar(opts: any, lastUsage?: any, lastText?: string, pinned =
 // Configure logger
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
-  transport: {
-    target: 'pino-pretty',
-    options: {
-      colorize: true,
-      ignore: 'pid,hostname',
-      translateTime: 'SYS:standard',
-    },
-  },
 });
 
 // Handle graceful exit on Ctrl+C globally
@@ -232,6 +225,15 @@ program
   .description('Start an interactive chat session (REPL)')
   .action(async () => {
     await startRepl(resolveOptions(program.opts()));
+  });
+
+program
+  .command('tui')
+  .description('Start the TUI chat interface (experimental)')
+  .action(async () => {
+    const opts = resolveOptions(program.opts());
+    const model = getModel(opts);
+    await startTui(model, opts.region, opts.compartment, opts.reasoning);
   });
 
 program
