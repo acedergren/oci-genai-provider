@@ -33,12 +33,18 @@ describe('OCIProviderOptionsSchema', () => {
       }
     });
 
-    it('should accept valid servingMode', () => {
-      const modes = ['ON_DEMAND', 'DEDICATED'] as const;
-      for (const mode of modes) {
-        const result = OCIProviderOptionsSchema.safeParse({ servingMode: mode });
-        expect(result.success).toBe(true);
-      }
+    it('should accept valid servingMode object', () => {
+      const result = OCIProviderOptionsSchema.safeParse({
+        servingMode: { type: 'ON_DEMAND', modelId: 'cohere.command-r-plus' },
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept dedicated servingMode with endpointId', () => {
+      const result = OCIProviderOptionsSchema.safeParse({
+        servingMode: { type: 'DEDICATED', endpointId: 'ocid1.endpoint.oc1..aaaa' },
+      });
+      expect(result.success).toBe(true);
     });
 
     it('should accept valid endpoint URL', () => {
@@ -90,8 +96,15 @@ describe('OCIProviderOptionsSchema', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should reject invalid servingMode', () => {
-      const result = OCIProviderOptionsSchema.safeParse({ servingMode: 'HYBRID' });
+    it('should reject invalid servingMode type', () => {
+      const result = OCIProviderOptionsSchema.safeParse({
+        servingMode: { type: 'HYBRID' },
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('should reject servingMode as string', () => {
+      const result = OCIProviderOptionsSchema.safeParse({ servingMode: 'ON_DEMAND' });
       expect(result.success).toBe(false);
     });
 
@@ -157,7 +170,7 @@ describe('OCIProviderOptionsSchema', () => {
         reasoningEffort: 'high',
         thinking: true,
         tokenBudget: 2048,
-        servingMode: 'ON_DEMAND',
+        servingMode: { type: 'ON_DEMAND' },
       };
       expect(options.reasoningEffort).toBe('high');
     });
