@@ -271,6 +271,156 @@ describe('Message Conversion', () => {
     });
   });
 
+  describe('Tool Parts', () => {
+    it('should convert assistant message with tool-call part', () => {
+      const aiPrompt = [
+        {
+          role: 'assistant' as const,
+          content: [
+            {
+              type: 'tool-call' as const,
+              toolCallId: 'call_123',
+              toolName: 'get_weather',
+              input: { location: 'London' },
+            },
+          ],
+        },
+      ];
+
+      const result = convertToOCIMessages(aiPrompt);
+
+      expect(result[0]).toMatchObject({
+        role: 'ASSISTANT',
+        toolCalls: [
+          {
+            id: 'call_123',
+            type: 'FUNCTION',
+            function: {
+              name: 'get_weather',
+              arguments: '{"location":"London"}',
+            },
+          },
+        ],
+      });
+    });
+
+    it('should convert assistant message with string input in tool-call', () => {
+      const aiPrompt = [
+        {
+          role: 'assistant' as const,
+          content: [
+            {
+              type: 'tool-call' as const,
+              toolCallId: 'call_456',
+              toolName: 'search',
+              input: '{"query":"test"}',
+            },
+          ],
+        },
+      ];
+
+      const result = convertToOCIMessages(aiPrompt);
+
+      expect(result[0].toolCalls?.[0].function.arguments).toBe('{"query":"test"}');
+    });
+
+    it('should convert assistant message with text and tool-call parts', () => {
+      const aiPrompt = [
+        {
+          role: 'assistant' as const,
+          content: [
+            { type: 'text' as const, text: 'Let me check the weather.' },
+            {
+              type: 'tool-call' as const,
+              toolCallId: 'call_789',
+              toolName: 'get_weather',
+              input: { city: 'Tokyo' },
+            },
+          ],
+        },
+      ];
+
+      const result = convertToOCIMessages(aiPrompt);
+
+      expect(result[0].content).toHaveLength(1);
+      expect(result[0].content?.[0].text).toBe('Let me check the weather.');
+      expect(result[0].toolCalls).toHaveLength(1);
+      expect(result[0].toolCalls?.[0].function.name).toBe('get_weather');
+    });
+
+    it('should convert tool message with tool-result part', () => {
+      const aiPrompt = [
+        {
+          role: 'tool' as const,
+          content: [
+            {
+              type: 'tool-result' as const,
+              toolCallId: 'call_123',
+              toolName: 'get_weather',
+              output: { type: 'text' as const, value: '{"temp": 20, "unit": "celsius"}' },
+            },
+          ],
+        },
+      ];
+
+      const result = convertToOCIMessages(aiPrompt);
+
+      expect(result[0]).toMatchObject({
+        role: 'TOOL',
+        toolCallId: 'call_123',
+        content: [{ type: 'TEXT', text: '{"temp": 20, "unit": "celsius"}' }],
+      });
+    });
+
+    it('should convert multiple tool calls in one message', () => {
+      const aiPrompt = [
+        {
+          role: 'assistant' as const,
+          content: [
+            {
+              type: 'tool-call' as const,
+              toolCallId: 'call_1',
+              toolName: 'tool_a',
+              input: { x: 1 },
+            },
+            {
+              type: 'tool-call' as const,
+              toolCallId: 'call_2',
+              toolName: 'tool_b',
+              input: { y: 2 },
+            },
+          ],
+        },
+      ];
+
+      const result = convertToOCIMessages(aiPrompt);
+
+      expect(result[0].toolCalls).toHaveLength(2);
+      expect(result[0].toolCalls?.[0].id).toBe('call_1');
+      expect(result[0].toolCalls?.[1].id).toBe('call_2');
+    });
+
+    it('should handle undefined input in tool-call', () => {
+      const aiPrompt = [
+        {
+          role: 'assistant' as const,
+          content: [
+            {
+              type: 'tool-call' as const,
+              toolCallId: 'call_empty',
+              toolName: 'no_args_tool',
+              input: undefined,
+            },
+          ],
+        },
+      ];
+
+      const result = convertToOCIMessages(aiPrompt);
+
+      expect(result[0].toolCalls?.[0].function.arguments).toBe('{}');
+    });
+  });
+
   describe('Performance', () => {
     it('should convert messages with 100 parts in under 5ms', () => {
       // Create message with 100 parts (mix of text and non-text)
