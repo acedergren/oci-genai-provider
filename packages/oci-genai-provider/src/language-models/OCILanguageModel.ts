@@ -1,18 +1,18 @@
 import type {
   LanguageModelV3,
   LanguageModelV3CallOptions,
-  LanguageModelV3Content,
-  LanguageModelV3FunctionTool,
   LanguageModelV3GenerateResult,
   LanguageModelV3StreamPart,
   LanguageModelV3StreamResult,
   SharedV3Warning,
+  LanguageModelV3FinishReason,
+  LanguageModelV3Usage,
+  LanguageModelV3Content,
 } from '@ai-sdk/provider';
-import { InvalidResponseDataError, NoSuchModelError } from '@ai-sdk/provider';
+import { NoSuchModelError } from '@ai-sdk/provider';
 import {
   GenerativeAiInferenceClient,
   models as OCIModel,
-  responses as OCIResponse,
 } from 'oci-generativeaiinference';
 import { Region } from 'oci-common';
 import type { OCIConfig, RequestOptions } from '../types';
@@ -23,11 +23,9 @@ import { convertToCohereFormat } from './converters/cohere-messages';
 import {
   convertToOCITools,
   convertToOCIToolChoice,
-  convertFromOCIToolCalls,
   supportsToolCalling,
 } from './converters/tools';
-import type { OCIToolCall } from './converters/tools';
-import { mapFinishReason, parseSSEStream } from '../shared/streaming/sse-parser';
+import { parseSSEStream } from '../shared/streaming/sse-parser';
 import { createAuthProvider, getRegion, getCompartmentId } from '../auth/index.js';
 import { handleOCIError } from '../shared/errors/index.js';
 import { withRetry, withTimeout, isRetryableError } from '../shared/utils/index.js';
@@ -144,6 +142,83 @@ export class OCILanguageModel implements LanguageModelV3 {
   }
 
   async doGenerate(options: LanguageModelV3CallOptions): Promise<LanguageModelV3GenerateResult> {
+    const { stream, response, request } = await this.doStream(options);
+    const reader = stream.getReader();
+    const warnings: SharedV3Warning[] = [];
+    const content: LanguageModelV3Content[] = [];
+    let usage: LanguageModelV3Usage = {
+      inputTokens: {
+        total: 0,
+        noCache: undefined,
+        cacheRead: undefined,
+        cacheWrite: undefined,
+      },
+      outputTokens: {
+        total: 0,
+        text: undefined,
+        reasoning: undefined,
+      },
+    };
+    let finishReason: LanguageModelV3FinishReason = {
+      unified: 'other',
+      raw: 'initializing',
+    };
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        switch (value.type) {
+          case 'text-delta': {
+            const last = content[content.length - 1];
+            if (last?.type === 'text') {
+              last.text += value.delta;
+            } else {
+              content.push({ type: 'text', text: value.delta });
+            }
+            break;
+          }
+          case 'reasoning-delta': {
+            const last = content[content.length - 1];
+            if (last?.type === 'reasoning') {
+              last.text += value.delta;
+            } else {
+              content.push({ type: 'reasoning', text: value.delta });
+            }
+            break;
+          }
+          case 'tool-call':
+            content.push({
+              type: 'tool-call',
+              toolCallId: value.toolCallId,
+              toolName: value.toolName,
+              input: value.input,
+            });
+            break;
+          case 'finish':
+            finishReason = value.finishReason;
+            usage = value.usage;
+            break;
+          case 'error':
+            throw value.error;
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+
+    return {
+      content,
+      usage,
+      finishReason,
+      request,
+      response,
+      warnings,
+    };
+  }
+
+  async doStream(options: LanguageModelV3CallOptions): Promise<LanguageModelV3StreamResult> {
     const messages: OCIMessage[] = convertToOCIMessages(options.prompt);
     const ociOptions = getOCIProviderOptions(options.providerOptions);
     const client = await this.getClient(ociOptions?.endpoint);
@@ -177,7 +252,6 @@ export class OCILanguageModel implements LanguageModelV3 {
     }
 
     // Add reasoning model validation (matching doGenerate)
-    const modelSupportsReasoning = supportsReasoning(this.modelId);
     if (ociOptions?.reasoningEffort && !modelSupportsReasoning) {
       warnings.push({
         type: 'unsupported',
