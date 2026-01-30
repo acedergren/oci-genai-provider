@@ -5,6 +5,13 @@ export interface TextDeltaPart {
   textDelta: string;
 }
 
+export interface ToolCallPart {
+  type: 'tool-call';
+  toolCallId: string;
+  toolName: string;
+  input: string; // JSON stringified args
+}
+
 export interface FinishPart {
   type: 'finish';
   finishReason: LanguageModelV3FinishReason;
@@ -14,7 +21,12 @@ export interface FinishPart {
   };
 }
 
-export type StreamPart = TextDeltaPart | FinishPart;
+export interface RawPart {
+  type: 'raw';
+  rawValue: unknown;
+}
+
+export type StreamPart = TextDeltaPart | ToolCallPart | FinishPart | RawPart;
 
 /**
  * Unified finish reason values matching AI SDK v3 spec.
