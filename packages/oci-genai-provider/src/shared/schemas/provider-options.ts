@@ -43,16 +43,19 @@ export const OCIProviderOptionsSchema = z.object({
 
   /**
    * Serving mode for the model.
-   * ON_DEMAND: Pay-per-use pricing
-   * DEDICATED: Dedicated AI units with reserved capacity
+   * Object with type (ON_DEMAND/DEDICATED) and related IDs.
    */
-  servingMode: z.enum(['ON_DEMAND', 'DEDICATED']).optional().describe('Model serving mode'),
-
-  /**
-   * Endpoint ID for dedicated serving mode.
-   * Required when servingMode is DEDICATED.
-   */
-  endpointId: z.string().optional().describe('Endpoint ID for dedicated serving'),
+  servingMode: z
+    .object({
+      /** Serving type: ON_DEMAND or DEDICATED */
+      type: z.enum(['ON_DEMAND', 'DEDICATED']),
+      /** Model OCID for on-demand serving */
+      modelId: z.string().optional(),
+      /** Endpoint OCID for dedicated serving */
+      endpointId: z.string().optional(),
+    })
+    .optional()
+    .describe('Model serving mode configuration'),
 
   /**
    * Custom compartment ID to use for this request.
