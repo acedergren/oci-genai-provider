@@ -1,0 +1,55 @@
+---
+title: Chat Requests (ChatRequest + ChatDetails)
+tldr: OCI GenAI chat calls wrap ChatDetails, which includes compartment, serving mode, and a chatRequest (Generic/Cohere).
+business_value: Prevents request-shape bugs when switching models or streaming.
+complexity: medium
+last_verified: 2026-01-31
+stakeholder_relevant: true
+dependencies:
+  - "oci-generativeaiinference"
+---
+
+# Chat Requests (ChatRequest + ChatDetails)
+
+## TL;DR
+
+**What**: `ChatRequest` is the top‑level request passed to `client.chat(...)`.  
+**Why**: Most OCI 400 errors come from malformed `chatDetails.chatRequest` shapes.  
+**How**: Build `ChatDetails` with `compartmentId`, `servingMode`, and a model‑specific `chatRequest` (Generic or Cohere).  
+**Dependencies**: OCI TypeScript SDK (`oci-generativeaiinference`).
+
+## Request Layers
+
+1. **ChatRequest**
+   - Fields: `chatDetails`, optional `opcRequestId`, `opcRetryToken`, `retryConfiguration`.
+2. **ChatDetails**
+   - `compartmentId`: OCID for inference.
+   - `servingMode`: `OnDemandServingMode` or `DedicatedServingMode`.
+   - `chatRequest`: one of:
+     - `GenericChatRequest` (default for non‑Cohere models)
+     - `CohereChatRequest`
+     - `CohereChatRequestV2`
+
+## GenericChatRequest (key fields)
+
+Use for non‑Cohere models (Gemini, Llama, Grok, etc).
+
+- `apiFormat`: `"GENERIC"`
+- `messages`: array of `Message`
+  - Each message has `role` and `content` (array of `ChatContent`).
+- `isStream`: `true` to enable SSE streaming.
+- `streamOptions`: `StreamOptions` for usage chunk behavior.
+- Sampling/limits: `maxTokens`, `temperature`, `topP`, `topK`, `presencePenalty`, `frequencyPenalty`.
+- Tooling: `tools`, `toolChoice`, `isParallelToolCalls`
+- Structured output: `responseFormat` (JSON/Schema formats)
+- Reasoning: `reasoningEffort` (only supported for reasoning‑capable models)
+
+## Streaming Notes
+
+Set `isStream: true` and optionally set `streamOptions.isIncludeUsage` to receive a final usage chunk before `[DONE]`.
+
+## Common Pitfalls
+
+- **Wrong request type**: Using `GenericChatRequest` with Cohere models or vice‑versa.
+- **Unsupported fields**: Some models reject `tools`, `responseFormat`, or `reasoningEffort`.
+- **Token limits**: `maxTokens` is capped by the model; OCI returns 400 if exceeded.
