@@ -1,0 +1,66 @@
+---
+title: GenerativeAiInferenceClient
+tldr: Core TypeScript SDK client for OCI GenAI inference with region/endpoint handling and chat/generate APIs.
+business_value: Clarifies how the provider instantiates and targets OCI inference endpoints, reducing init/debug time.
+complexity: low
+last_verified: 2026-01-31
+stakeholder_relevant: true
+dependencies:
+  - "oci-generativeaiinference"
+---
+
+# GenerativeAiInferenceClient
+
+## TL;DR
+
+**What**: The OCI TypeScript SDK client used to call GenAI inference APIs.  
+**Why**: Provider initialization failures often trace back to auth, region, or endpoint configuration on this client.  
+**How**: Construct with an auth provider, set `region` (or `endpoint`), then call `chat`/`generateText`/`embedText`/`rerankText`.  
+**Dependencies**: OCI SDK (`oci-generativeaiinference`, `oci-common`).
+
+## Constructor
+
+```ts
+new GenerativeAiInferenceClient(params, clientConfiguration?)
+```
+
+- `params`: OCI auth params (e.g., `authenticationDetailsProvider`).
+- `clientConfiguration`: optional SDK client configuration.
+
+## Endpoint + Region
+
+- Default endpoint template:  
+  `https://inference.generativeai.{region}.oci.{secondLevelDomain}`
+- Set region via `client.region = Region.fromRegionId("eu-frankfurt-1")`.
+- You can override `client.endpoint` directly if needed.
+
+## Core Methods
+
+| Method | Purpose | Notes |
+| --- | --- | --- |
+| `chat` | Chat/completions | Uses `ChatRequest` with `ChatDetails` + `chatRequest` payload |
+| `generateText` | Text generation | Uses `GenerateTextRequest` with `GenerateTextDetails` + inference request |
+| `embedText` | Embeddings | Not used by language model flow, used by embedding provider |
+| `rerankText` | Reranking | Used by reranking provider |
+| `summarizeText` | Summarization | Not currently used by this repo |
+| `applyGuardrails` | Guardrails | Not currently used by this repo |
+
+## Minimal Initialization (Pseudo‑code)
+
+```ts
+import { GenerativeAiInferenceClient } from 'oci-generativeaiinference';
+import { Region } from 'oci-common';
+
+const client = new GenerativeAiInferenceClient({
+  authenticationDetailsProvider: authProvider,
+});
+
+client.region = Region.fromRegionId('eu-frankfurt-1');
+// Optional: client.endpoint = 'https://inference.generativeai.eu-frankfurt-1.oci.oraclecloud.com';
+```
+
+## Repo Usage Notes
+
+- Language model calls are routed through `client.chat(...)`.
+- Streaming uses `chatRequest.isStream = true` and consumes SSE events.
+- Errors like “Invalid input” typically indicate a request shape mismatch or invalid parameter bounds (e.g., `maxTokens`, `topK`).

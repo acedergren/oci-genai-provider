@@ -1,0 +1,41 @@
+---
+title: OCI TypeScript GenAI SDK (Reference)
+tldr: Practical map of OCI GenAI TypeScript SDK chat/generate/streaming primitives used by this repo.
+business_value: Accelerates debugging and onboarding by consolidating SDK shapes, limits, and usage patterns.
+complexity: medium
+last_verified: 2026-01-31
+stakeholder_relevant: true
+dependencies:
+  - "@acedergren/oci-genai-provider"
+  - "@acedergren/opencode-oci-genai"
+---
+
+# OCI TypeScript GenAI SDK (Reference)
+
+## TL;DR
+
+**What**: A focused guide to OCI TypeScript SDK inference primitives (chat, generate, streaming, responses) relevant to this repo.  
+**Why**: We need a single, accurate map of SDK request/response shapes to debug OpenCode init and streaming failures.  
+**How**: Summarizes the SDK’s GenerativeAiInferenceClient, request models, and streaming options.  
+**Dependencies**: OCI TypeScript SDK, provider code in `packages/oci-genai-provider`.
+
+## Sections
+
+- `inference-client.mdx` — Client construction, endpoints, and core methods
+- `chat-requests.mdx` — ChatRequest + ChatDetails + GenericChatRequest structure
+- `generate-text.mdx` — GenerateTextRequest + Llama/Cohere inference requests
+- `streaming.mdx` — SSE behavior, `isStream`, and `StreamOptions`
+- `repo-usage.mdx` — Where and how this repo calls the SDK
+
+## Key Concepts (Quick Map)
+
+- **Client**: `GenerativeAiInferenceClient` exposes `chat`, `generateText`, `embedText`, `rerankText`, and `summarizeText`.
+- **ChatRequest**: wraps `ChatDetails`, which contains `compartmentId`, `servingMode`, and `chatRequest`.
+- **ChatDetails.chatRequest**: one of `GenericChatRequest`, `CohereChatRequest`, or `CohereChatRequestV2`.
+- **Streaming**: `GenericChatRequest.isStream=true` enables server‑sent events; `StreamOptions.isIncludeUsage` adds a final usage chunk before `[DONE]`.
+- **GenerateText**: `GenerateTextDetails.inferenceRequest` is `LlamaLlmInferenceRequest` or `CohereLlmInferenceRequest`, and supports `isStream` for SSE.
+
+## Known Debugging Focus
+
+- OpenCode “small model” selection must point to a model available in the configured region.
+- OCI chat/generate requests validate `maxTokens` and `topK` per model; use conservative limits when unsure.
