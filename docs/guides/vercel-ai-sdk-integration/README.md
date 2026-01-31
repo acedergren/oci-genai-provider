@@ -52,7 +52,7 @@ for await (const chunk of stream.textStream) {
 import { oci } from '@acedergren/oci-genai-provider';
 
 // Use default OCI config (~/.oci/config)
-const model = oci('xai.grok-4-maverick');
+const model = oci('xai.grok-4');
 
 // Or specify configuration
 const model = oci('cohere.command-r-plus', {
@@ -75,7 +75,7 @@ const oci = createOCI({
 });
 
 // Use with different models
-const grokModel = oci('xai.grok-4-maverick');
+const grokModel = oci('xai.grok-4');
 const llamaModel = oci('meta.llama-3.3-70b-instruct');
 ```
 
@@ -116,7 +116,7 @@ import { oci } from '@acedergren/oci-genai-provider';
 import { generateText } from 'ai';
 
 const conversation = await generateText({
-  model: oci('xai.grok-4-maverick'),
+  model: oci('xai.grok-4'),
   messages: [
     { role: 'user', content: 'Hello!' },
     { role: 'assistant', content: 'Hi! How can I help you today?' },
@@ -196,7 +196,7 @@ app.post('/api/chat', async (req, res) => {
   const { messages } = req.body;
 
   const result = streamText({
-    model: oci('xai.grok-4-maverick'),
+    model: oci('xai.grok-4'),
     messages,
   });
 
@@ -251,11 +251,11 @@ const model = oci('cohere.command-r-plus', {
 ```typescript
 // Good: Create provider once, reuse for multiple models
 const oci = createOCI({ region: 'eu-frankfurt-1' });
-const model1 = oci('xai.grok-4-maverick');
+const model1 = oci('xai.grok-4');
 const model2 = oci('cohere.command-r-plus');
 
 // Bad: Recreate provider for each model
-const model1 = oci('xai.grok-4-maverick', { region: 'eu-frankfurt-1' });
+const model1 = oci('xai.grok-4', { region: 'us-chicago-1' });
 const model2 = oci('cohere.command-r-plus', { region: 'eu-frankfurt-1' });
 ```
 
@@ -297,7 +297,7 @@ for await (const chunk of stream.textStream) {
 const fastModel = oci('google.gemini-2.5-flash');
 
 // Powerful models for complex tasks
-const powerfulModel = oci('xai.grok-4-maverick');
+const powerfulModel = oci('xai.grok-4');
 
 // Cost-effective for high volume
 const economicalModel = oci('meta.llama-3.3-70b-instruct');

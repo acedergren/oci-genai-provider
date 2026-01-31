@@ -60,6 +60,7 @@ export class GenericChatRequest extends BaseChatRequest {
   reasoningEffort?: GenericChatRequest.ReasoningEffort;
 }
 
+/* eslint-disable no-redeclare */
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace GenericChatRequest {
   export enum ReasoningEffort {
@@ -89,6 +90,7 @@ export namespace CohereThinkingV2 {
     Disabled = 'DISABLED',
   }
 }
+/* eslint-enable no-redeclare */
 
 // Export models namespace to match SDK structure
 // This allows imports like: import { models as OCIModel } from 'oci-generativeaiinference'

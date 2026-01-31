@@ -1,4 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
+import { APICallError } from '@ai-sdk/provider';
 import { OCIGenAIError, isRetryableStatusCode, handleOCIError } from '../shared/errors';
 
 describe('Error Handling', () => {
@@ -60,6 +61,7 @@ describe('Error Handling', () => {
       const rawError = { message: 'Unauthorized', statusCode: 401 };
       const error = handleOCIError(rawError);
       expect(error.message).toContain('authentication');
+      expect(APICallError.isInstance(error)).toBe(true);
     });
 
     it('should add IAM context to 403 errors', () => {
@@ -84,34 +86,37 @@ describe('Error Handling', () => {
       const rawError = new Error('Original error message');
       const error = handleOCIError(rawError);
       expect(error.message).toContain('Original error message');
+      expect(APICallError.isInstance(error)).toBe(true);
     });
 
     it('should wrap non-OCI errors', () => {
       const error = new Error('Network timeout');
       const wrapped = handleOCIError(error);
-      expect(wrapped).toBeInstanceOf(OCIGenAIError);
+      expect(APICallError.isInstance(wrapped)).toBe(true);
       expect(wrapped.message).toContain('timeout');
     });
   });
 
   describe('Error Integration', () => {
-    it('should return OCIGenAIError if already wrapped', () => {
+    it('should convert OCIGenAIError to APICallError', () => {
       const original = new OCIGenAIError('Already wrapped', 500, true);
       const result = handleOCIError(original);
-      expect(result).toBe(original);
+      expect(APICallError.isInstance(result)).toBe(true);
     });
 
     it('should set retryable based on status code', () => {
       const rawError = { message: 'Server error', statusCode: 503 };
       const error = handleOCIError(rawError);
-      expect(error.retryable).toBe(true);
+      expect(APICallError.isInstance(error)).toBe(true);
+      expect((error as APICallError).isRetryable).toBe(true);
     });
 
     it('should preserve status code in wrapped error', () => {
       const rawError = { message: 'Forbidden', statusCode: 403 };
       const wrapped = handleOCIError(rawError);
-      expect(wrapped.statusCode).toBe(403);
-      expect(wrapped.retryable).toBe(false);
+      expect(APICallError.isInstance(wrapped)).toBe(true);
+      expect((wrapped as APICallError).statusCode).toBe(403);
+      expect((wrapped as APICallError).isRetryable).toBe(false);
     });
   });
 });

@@ -644,7 +644,7 @@ File: `examples/chatbot-demo/src/routes/+page.svelte`
 
   const models = [
     { value: 'cohere.command-r-plus', label: 'Cohere Command R+' },
-    { value: 'cohere.command-r', label: 'Cohere Command R' },
+    { value: 'cohere.command-r-08-2024', label: 'Cohere Command R' },
     { value: 'meta.llama-3.1-70b-instruct', label: 'Llama 3.1 70B' },
     { value: 'meta.llama-3.1-405b-instruct', label: 'Llama 3.1 405B' },
   ];

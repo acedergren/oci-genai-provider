@@ -11,10 +11,9 @@ name: AI Code Review
 on: [pull_request]
 
 jobs:
-  review:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+review:
+runs-on: ubuntu-latest
+steps: - uses: actions/checkout@v3
 
       - name: Setup OCI
         run: |
@@ -27,6 +26,7 @@ jobs:
           node review.js
         env:
           OCI_REGION: eu-frankfurt-1
+
 \`\`\`
 
 ## Step 2: Review Script
@@ -40,13 +40,13 @@ import { execFileSync } from 'child_process';
 
 const oci = createOCI({ region: 'eu-frankfurt-1' });
 
-const diff = execFileSync('git', ['diff', 'HEAD~1'], 
-  { encoding: 'utf-8' }
+const diff = execFileSync('git', ['diff', 'HEAD~1'],
+{ encoding: 'utf-8' }
 );
 
 const { text } = await generateText({
-  model: oci('xai.grok-4-maverick'),
-  prompt: \`Review this code:\n\${diff}\`
+model: oci('xai.grok-4'),
+prompt: \`Review this code:\n\${diff}\`
 });
 
 console.log(text);

@@ -253,7 +253,7 @@ describe('OCIProvider', () => {
 
   it('should merge provider config with model-specific settings', () => {
     const provider = new OCIProvider({ region: 'eu-frankfurt-1' });
-    const model = provider.languageModel('cohere.command-r', {
+    const model = provider.languageModel('cohere.command-r-08-2024', {
       region: 'us-ashburn-1', // Override
       requestOptions: { timeoutMs: 60000 },
     });
@@ -508,9 +508,9 @@ describe('oci default instance', () => {
   });
 
   it('should create language models from default instance', () => {
-    const model = oci.languageModel('cohere.command-r');
+    const model = oci.languageModel('cohere.command-r-08-2024');
     expect(model).toBeDefined();
-    expect(model.modelId).toBe('cohere.command-r');
+    expect(model.modelId).toBe('cohere.command-r-08-2024');
   });
 });
 ```

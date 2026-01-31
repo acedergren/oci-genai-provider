@@ -107,16 +107,32 @@ export async function waitForCondition(
 }
 
 /**
- * Create a mock streaming response
+ * Create a mock streaming response in the 2025+ OCI format
  */
 export function createMockStreamChunks(texts: string[]): string[] {
   return texts.map(
     (text) =>
       `data: ${JSON.stringify({
-        chatResponse: { text },
-        finishReason: null,
+        message: {
+          content: [{ type: 'TEXT', text }],
+        },
       })}\n\n`
   );
+}
+
+/**
+ * Create a ReadableStream from string chunks
+ */
+export function createReadableStream(chunks: string[]): ReadableStream<Uint8Array> {
+  const encoder = new TextEncoder();
+  return new ReadableStream({
+    async start(controller) {
+      for (const chunk of chunks) {
+        controller.enqueue(encoder.encode(chunk));
+      }
+      controller.close();
+    },
+  });
 }
 
 /**

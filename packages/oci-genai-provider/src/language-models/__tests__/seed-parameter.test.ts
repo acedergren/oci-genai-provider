@@ -2,6 +2,7 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { OCILanguageModel } from '../OCILanguageModel';
 import type { AuthenticationDetailsProvider } from 'oci-common';
 import type { OCIConfig } from '../../types';
+import { createMockStreamChunks, createReadableStream } from '../../__tests__/utils/test-helpers';
 
 // Mock functions
 const mockAuthProviderGetKeyId = jest.fn(() =>
@@ -68,17 +69,20 @@ describe('OCILanguageModel - seed parameter', () => {
     mockGetRegion.mockReturnValue('eu-frankfurt-1');
     mockGetCompartmentId.mockReturnValue('ocid1.compartment.oc1..test');
     mockFromRegionId.mockReturnValue({ regionId: 'eu-frankfurt-1' });
-    mockChat.mockResolvedValue({
-      chatResponse: {
-        chatChoice: [
-          {
-            message: { content: [{ text: 'Test response' }] },
-            finishReason: 'STOP',
-          },
-        ],
-        usage: { promptTokens: 15, completionTokens: 10 },
+    mockChat.mockImplementation(async () => ({
+      body: createReadableStream([
+        ...createMockStreamChunks(['Generated response']),
+        `data: ${JSON.stringify({
+          finishReason: 'STOP',
+          usage: { promptTokens: 15, completionTokens: 10 },
+        })}
+
+`,
+      ]),
+      headers: {
+        entries: () => new Map<string, string>().entries(),
       },
-    });
+    }));
   });
 
   it('should pass seed parameter in non-streaming requests', async () => {

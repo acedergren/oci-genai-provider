@@ -128,7 +128,9 @@ describe('OCIProviderOptionsSchema', () => {
     });
 
     it('should throw OCIValidationError for invalid options', () => {
-      expect(() => parseProviderOptions({ reasoningEffort: 'invalid' })).toThrow(OCIValidationError);
+      expect(() => parseProviderOptions({ reasoningEffort: 'invalid' })).toThrow(
+        OCIValidationError
+      );
     });
 
     it('should include error details in OCIValidationError', () => {

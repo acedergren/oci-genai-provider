@@ -1,7 +1,9 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { APICallError, NoSuchModelError } from '@ai-sdk/provider';
 import { OCILanguageModel } from '../OCILanguageModel';
 import type { AuthenticationDetailsProvider } from 'oci-common';
 import type { OCIConfig } from '../../types';
+import { createMockStreamChunks, createReadableStream } from '../../__tests__/utils/test-helpers';
 
 // Mock functions that will be accessible in mocks
 const mockAuthProviderGetKeyId = jest.fn(() =>
@@ -69,17 +71,18 @@ describe('OCILanguageModel', () => {
     mockGetRegion.mockReturnValue('eu-frankfurt-1');
     mockGetCompartmentId.mockReturnValue('ocid1.compartment.oc1..test');
     mockFromRegionId.mockReturnValue({ regionId: 'eu-frankfurt-1' });
-    mockChat.mockResolvedValue({
-      chatResponse: {
-        chatChoice: [
-          {
-            message: { content: [{ text: 'Generated response' }] },
-            finishReason: 'STOP',
-          },
-        ],
-        usage: { promptTokens: 15, completionTokens: 10, totalTokens: 25 },
+    mockChat.mockImplementation(async () => ({
+      body: createReadableStream([
+        ...createMockStreamChunks(['Generated response']),
+        `data: ${JSON.stringify({
+          finishReason: 'STOP',
+          usage: { promptTokens: 15, completionTokens: 10 },
+        })}\n\n`,
+      ]),
+      headers: {
+        entries: () => new Map<string, string>().entries(),
       },
-    });
+    }));
   });
 
   describe('Authentication', () => {
@@ -173,12 +176,12 @@ describe('OCILanguageModel', () => {
     });
 
     it('should throw error for invalid model ID', () => {
-      expect(() => new OCILanguageModel('invalid.model', mockConfig)).toThrow('Invalid model ID');
+      expect(() => new OCILanguageModel('invalid.model', mockConfig)).toThrow(NoSuchModelError);
     });
 
     it('should have correct specification version', () => {
       const model = new OCILanguageModel('cohere.command-r-plus', mockConfig);
-      expect(model.specificationVersion).toBe('V3');
+      expect(model.specificationVersion).toBe('v3');
     });
 
     it('should have correct provider identifier', () => {
@@ -293,7 +296,7 @@ describe('OCILanguageModel', () => {
   });
 
   describe('Error handling', () => {
-    it('should wrap 401 errors with OCIGenAIError and authentication context', async () => {
+    it('should wrap 401 errors with APICallError and authentication context', async () => {
       const model = new OCILanguageModel('cohere.command-r-plus', mockConfig);
 
       // Mock API to throw 401 error
@@ -309,8 +312,8 @@ describe('OCILanguageModel', () => {
         await model.doGenerate(options);
         throw new Error('Expected error to be thrown');
       } catch (error) {
-        expect(error).toHaveProperty('name', 'OCIGenAIError');
-        expect(error).toHaveProperty('statusCode', 401);
+        expect(APICallError.isInstance(error)).toBe(true);
+        expect((error as APICallError).statusCode).toBe(401);
         expect(error).toHaveProperty('message');
         expect((error as Error).message).toContain('authentication');
       }
@@ -332,13 +335,13 @@ describe('OCILanguageModel', () => {
         await model.doGenerate(options);
         throw new Error('Expected error to be thrown');
       } catch (error) {
-        expect(error).toHaveProperty('name', 'OCIGenAIError');
-        expect(error).toHaveProperty('statusCode', 429);
-        expect(error).toHaveProperty('retryable', true);
+        expect(APICallError.isInstance(error)).toBe(true);
+        expect((error as APICallError).statusCode).toBe(429);
+        expect((error as APICallError).isRetryable).toBe(true);
       }
     });
 
-    it('should wrap streaming errors with OCIGenAIError', async () => {
+    it('should wrap streaming errors with APICallError', async () => {
       const model = new OCILanguageModel('cohere.command-r-plus', mockConfig);
 
       // Mock API to throw 500 error
@@ -357,8 +360,8 @@ describe('OCILanguageModel', () => {
         await reader.read();
         throw new Error('Expected error to be thrown');
       } catch (error) {
-        expect(error).toHaveProperty('name', 'OCIGenAIError');
-        expect(error).toHaveProperty('statusCode', 500);
+        expect(APICallError.isInstance(error)).toBe(true);
+        expect((error as APICallError).statusCode).toBe(500);
       }
     });
   });

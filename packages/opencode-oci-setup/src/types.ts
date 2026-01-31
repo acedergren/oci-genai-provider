@@ -53,7 +53,7 @@ export interface SetupContext {
  * Coding-optimized model settings
  */
 export const CODING_SETTINGS = {
-  temperature: 0.2,      // More deterministic, consistent code
-  maxTokens: 8192,       // Support longer code outputs
+  temperature: 0.2, // More deterministic, consistent code
+  maxTokens: 8192, // Support longer code outputs
   frequencyPenalty: 0.1, // Reduce repetitive patterns
 } as const;

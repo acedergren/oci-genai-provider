@@ -5,10 +5,10 @@ import { DefaultChatTransport } from 'ai';
 import { useState, useMemo, type FormEvent } from 'react';
 
 const MODELS = [
-  { id: 'meta.llama-3.3-70b-instruct', name: 'Llama 3.3 70B' },
-  { id: 'cohere.command-plus-latest', name: 'Command R+ Latest' },
-  { id: 'cohere.command-a-03-2025', name: 'Command A' },
-  { id: 'google.gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
+  { id: 'meta.llama-3.3-70b-instruct', name: 'Llama 3.3 70B (General Purpose)' },
+  { id: 'cohere.command-r-plus', name: 'Command R+ (RAG Specialized)' },
+  { id: 'xai.grok-4', name: 'Grok 4 (Advanced Reasoning)' },
+  { id: 'google.gemini-2.5-flash', name: 'Gemini 2.5 Flash (Multimodal)' },
 ];
 
 export default function Chat() {

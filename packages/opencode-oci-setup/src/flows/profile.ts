@@ -44,7 +44,7 @@ export async function checkExistingSetup(
   // Parse existing config
   let existingConfig: Record<string, unknown> | undefined;
   try {
-    existingConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    existingConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8')) as Record<string, unknown>;
   } catch {
     // Invalid JSON, treat as fresh
     return { mode: 'fresh' };
@@ -177,7 +177,7 @@ async function handleExistingConfig(
  * Handle missing OCI config - offer setup options
  */
 async function handleMissingConfig(
-  options: CLIOptions,
+  _options: CLIOptions,
   log: Logger
 ): Promise<OCIProfile | undefined> {
   log.log(chalk.yellow('⚠️  OCI configuration not found at ~/.oci/config\n'));
@@ -238,7 +238,8 @@ async function manualConfigurationFlow(log: Logger): Promise<OCIProfile | undefi
     message: 'Enter your User OCID:',
     validate: (value) => {
       if (!value) return 'User OCID is required';
-      if (!isValidOCID(value, 'user')) return 'Invalid User OCID format (should start with ocid1.user.)';
+      if (!isValidOCID(value, 'user'))
+        return 'Invalid User OCID format (should start with ocid1.user.)';
       return true;
     },
   });

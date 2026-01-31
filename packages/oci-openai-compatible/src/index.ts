@@ -28,12 +28,7 @@
 export { createOCIOpenAI } from './client';
 
 // Type exports
-export type {
-  OCIOpenAIConfig,
-  OCIRegion,
-  OCIAuthMethod,
-  OCIModelId,
-} from './types';
+export type { OCIOpenAIConfig, OCIRegion, OCIAuthMethod, OCIModelId } from './types';
 
 // Constants
 export { REGION_ENDPOINTS, OCI_OPENAI_API_VERSION } from './types';
@@ -44,7 +39,6 @@ export { createOCIAuthHeaders, getCompartmentId } from './auth';
 
 // Re-export factory as named export for default instance
 import { createOCIOpenAI } from './client';
-import type { OCIRegion } from './types';
 import { isValidRegion } from './types';
 
 // Export validation helper
@@ -56,9 +50,7 @@ let _defaultInstance: ReturnType<typeof createOCIOpenAI> | null = null;
 function getDefaultInstance(): ReturnType<typeof createOCIOpenAI> {
   if (!_defaultInstance) {
     _defaultInstance = createOCIOpenAI({
-      region: isValidRegion(process.env.OCI_REGION)
-        ? (process.env.OCI_REGION as OCIRegion)
-        : 'us-ashburn-1',
+      region: isValidRegion(process.env.OCI_REGION) ? process.env.OCI_REGION : 'us-ashburn-1',
       apiKey: process.env.OCI_API_KEY,
       compartmentId: process.env.OCI_COMPARTMENT_ID,
     });
@@ -86,7 +78,7 @@ function getDefaultInstance(): ReturnType<typeof createOCIOpenAI> {
  * ```
  */
 export const ociOpenAI = new Proxy({} as ReturnType<typeof createOCIOpenAI>, {
-  get(_, prop) {
+  get(_, prop): unknown {
     return getDefaultInstance()[prop as keyof ReturnType<typeof createOCIOpenAI>];
   },
 });

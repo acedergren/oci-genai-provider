@@ -664,7 +664,7 @@ describe('Language Models Integration', () => {
     });
 
     it('should apply model-specific settings', () => {
-      const model = provider.languageModel('cohere.command-r', {
+      const model = provider.languageModel('cohere.command-r-08-2024', {
         region: 'us-ashburn-1',
         requestOptions: { timeoutMs: 30000 },
       });
@@ -683,7 +683,7 @@ describe('Language Models Integration', () => {
     it('should support all Cohere models', () => {
       const cohereModels = [
         'cohere.command-r-plus',
-        'cohere.command-r',
+        'cohere.command-r-08-2024',
         'cohere.command-r-plus-08-2024',
       ];
 
@@ -696,7 +696,7 @@ describe('Language Models Integration', () => {
     it('should support all Meta Llama models', () => {
       const llamaModels = [
         'meta.llama-3.3-70b',
-        'meta.llama-3.1-405b',
+        'meta.llama-3.1-405b-instruct',
         'meta.llama-3.1-70b',
       ];
 
@@ -1000,7 +1000,7 @@ describe('E2E: Complete Workflow', () => {
     expect(transcriptionModel).toBeDefined();
 
     // 2. Language model (text → text)
-    const languageModel = provider.languageModel('cohere.command-r');
+    const languageModel = provider.languageModel('cohere.command-r-08-2024');
     expect(languageModel).toBeDefined();
 
     // 3. Speech synthesis (text → audio)
@@ -1508,12 +1508,12 @@ export const COMMON_SCENARIOS = {
     language: {
       cohere: [
         'cohere.command-r-plus',
-        'cohere.command-r',
+        'cohere.command-r-08-2024',
         'cohere.command-r-plus-08-2024',
       ],
       meta: [
         'meta.llama-3.3-70b',
-        'meta.llama-3.1-405b',
+        'meta.llama-3.1-405b-instruct',
         'meta.llama-3.1-70b',
       ],
     },

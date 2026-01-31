@@ -52,12 +52,12 @@ npx @acedergren/opencode-oci-setup \
 
 ### Options
 
-| Option | Description |
-|--------|-------------|
-| `-p, --profile <name>` | OCI profile name from `~/.oci/config` |
-| `-c, --compartment <ocid>` | Compartment OCID for API calls |
-| `-y, --yes` | Skip confirmations |
-| `-q, --quiet` | Minimal output |
+| Option                     | Description                           |
+| -------------------------- | ------------------------------------- |
+| `-p, --profile <name>`     | OCI profile name from `~/.oci/config` |
+| `-c, --compartment <ocid>` | Compartment OCID for API calls        |
+| `-y, --yes`                | Skip confirmations                    |
+| `-q, --quiet`              | Minimal output                        |
 
 ## Setup Flows
 
@@ -105,15 +105,19 @@ If you don't have OCI CLI installed:
 ## Finding Your OCIDs
 
 ### User OCID
+
 OCI Console → Identity → Users → [Your User] → OCID
 
 ### Tenancy OCID
+
 OCI Console → Administration → Tenancy Details → OCID
 
 ### Compartment OCID
+
 OCI Console → Identity → Compartments → [Compartment] → OCID
 
 ### API Key Fingerprint
+
 OCI Console → Identity → Users → [Your User] → API Keys → Fingerprint
 
 ## Output
@@ -132,8 +136,8 @@ The wizard generates `~/.config/opencode/opencode.json`:
         "configProfile": "FRANKFURT"
       },
       "models": {
-        "xai.grok-4-maverick": {
-          "name": "Grok 4 Maverick",
+        "xai.grok-4": {
+          "name": "Grok 4",
           "limit": { "context": 131072, "output": 8192 }
         }
       }

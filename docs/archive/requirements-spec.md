@@ -24,6 +24,7 @@ OpenCode → AI SDK v6 → OCI GenAI Provider → OCI TypeScript SDK → OCI Gen
 ```
 
 **Components:**
+
 1. **Provider Factory** (`createOCIGenAI`) - Initializes provider with auth
 2. **Chat Model** (`OCIGenAIChatModel`) - Implements LanguageModelV3
 3. **Authentication Layer** - Cascading auth (config → instance → resource principal)
@@ -33,11 +34,13 @@ OpenCode → AI SDK v6 → OCI GenAI Provider → OCI TypeScript SDK → OCI Gen
 ### 1.2 Technology Stack
 
 **Runtime:**
+
 - Node.js 20+ (OpenCode uses Bun, but provider runs in Node context)
 - TypeScript 5.9+
 - Package manager: pnpm
 
 **Core Dependencies:**
+
 ```json
 {
   "@ai-sdk/provider": "^3.0.2",
@@ -50,6 +53,7 @@ OpenCode → AI SDK v6 → OCI GenAI Provider → OCI TypeScript SDK → OCI Gen
 ```
 
 **Peer Dependencies:**
+
 ```json
 {
   "ai": "^6.0.0"
@@ -63,36 +67,42 @@ OpenCode → AI SDK v6 → OCI GenAI Provider → OCI TypeScript SDK → OCI Gen
 ### 2.1 Available Models (as of Jan 2026)
 
 **xAI Grok Models:**
-- `xai.grok-4-maverick` - Latest flagship
-- `xai.grok-4-scout` - Optimized variant
+
+- `xai.grok-4` - Latest flagship
+- `xai.grok-4-fast-reasoning` - Optimized variant
 - `xai.grok-3` (70B) - Previous generation
 - `xai.grok-3-mini` - Lightweight
 
 **Meta Llama Models:**
+
 - `meta.llama-3.3-70b-instruct` - **Supports fine-tuning**
-- `meta.llama-3.2-90b-vision` - Vision capable
-- `meta.llama-3.2-11b-vision` - Smaller vision model
-- `meta.llama-3.1-405b` - Largest context
+- `meta.llama-3.2-90b-vision-instruct` - Vision capable
+- `meta.llama-3.2-11b-vision-instruct` - Smaller vision model
+- `meta.llama-3.1-405b-instruct` - Largest context
 - `meta.llama-3-70b-instruct` - Production stable
 
 **Cohere Command Models:**
+
 - `cohere.command-a-reasoning` - Reasoning optimized
 - `cohere.command-a-vision` - Vision capable
-- `cohere.command-a` - General purpose
+- `cohere.command-a-03-2025` - General purpose
 - `cohere.command-r-08-2024` - Latest R series
 - `cohere.command-r-plus-08-2024` - Extended capabilities
 
 **Google Gemini Models:**
+
 - `google.gemini-2.5-pro` - Flagship
 - `google.gemini-2.5-flash` - Fast inference
 - `google.gemini-2.5-flash-lite` - Lightweight
 
 **OpenAI gpt-oss Models:**
+
 - Reasoning and agentic task optimized
 
 ### 2.2 Deployment Modes
 
 **On-Demand Serving:**
+
 - **Infrastructure**: Shared multi-tenant
 - **Pricing**: Pay-per-transaction (tokens)
 - **Availability**: Instant access
@@ -100,6 +110,7 @@ OpenCode → AI SDK v6 → OCI GenAI Provider → OCI TypeScript SDK → OCI Gen
 - **Limitations**: Subject to dynamic throttling
 
 **Dedicated AI Clusters:**
+
 - **Infrastructure**: Isolated single-tenant compute
 - **Pricing**: Per unit-hour
 - **Availability**: Requires cluster provisioning
@@ -110,6 +121,7 @@ OpenCode → AI SDK v6 → OCI GenAI Provider → OCI TypeScript SDK → OCI Gen
 **Important (2026):** All on-demand text generation/summarization API models have been retired. Use the chat API instead.
 
 **Provider Implications:**
+
 - Support both modes via `servingMode.servingType`
 - On-demand: just `modelId`
 - Dedicated: requires `modelId` + `endpointId`
@@ -125,6 +137,7 @@ OpenCode → AI SDK v6 → OCI GenAI Provider → OCI TypeScript SDK → OCI Gen
 ### 2.4 Regional Availability
 
 **Available Regions (10 total):**
+
 - US Midwest (Chicago) - `us-chicago-1`
 - US East (Ashburn) - `us-ashburn-1`
 - US West (Phoenix) - `us-phoenix-1`
@@ -138,6 +151,7 @@ OpenCode → AI SDK v6 → OCI GenAI Provider → OCI TypeScript SDK → OCI Gen
 - Brazil East (Sao Paulo) - `sa-saopaulo-1`
 
 **Endpoint Format:**
+
 ```
 https://inference.generativeai.{region}.oci.oraclecloud.com
 ```
@@ -145,12 +159,14 @@ https://inference.generativeai.{region}.oci.oraclecloud.com
 **Note:** Different regions for EU sovereign cloud use `.oci.oraclecloud.eu` domain.
 
 **Model Availability Across Regions:**
+
 - ✅ **All pretrained models available in ALL regions** (as of Jan 2026)
 - Llama 3.3 70B, Llama 3.2 Vision (90B/11B), Grok models, Cohere, Gemini - no region restrictions
 - **No model-to-region mapping needed** in provider implementation
 - Exception: Dedicated AI clusters are region-specific infrastructure resources
 
 **Provider Simplification:**
+
 - User can use any model in their configured region
 - No need for model availability lookup tables
 - Region only affects endpoint URL, not model access
@@ -162,11 +178,13 @@ https://inference.generativeai.{region}.oci.oraclecloud.com
 ### 3.1 Authentication Methods (Priority Order)
 
 **1. Config File Authentication** (Recommended for dev)
+
 - Location: `~/.oci/config`
 - Profile: `DEFAULT` or custom
 - Implementation: `ConfigFileAuthenticationDetailsProvider`
 
 **Config File Format:**
+
 ```ini
 [DEFAULT]
 user=ocid1.user.oc1..<unique_id>
@@ -177,26 +195,30 @@ region=us-ashburn-1
 ```
 
 **TypeScript Implementation:**
+
 ```typescript
-import common = require("oci-common");
+import common = require('oci-common');
 
 const provider = new common.ConfigFileAuthenticationDetailsProvider(
-  "~/.oci/config",  // optional, defaults to ~/.oci/config
-  "DEFAULT"          // optional, defaults to DEFAULT
+  '~/.oci/config', // optional, defaults to ~/.oci/config
+  'DEFAULT' // optional, defaults to DEFAULT
 );
 ```
 
 **2. Instance Principal Authentication** (For OCI Compute)
+
 - Auto-detected when running on OCI instances
 - Uses instance metadata service
 - No configuration required
 
 **3. Resource Principal Authentication** (For OCI Functions)
+
 - Auto-detected when `OCI_RESOURCE_PRINCIPAL_VERSION` env var set
 - Uses resource metadata
 - No configuration required
 
 **4. IDCS OAuth (Future Enhancement)**
+
 - Browser-based SSO flow
 - Session token management
 - Requires IDCS domain, client ID, tenancy
@@ -204,6 +226,7 @@ const provider = new common.ConfigFileAuthenticationDetailsProvider(
 ### 3.2 IAM Policy Requirements
 
 **Minimum Required Policies:**
+
 ```hcl
 # Allow GenAI inference
 Allow group <YOUR_GROUP> to use generative-ai-family in compartment <COMPARTMENT>
@@ -213,6 +236,7 @@ Allow group <YOUR_GROUP> to read compartments in compartment <COMPARTMENT>
 ```
 
 **Optional for Dedicated Endpoints:**
+
 ```hcl
 Allow group <YOUR_GROUP> to manage generative-ai-dedicated-ai-cluster in compartment <COMPARTMENT>
 Allow group <YOUR_GROUP> to manage generative-ai-endpoint in compartment <COMPARTMENT>
@@ -243,8 +267,9 @@ interface LanguageModelV3 {
 ### 4.2 Provider Factory Pattern
 
 **Function Signature:**
+
 ```typescript
-export function createOCIGenAI(settings: OCIGenAISettings): Promise<OCIGenAIProvider>
+export function createOCIGenAI(settings: OCIGenAISettings): Promise<OCIGenAIProvider>;
 
 interface OCIGenAIProvider {
   // Creates a chat model instance
@@ -257,17 +282,18 @@ interface OCIGenAIProvider {
 ```
 
 **Settings Interface:**
+
 ```typescript
 interface OCIGenAISettings {
   // Required
   compartmentId: string;
 
   // Authentication (one of)
-  configProfile?: string;        // Default: "DEFAULT"
-  configFile?: string;           // Default: "~/.oci/config"
+  configProfile?: string; // Default: "DEFAULT"
+  configFile?: string; // Default: "~/.oci/config"
 
   // Optional overrides
-  region?: string;               // Auto-detected from config
+  region?: string; // Auto-detected from config
 
   // Future: OAuth
   idcs?: {
@@ -283,14 +309,15 @@ interface OCIGenAISettings {
 
 **AI SDK V3 → OCI GenAI:**
 
-| AI SDK Role | OCI Role | Content Types |
-|-------------|----------|---------------|
-| `system` | System message | Text only |
-| `user` | `USER` | Text, files (vision models) |
-| `assistant` | `ASSISTANT` | Text, tool calls |
-| `tool` | Tool result | JSON |
+| AI SDK Role | OCI Role       | Content Types               |
+| ----------- | -------------- | --------------------------- |
+| `system`    | System message | Text only                   |
+| `user`      | `USER`         | Text, files (vision models) |
+| `assistant` | `ASSISTANT`    | Text, tool calls            |
+| `tool`      | Tool result    | JSON                        |
 
 **Content Conversion:**
+
 ```typescript
 // AI SDK V3 format
 type LanguageModelV3Prompt = Array<{
@@ -312,7 +339,7 @@ interface Message {
   content: Array<{
     type: 'TEXT' | 'IMAGE';
     text?: string;
-    imageUrl?: string;  // Base64 data URL
+    imageUrl?: string; // Base64 data URL
   }>;
 }
 ```
@@ -320,6 +347,7 @@ interface Message {
 ### 4.4 Tool Calling Support
 
 **AI SDK V3 Tool Format:**
+
 ```typescript
 interface LanguageModelV3FunctionTool {
   type: 'function';
@@ -335,40 +363,44 @@ OCI GenAI Agents platform (March 2025) uses standard JSON Schema for tool defini
 
 ```typescript
 interface OCIFunctionTool {
-  name: string;                    // Function name
-  description: string;             // What the function does
+  name: string; // Function name
+  description: string; // What the function does
   parameters: {
-    type: "object";
+    type: 'object';
     properties: {
       [key: string]: {
-        type: string;              // "string", "number", "boolean", etc.
-        description: string;       // Parameter description
-        enum?: string[];           // Optional allowed values
+        type: string; // "string", "number", "boolean", etc.
+        description: string; // Parameter description
+        enum?: string[]; // Optional allowed values
       };
     };
-    required: string[];            // Required parameter names
+    required: string[]; // Required parameter names
     additionalProperties: false;
   };
 }
 ```
 
 **Naming Rules:**
+
 - Must start with letter or underscore
 - Can contain: letters, numbers, hyphens, underscores
 - Length: 1-255 characters
 
 **Tool Types Supported:**
+
 1. **Function Calling Tools** - Custom user-defined functions (use this)
 2. **API Endpoint Calling Tools** - OpenAPI schema-based (advanced)
 
 **Conversion Strategy:**
 Since both AI SDK and OCI use JSON Schema, conversion is **straightforward**:
+
 - ✅ AI SDK `parameters` → OCI `parameters` (1:1 mapping)
 - ✅ AI SDK `name` → OCI `name` (validate naming rules)
 - ✅ AI SDK `description` → OCI `description`
 - ⚠️ Minimal transformation needed
 
 **Tool Call Response Mapping:**
+
 ```typescript
 // AI SDK expects
 {
@@ -386,6 +418,7 @@ Since both AI SDK and OCI use JSON Schema, conversion is **straightforward**:
 ```
 
 **Tool Call Output Format:**
+
 - Must be JSON string
 - ADK (Agent Development Kit) auto-generates schema
 
@@ -396,6 +429,7 @@ Since both AI SDK and OCI use JSON Schema, conversion is **straightforward**:
 ### 5.1 Chat API Request Structure
 
 **Request Interface:**
+
 ```typescript
 import { GenerativeAiInferenceClient, requests, models } from 'oci-generativeaiinference';
 
@@ -431,24 +465,26 @@ const chatRequest: requests.ChatRequest = {
 ```
 
 **API Format Selection:**
+
 - `"COHERE"` - For Cohere Command models
 - `"GENERIC"` - For all other models (Llama, Grok, Gemini, OpenAI)
 
 ### 5.2 Response Structure
 
 **Non-Streaming Response:**
+
 ```typescript
 interface ChatResult {
   chatResponse: {
     choices: Array<{
       message: {
-        role: "ASSISTANT";
+        role: 'ASSISTANT';
         content: Array<{
-          type: "TEXT";
+          type: 'TEXT';
           text: string;
         }>;
       };
-      finishReason: "STOP" | "LENGTH" | "CONTENT_FILTER";
+      finishReason: 'STOP' | 'LENGTH' | 'CONTENT_FILTER';
       index: number;
     }>;
     usage: {
@@ -499,21 +535,25 @@ for await (const chunk of streamResponse) {
 ### 5.3 Vision/Multimodal Support
 
 **Supported Vision Models:**
-- `cohere.command-a-vision-07-2025` - Vision + text understanding
-- `meta.llama-3.2-90b-vision` - 90B vision model
-- `meta.llama-3.2-11b-vision` - Lightweight vision model
+
+- `cohere.command-a-vision` - Vision + text understanding
+- `meta.llama-3.2-90b-vision-instruct` - 90B vision model
+- `meta.llama-3.2-11b-vision-instruct` - Lightweight vision model
 - `cohere.embed-v4.0` - Multimodal embeddings (text OR image, not both)
 
 **Image Requirements:**
+
 - **Format**: PNG or JPG
 - **Size Limit**: 5 MB maximum
 - **Encoding**: Base64 for API usage (console accepts direct upload)
 - **Data URI Scheme**: `data:image/{mime};base64,{encoded_data}`
 
 **Token Conversion:**
+
 - 512x512 image ≈ **1,610 tokens**
 
 **Message Format with Images:**
+
 ```typescript
 {
   role: "USER",
@@ -528,6 +568,7 @@ for await (const chunk of streamResponse) {
 ```
 
 **AI SDK V3 → OCI Conversion:**
+
 ```typescript
 // AI SDK file part
 {
@@ -542,6 +583,7 @@ const imageUrl = `data:${mimeType};base64,${base64}`;
 ```
 
 **Provider Implications:**
+
 - Detect vision models by ID pattern (`*-vision`, `embed-v4`)
 - Convert AI SDK file parts to base64 data URIs
 - Account for image tokens in usage tracking
@@ -550,15 +592,15 @@ const imageUrl = `data:${mimeType};base64,${base64}`;
 ### 5.4 Client Initialization
 
 ```typescript
-import common = require("oci-common");
-import { GenerativeAiInferenceClient } from "oci-generativeaiinference";
+import common = require('oci-common');
+import { GenerativeAiInferenceClient } from 'oci-generativeaiinference';
 
 // 1. Create auth provider
 const authProvider = new common.ConfigFileAuthenticationDetailsProvider();
 
 // 2. Create client
 const client = new GenerativeAiInferenceClient({
-  authenticationDetailsProvider: authProvider
+  authenticationDetailsProvider: authProvider,
 });
 
 // 3. Set region-specific endpoint
@@ -656,6 +698,7 @@ async doStream(options: LanguageModelV3CallOptions): Promise<LanguageModelV3Stre
 ### 7.1 OCI API Error Responses
 
 **HTTP Status Codes:**
+
 - `400` - Bad Request (invalid parameters, malformed request)
 - `401` - Unauthorized (invalid auth credentials)
 - `403` - Forbidden (insufficient IAM permissions)
@@ -665,6 +708,7 @@ async doStream(options: LanguageModelV3CallOptions): Promise<LanguageModelV3Stre
 - `503` - Service Unavailable (temporary outage)
 
 **Error Response Structure:**
+
 ```typescript
 {
   code: string;
@@ -680,6 +724,7 @@ async doStream(options: LanguageModelV3CallOptions): Promise<LanguageModelV3Stre
 ⚠️ **CRITICAL**: OCI GenAI **does NOT publish fixed rate limits**. Instead, it uses dynamic throttling that adjusts in real-time.
 
 **How Dynamic Throttling Works:**
+
 - Limits adjust based on:
   - Current model demand
   - Available system capacity
@@ -689,9 +734,11 @@ async doStream(options: LanguageModelV3CallOptions): Promise<LanguageModelV3Stre
 - Different limits per model, per region, per tenancy
 
 **Oracle's Official Recommendation:**
+
 > "Implement a backoff strategy which involves delaying requests after a rejection"
 
 **Provider Implications:**
+
 - ❌ Cannot hardcode rate limits (e.g., "10 req/sec")
 - ✅ MUST implement exponential backoff with jitter
 - ✅ MUST handle 429 errors gracefully
@@ -701,17 +748,20 @@ async doStream(options: LanguageModelV3CallOptions): Promise<LanguageModelV3Stre
 ### 7.3 Retry Strategy
 
 **Retryable Errors:**
+
 - `429` - Rate limit exceeded (exponential backoff with jitter)
 - `500`, `502`, `503` - Server errors (exponential backoff)
 - Network timeouts
 - Connection errors
 
 **Non-Retryable Errors:**
+
 - `400` - Bad request (client error - fix parameters)
 - `401`, `403` - Auth errors (fix credentials)
 - `404` - Not found (fix model ID/endpoint)
 
 **Retry Configuration (Updated for Dynamic Throttling):**
+
 ```typescript
 {
   maxRetries: 5,           // Increased due to dynamic limits
@@ -723,6 +773,7 @@ async doStream(options: LanguageModelV3CallOptions): Promise<LanguageModelV3Stre
 ```
 
 **Jitter Implementation:**
+
 ```typescript
 const delay = baseDelay * Math.pow(backoffFactor, attemptNumber);
 const jitteredDelay = delay * (0.5 + Math.random() * 0.5); // ±50% jitter
@@ -730,6 +781,7 @@ await sleep(Math.min(jitteredDelay, maxDelay));
 ```
 
 **Why Jitter Matters:**
+
 - Prevents many clients from retrying simultaneously
 - Spreads load over time after capacity issues
 - Critical for CI/CD use case (many PRs at once)
@@ -742,33 +794,36 @@ await sleep(Math.min(jitteredDelay, maxDelay));
 import CircuitBreaker from 'opossum';
 
 const breaker = new CircuitBreaker(asyncAction, {
-  timeout: 120000,              // 2 minutes (LLM generation is slow)
+  timeout: 120000, // 2 minutes (LLM generation is slow)
   errorThresholdPercentage: 50, // Open after 50% errors
-  resetTimeout: 30000,          // Try again after 30s
-  volumeThreshold: 10           // Min requests before calculating error rate
+  resetTimeout: 30000, // Try again after 30s
+  volumeThreshold: 10, // Min requests before calculating error rate
 });
 
 breaker.fire(request);
 ```
 
 **Use Case Specific Timeouts:**
+
 ```typescript
 // Code generation (long outputs)
-timeout: 180000  // 3 minutes
+timeout: 180000; // 3 minutes
 
 // Office automation (medium tasks)
-timeout: 120000  // 2 minutes
+timeout: 120000; // 2 minutes
 
 // CI/CD (short outputs)
-timeout: 30000   // 30 seconds
+timeout: 30000; // 30 seconds
 ```
 
 **Circuit Breaker States:**
+
 - **Closed**: Normal operation, requests pass through
 - **Open**: Too many failures, fail fast (don't call OCI API)
 - **Half-Open**: Testing if service recovered
 
 **Why Critical for Your Use Cases:**
+
 - **UC2 (Office Automation)**: Protect unattended batch jobs from cascading failures
 - **UC3 (CI/CD)**: Prevent blocking all PRs when OCI has capacity issues
 - **UC1 (Code Generation)**: Fast feedback when service is degraded
@@ -781,18 +836,22 @@ OCI supports idempotency tokens via `opcRetryToken` to prevent duplicate operati
 
 ```typescript
 const chatRequest = {
-  chatDetails: { /* ... */ },
-  opcRetryToken: `pr-${prNumber}-${commitSha}` // Unique per PR + commit
+  chatDetails: {
+    /* ... */
+  },
+  opcRetryToken: `pr-${prNumber}-${commitSha}`, // Unique per PR + commit
 };
 ```
 
 **Benefits:**
+
 - Safe retries in CI/CD pipelines
 - Prevents duplicate commit messages
 - Prevents duplicate PR comments
 - Tokens expire after 24 hours
 
 **Implementation:**
+
 - Generate deterministic token from: PR ID + commit SHA + operation type
 - Include in every CI/CD request
 - OCI deduplicates within 24-hour window
@@ -804,6 +863,7 @@ const chatRequest = {
 ### 8.1 Use Case 1: Code Generation with OpenCode Agent Harness
 
 **Objectives:**
+
 - Interactive coding assistance
 - Full file generation
 - Multi-file refactoring
@@ -815,9 +875,10 @@ const chatRequest = {
 |-------|----------|---------|--------|
 | `xai.grok-4-code-fast-1` | **Primary** - Code generation | 131K | 8K |
 | `meta.llama-3.3-70b-instruct` | Fine-tuning for your codebase | 128K | 4K |
-| `meta.llama-3.1-405b` | Very large codebases | 128K | 4K |
+| `meta.llama-3.1-405b-instruct` | Very large codebases | 128K | 4K |
 
 **Configuration:**
+
 ```typescript
 {
   modelId: 'xai.grok-4-code-fast-1',
@@ -830,6 +891,7 @@ const chatRequest = {
 ```
 
 **Critical Features:**
+
 - ✅ Streaming (Phase 2) - **HIGH PRIORITY**
 - ✅ Tool calling (Phase 2) - **CRITICAL**
 - ✅ Vision support (Phase 5) - Screenshots, diagrams
@@ -838,12 +900,14 @@ const chatRequest = {
 ### 8.2 Use Case 2: Office Task Automation with OpenWork
 
 **What is OpenWork:**
+
 - Extensible, open-source "Claude Work"-style system for knowledge workers
 - Built on OpenCode - provides GUI for non-technical users
 - Transforms developer workflows into accessible desktop experiences
 - **Uses OpenCode's provider system** - OCI GenAI provider works automatically
 
 **Objectives:**
+
 - Guided automated workflows
 - Email drafting
 - Document generation
@@ -858,6 +922,7 @@ const chatRequest = {
 | `meta.llama-3.3-70b-instruct` | Custom workflows | Fine-tunable |
 
 **Configuration:**
+
 ```typescript
 {
   modelId: 'cohere.command-a-reasoning',
@@ -870,6 +935,7 @@ const chatRequest = {
 ```
 
 **Critical Features:**
+
 - ✅ Tool calling (Phase 2) - **CRITICAL** for API integrations
 - ✅ Circuit breakers (Phase 4) - **CRITICAL** for reliability
 - ✅ Retry logic with jitter (Phase 4) - **CRITICAL** for unattended ops
@@ -879,6 +945,7 @@ const chatRequest = {
 ### 8.3 Use Case 3: CI/CD Integration (GitHub Bot)
 
 **Objectives:**
+
 - Commit message generation
 - PR description generation
 - Code review summaries
@@ -889,10 +956,11 @@ const chatRequest = {
 | Model | Best For | Why |
 |-------|----------|-----|
 | `google.gemini-2.5-flash` | **Primary** - CI/CD | Fast + cheap |
-| `xai.grok-4-fast` | Code understanding | Fast with code context |
+| `xai.grok-4-fast-reasoning` | Code understanding | Fast with code context |
 | `meta.llama-3.3-70b-instruct` | Higher quality | Better summaries |
 
 **Configuration:**
+
 ```typescript
 {
   modelId: 'google.gemini-2.5-flash',
@@ -905,6 +973,7 @@ const chatRequest = {
 ```
 
 **Critical Features:**
+
 - ✅ Rate limit handling (Phase 4) - **CRITICAL**
 - ✅ Exponential backoff + jitter (Phase 4) - **CRITICAL**
 - ✅ Circuit breakers (Phase 4) - **CRITICAL**
@@ -913,15 +982,18 @@ const chatRequest = {
 - ⚠️ Fast model selection - Don't block CI pipelines
 
 **GitHub Bot Workflow Example:**
+
 ```typescript
 // PR opened - generate description
 const description = await oci.chat('google.gemini-2.5-flash').doGenerate({
-  prompt: [{
-    role: 'user',
-    content: `Generate PR description for:\n${diffContent}`
-  }],
+  prompt: [
+    {
+      role: 'user',
+      content: `Generate PR description for:\n${diffContent}`,
+    },
+  ],
   temperature: 0.0,
-  maxTokens: 256
+  maxTokens: 256,
 });
 
 // Use idempotency token to prevent duplicates on retry
@@ -935,21 +1007,25 @@ const token = `pr-${pr.number}-${pr.head.sha}-description`;
 ### 8.1 Test Types
 
 **1. Unit Tests** (`vitest`)
+
 - Message format conversion
 - Tool format conversion
 - Stream parsing logic
 - Error handling
 
 **2. Contract Tests**
+
 - OCI API response schema validation
 - AI SDK V3 interface compliance
 
 **3. Integration Tests**
+
 - Live OCI API calls (requires credentials)
 - End-to-end streaming
 - Tool calling workflows
 
 **4. Property-Based Tests** (`fast-check`)
+
 - Message conversion round-trips
 - Stream parser robustness
 
@@ -965,13 +1041,15 @@ const server = setupServer(
   http.post('https://inference.generativeai.*/20231130/actions/chat', () => {
     return HttpResponse.json({
       chatResponse: {
-        choices: [{
-          message: { role: 'ASSISTANT', content: [{ type: 'TEXT', text: 'Mock response' }] },
-          finishReason: 'STOP',
-          index: 0
-        }],
-        usage: { promptTokens: 10, completionTokens: 5, totalTokens: 15 }
-      }
+        choices: [
+          {
+            message: { role: 'ASSISTANT', content: [{ type: 'TEXT', text: 'Mock response' }] },
+            finishReason: 'STOP',
+            index: 0,
+          },
+        ],
+        usage: { promptTokens: 10, completionTokens: 5, totalTokens: 15 },
+      },
     });
   })
 );
@@ -1005,6 +1083,7 @@ const server = setupServer(
 ### 9.3 Secure Dependencies
 
 **Preferred Libraries:**
+
 - `zod` - Schema validation (safe-by-default)
 - `jose` - JWT handling (if needed for OAuth)
 - Use TypeScript strict mode
@@ -1057,6 +1136,7 @@ export const ociGenAI = await createOCIGenAI({
 ### 10.3 OpenCode Configuration
 
 **Project `opencode.json`:**
+
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
@@ -1070,7 +1150,7 @@ export const ociGenAI = await createOCIGenAI({
           "attachment": true,
           "limit": { "context": 128000, "output": 4096 }
         },
-        "xai.grok-4-scout": {
+        "xai.grok-4-fast-reasoning": {
           "name": "Grok 4 Scout",
           "attachment": true,
           "limit": { "context": 131072, "output": 8192 }
@@ -1108,6 +1188,7 @@ OCI_IDCS_TENANCY=ocid1.tenancy...
 ## 11. Implementation Phases (Prioritized for Use Cases)
 
 ### Phase 1: Core Provider (MVP)
+
 **Timeline:** Week 1
 **Priority:** CRITICAL - Foundation for all use cases
 
@@ -1125,6 +1206,7 @@ OCI_IDCS_TENANCY=ocid1.tenancy...
 ---
 
 ### Phase 2: Tool Calling Support
+
 **Timeline:** Week 2
 **Priority:** CRITICAL - Required for UC1, UC2
 
@@ -1140,6 +1222,7 @@ OCI_IDCS_TENANCY=ocid1.tenancy...
 **Use Cases Enabled:** UC1 (code gen with tools), UC2 (API integrations)
 
 **Critical for:**
+
 - File operations (code generation)
 - Git commands (code generation)
 - Email/Calendar APIs (office automation)
@@ -1148,6 +1231,7 @@ OCI_IDCS_TENANCY=ocid1.tenancy...
 ---
 
 ### Phase 3: Production Resilience
+
 **Timeline:** Week 3
 **Priority:** CRITICAL - Required for UC2, UC3
 
@@ -1163,6 +1247,7 @@ OCI_IDCS_TENANCY=ocid1.tenancy...
 **Use Cases Enabled:** UC2 (reliable automation), UC3 (CI/CD reliability)
 
 **Critical for:**
+
 - Unattended batch operations (office automation)
 - CI/CD spikes (many PRs at once)
 - Dynamic rate limit handling
@@ -1171,6 +1256,7 @@ OCI_IDCS_TENANCY=ocid1.tenancy...
 ---
 
 ### Phase 4: Streaming Support
+
 **Timeline:** Week 4
 **Priority:** HIGH - Important for UC1
 
@@ -1186,6 +1272,7 @@ OCI_IDCS_TENANCY=ocid1.tenancy...
 **Use Cases Enabled:** UC1 (real-time code generation)
 
 **Critical for:**
+
 - Interactive coding assistance
 - Real-time feedback
 - Long file generation with progress
@@ -1193,6 +1280,7 @@ OCI_IDCS_TENANCY=ocid1.tenancy...
 ---
 
 ### Phase 5: Vision/Multimodal Support
+
 **Timeline:** Week 5
 **Priority:** MEDIUM - Enhancement for UC1
 
@@ -1210,6 +1298,7 @@ OCI_IDCS_TENANCY=ocid1.tenancy...
 ---
 
 ### Phase 6: Advanced Auth & Embeddings
+
 **Timeline:** Week 6+
 **Priority:** LOW - Future enhancements
 
@@ -1270,6 +1359,7 @@ All initial open questions have been researched and resolved:
 ### UC1: Code Generation Success Criteria
 
 ✅ **Functional:**
+
 - All code models accessible (Grok, Llama 3.3, Llama 3.1 405B)
 - Streaming responses with real-time feedback
 - Tool calling works (file ops, git, test runner)
@@ -1277,6 +1367,7 @@ All initial open questions have been researched and resolved:
 - Context window warnings
 
 ✅ **Performance:**
+
 - First token latency < 2s
 - Stream chunks with < 100ms latency
 - Full file generation (4K tokens) < 30s
@@ -1284,12 +1375,14 @@ All initial open questions have been researched and resolved:
 ### UC2: Office Automation Success Criteria
 
 ✅ **Functional:**
+
 - Reasoning models work (Cohere Command A Reasoning)
 - Tool calling for API integrations (email, calendar, CRM)
 - Batch processing without streaming overhead
 - Error logging for audit trails
 
 ✅ **Reliability:**
+
 - Circuit breakers prevent cascading failures
 - Exponential backoff handles dynamic throttling
 - Unattended operations complete successfully
@@ -1298,17 +1391,20 @@ All initial open questions have been researched and resolved:
 ### UC3: CI/CD Integration Success Criteria
 
 ✅ **Functional:**
+
 - Fast models work (Gemini 2.5 Flash, Grok 4 Fast)
 - Idempotency tokens prevent duplicate operations
 - Parallel request handling (multiple PRs)
 - Deterministic outputs (temp=0.0)
 
 ✅ **Performance:**
+
 - Commit message generation < 10s
 - PR description generation < 15s
 - No CI pipeline blocking (< 30s timeout)
 
 ✅ **Reliability:**
+
 - Handles rate limit spikes (many PRs at once)
 - Jittered backoff prevents thundering herd
 - Circuit breakers protect GitHub workflows
@@ -1317,18 +1413,21 @@ All initial open questions have been researched and resolved:
 ### Overall Quality Criteria
 
 ✅ **Code Quality:**
+
 - 80%+ test coverage (unit, contract, integration)
 - All security scans pass (semgrep, CodeRabbit)
 - Type-safe (no `any` types)
 - TSDoc comments for public APIs
 
 ✅ **Documentation:**
+
 - README with quick start
 - API reference (generated from TSDoc)
 - Use case guides (UC1, UC2, UC3)
 - Troubleshooting guide
 
 ✅ **OpenCode/OpenWork Integration:**
+
 - Works in OpenCode without modification
 - Works in OpenWork automatically
 - Environment variable configuration
@@ -1340,6 +1439,7 @@ All initial open questions have been researched and resolved:
 ## 15. References
 
 **OpenCode & AI SDK:**
+
 - [OpenCode Providers Documentation](https://opencode.ai/docs/providers/)
 - [AI SDK v6 Documentation](https://sdk.vercel.ai)
 - [AI SDK Custom Provider Guide](https://ai-sdk.dev/providers/community-providers/custom-providers)
@@ -1347,6 +1447,7 @@ All initial open questions have been researched and resolved:
 - [GitHub - OpenWork](https://github.com/different-ai/openwork)
 
 **OCI Generative AI - General:**
+
 - [OCI GenAI Overview](https://docs.oracle.com/en-us/iaas/Content/generative-ai/overview.htm)
 - [Pretrained Models](https://docs.oracle.com/en-us/iaas/Content/generative-ai/pretrained-models.htm)
 - [OCI GenAI Release Notes](https://docs.oracle.com/en-us/iaas/releasenotes/services/generative-ai/)
@@ -1354,6 +1455,7 @@ All initial open questions have been researched and resolved:
 - [Service Limits](https://docs.oracle.com/en-us/iaas/Content/generative-ai/limits.htm)
 
 **OCI Generative AI - Models & Regions:**
+
 - [Llama 3.3 70B Availability](https://docs.oracle.com/en-us/iaas/releasenotes/generative-ai/llama-3-3.htm)
 - [Llama 3.2 Vision Regional Availability](https://docs.oracle.com/en-us/iaas/releasenotes/generative-ai/llama-3-2-new-regions.htm)
 - [Grok 4 Announcement](https://docs.oracle.com/en-us/iaas/releasenotes/generative-ai/grok-4.htm)
@@ -1361,18 +1463,21 @@ All initial open questions have been researched and resolved:
 - [Cohere Command A Vision](https://docs.oracle.com/es-ww/iaas/Content/generative-ai/cohere-command-a-vision-07-2025.htm)
 
 **OCI Generative AI - Tool Calling:**
+
 - [GenAI Agents Function Calling](https://docs.oracle.com/en-us/iaas/Content/generative-ai-agents/function-calling-tool.htm)
 - [Creating Function Calling Tools](https://docs.public.oneportal.content.oci.oraclecloud.com/en-us/iaas/Content/generative-ai-agents/function-calling-tool-create.htm)
 - [Building AI Agent with Function Calling (Java)](https://www.ateam-oracle.com/building-a-generative-ai-agent-with-function-calling-in-java)
 - [API Endpoint Calling Tools](https://docs.public.content.oci.oraclecloud.com/en-us/iaas/Content/generative-ai-agents/api-calling-tool.htm)
 
 **OCI Generative AI - Dedicated Clusters:**
+
 - [Managing Dedicated AI Clusters](https://docs.oracle.com/en-us/iaas/Content/generative-ai/ai-cluster.htm)
 - [Creating Dedicated AI Clusters](https://docs.oracle.com/en-us/iaas/Content/generative-ai/create-ai-cluster-hosting.htm)
 - [Dedicated AI Cluster Pricing](https://docs.public.content.oci.oraclecloud.com/en-us/iaas/Content/generative-ai/pay-dedicated.htm)
 - [Managing Endpoints](https://docs.oracle.com/en-us/iaas/Content/generative-ai/endpoint.htm)
 
 **OCI TypeScript SDK:**
+
 - [OCI TypeScript SDK](https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/typescriptsdk.htm)
 - [Getting Started Guide](https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/typescriptsdkgettingstarted.htm)
 - [ChatRequest Interface](https://docs.oracle.com/en-us/iaas/tools/typescript/latest/interfaces/_generativeaiinference_lib_request_chat_request_.chatrequest.html)
@@ -1380,6 +1485,7 @@ All initial open questions have been researched and resolved:
 - [npm - oci-generativeaiinference](https://www.npmjs.com/package/oci-generativeaiinference)
 
 **Authentication:**
+
 - [OCI Authentication Methods](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdk_authentication_methods.htm)
 - [SDK Configuration File](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdkconfig.htm)
 - [API Signing Keys](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/apisigningkey.htm)
@@ -1389,17 +1495,20 @@ All initial open questions have been researched and resolved:
 ## 16. Document Summary
 
 **Target Use Cases:**
+
 1. **Code Generation** - OpenCode agent harness with tool calling, streaming, vision
 2. **Office Automation** - OpenWork (built on OpenCode) for knowledge work
 3. **CI/CD Integration** - GitHub bot for commits, PRs, code review
 
 **Critical Features (Priority Order):**
+
 1. Tool calling (Phase 2) - **CRITICAL** for all use cases
 2. Resilience (Phase 3) - **CRITICAL** for UC2, UC3
 3. Streaming (Phase 4) - Important for UC1
 4. Vision (Phase 5) - Enhancement for UC1
 
 **Key Technical Decisions:**
+
 - ✅ Native OCI SDK (not OpenAI-compatible wrapper)
 - ✅ Bun/pnpm compatible (OpenCode uses Bun)
 - ✅ Dynamic throttling handling (no fixed rate limits)
@@ -1408,6 +1517,7 @@ All initial open questions have been researched and resolved:
 - ✅ All models available in all regions
 
 **Recommended Models by Use Case:**
+
 - UC1: `xai.grok-4-code-fast-1`
 - UC2: `cohere.command-a-reasoning` or `google.gemini-2.5-flash`
 - UC3: `google.gemini-2.5-flash`

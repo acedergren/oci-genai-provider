@@ -133,7 +133,7 @@ import { generateText, streamText } from 'ai';
 
 // Generate complete responses
 const result = await generateText({
-  model: oci('xai.grok-4-maverick'),
+  model: oci('xai.grok-4'),
   prompt: 'Write a haiku about TypeScript',
 });
 
@@ -152,7 +152,7 @@ for await (const chunk of stream.textStream) {
 
 | Family            | Model ID                      | Context | Tools | Vision |
 | ----------------- | ----------------------------- | ------- | ----- | ------ |
-| **xAI Grok**      | `xai.grok-4-maverick`         | 131K    | Yes   | No     |
+| **xAI Grok**      | `xai.grok-4`                  | 131K    | Yes   | No     |
 | **Meta Llama**    | `meta.llama-3.3-70b-instruct` | 128K    | Yes   | No     |
 | **Cohere**        | `cohere.command-r-plus`       | 131K    | Yes   | No     |
 | **Google Gemini** | `google.gemini-2.5-flash`     | 1M      | Yes   | Yes    |
@@ -194,22 +194,26 @@ cd examples/cli-tool && pnpm install && pnpm dev "Hello!"
 ## Documentation
 
 **Start Here**
+
 - [Getting Started](./docs/getting-started/README.md)
 - [Authentication Guide](./docs/guides/authentication/README.md)
 - [Core Provider API](./packages/oci-genai-provider/README.md)
 
 **Guides**
+
 - [Streaming Responses](./docs/guides/streaming/README.md)
 - [Tool Calling](./docs/guides/tool-calling/README.md)
 - [OpenCode Integration](./docs/guides/opencode-integration/README.md)
 - [Troubleshooting](./docs/guides/troubleshooting.md)
 
 **Reference**
+
 - [Model Catalog](./docs/reference/oci-genai-models/README.md)
 - [IAM Policies](./docs/guides/iam-policies/README.md)
 - [Architecture](./docs/architecture/)
 
 **Contributing**
+
 - [Contributing Guidelines](./CONTRIBUTING.md)
 - [Development Guide](./DEVELOPMENT.md)
 - [Security Policy](./SECURITY.md)

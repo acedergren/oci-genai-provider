@@ -1,19 +1,29 @@
-import {
+import type {
   EmbeddingModelV3,
   EmbeddingModelV3CallOptions,
   EmbeddingModelV3Result,
 } from '@ai-sdk/provider';
+import { NoSuchModelError, TooManyEmbeddingValuesForCallError } from '@ai-sdk/provider';
 import { GenerativeAiInferenceClient, models as ociModels } from 'oci-generativeaiinference';
 import { Region } from 'oci-common';
 import { createAuthProvider, getCompartmentId, getRegion } from '../auth';
 import { isValidEmbeddingModelId } from './registry';
-import type { OCIEmbeddingSettings } from '../types';
+import type { OCIEmbeddingSettings, RequestOptions } from '../types';
+import { handleOCIError } from '../shared/errors';
+import { withRetry, withTimeout, isRetryableError } from '../shared/utils';
+import {
+  getOCIProviderOptions,
+  resolveCompartmentId,
+  resolveEndpoint,
+  resolveServingMode,
+} from '../shared/provider-options';
+import { resolveRequestOptions } from '../shared/request-options';
 
 type Truncate = ociModels.EmbedTextDetails.Truncate;
 type InputType = ociModels.EmbedTextDetails.InputType;
 
 export class OCIEmbeddingModel implements EmbeddingModelV3 {
-  readonly specificationVersion = 'V3';
+  readonly specificationVersion = 'v3';
   readonly provider = 'oci-genai';
   readonly maxEmbeddingsPerCall = 96;
   readonly supportsParallelCalls = true;
@@ -25,31 +35,67 @@ export class OCIEmbeddingModel implements EmbeddingModelV3 {
     private config: OCIEmbeddingSettings
   ) {
     if (!isValidEmbeddingModelId(modelId)) {
-      throw new Error(
-        `Invalid embedding model ID: ${modelId}. ` +
-          `Valid models: cohere.embed-multilingual-v3.0, cohere.embed-english-v3.0, cohere.embed-english-light-v3.0`
-      );
+      throw new NoSuchModelError({
+        modelId,
+        modelType: 'embeddingModel',
+      });
     }
   }
 
-  private async getClient(): Promise<GenerativeAiInferenceClient> {
-    if (!this._client) {
+  private async getClient(endpointOverride?: string): Promise<GenerativeAiInferenceClient> {
+    const resolvedEndpoint = resolveEndpoint(this.config.endpoint, endpointOverride);
+
+    if (!this._client || (endpointOverride && endpointOverride !== this.config.endpoint)) {
       const authProvider = await createAuthProvider(this.config);
       const regionId = getRegion(this.config);
 
-      this._client = new GenerativeAiInferenceClient({
+      const client = new GenerativeAiInferenceClient({
         authenticationDetailsProvider: authProvider,
       });
 
       // Set region using proper OCI Region API
-      this._client.region = Region.fromRegionId(regionId);
+      client.region = Region.fromRegionId(regionId);
 
-      if (this.config.endpoint) {
-        this._client.endpoint = this.config.endpoint;
+      if (resolvedEndpoint) {
+        client.endpoint = resolvedEndpoint;
       }
+
+      if (!endpointOverride || endpointOverride === this.config.endpoint) {
+        this._client = client;
+      }
+
+      return client;
     }
 
     return this._client;
+  }
+
+  private getRequestOptions(
+    perRequestOptions?: OCIEmbeddingSettings['requestOptions']
+  ): Required<RequestOptions> {
+    return resolveRequestOptions(this.config.requestOptions, perRequestOptions);
+  }
+
+  private async executeWithResilience<T>(
+    operation: () => Promise<T>,
+    operationName: string,
+    requestOptions?: OCIEmbeddingSettings['requestOptions']
+  ): Promise<T> {
+    const options = this.getRequestOptions(requestOptions);
+
+    const withTimeoutOperation = (): Promise<T> =>
+      withTimeout(operation(), options.timeoutMs, operationName);
+
+    if (options.retry.enabled) {
+      return withRetry(withTimeoutOperation, {
+        maxRetries: options.retry.maxRetries,
+        baseDelayMs: options.retry.baseDelayMs,
+        maxDelayMs: options.retry.maxDelayMs,
+        isRetryable: isRetryableError,
+      });
+    }
+
+    return withTimeoutOperation();
   }
 
   async doEmbed(options: EmbeddingModelV3CallOptions): Promise<EmbeddingModelV3Result> {
@@ -57,35 +103,64 @@ export class OCIEmbeddingModel implements EmbeddingModelV3 {
 
     // Validate batch size
     if (values.length > this.maxEmbeddingsPerCall) {
-      throw new Error(
-        `Batch size (${values.length}) exceeds maximum allowed (${this.maxEmbeddingsPerCall})`
-      );
+      throw new TooManyEmbeddingValuesForCallError({
+        provider: this.provider,
+        modelId: this.modelId,
+        maxEmbeddingsPerCall: this.maxEmbeddingsPerCall,
+        values,
+      });
     }
 
-    const client = await this.getClient();
-    const compartmentId = getCompartmentId(this.config);
+    const ociOptions = getOCIProviderOptions(options.providerOptions);
+    const client = await this.getClient(ociOptions?.endpoint);
+    const compartmentId = resolveCompartmentId(
+      getCompartmentId(this.config),
+      ociOptions?.compartmentId
+    );
 
-    const response = await client.embedText({
-      embedTextDetails: {
-        servingMode: {
-          servingType: 'ON_DEMAND',
-          modelId: this.modelId,
+    try {
+      const response = await this.executeWithResilience(
+        () =>
+          client.embedText({
+            embedTextDetails: {
+              servingMode: resolveServingMode(
+                this.modelId,
+                this.config.servingMode,
+                ociOptions?.servingMode
+              ),
+              compartmentId,
+              inputs: values,
+              truncate: (this.config.truncate ?? 'END') as Truncate,
+              inputType: (this.config.inputType ?? 'SEARCH_DOCUMENT') as InputType,
+            },
+          }),
+        'OCI embed request',
+        ociOptions?.requestOptions
+      );
+
+      const embeddings = response.embedTextResult.embeddings;
+      const usage = response.embedTextResult.usage;
+      const tokenEstimate = values.reduce((sum, text) => sum + Math.ceil(text.length / 4), 0);
+
+      return {
+        embeddings,
+        usage: {
+          tokens: usage?.promptTokens ?? usage?.totalTokens ?? tokenEstimate,
         },
-        compartmentId,
-        inputs: values,
-        truncate: (this.config.truncate ?? 'END') as Truncate,
-        inputType: (this.config.inputType ?? 'SEARCH_DOCUMENT') as InputType,
-      },
-    });
-
-    const embeddings = response.embedTextResult.embeddings;
-
-    return {
-      embeddings,
-      usage: {
-        tokens: values.reduce((sum, text) => sum + Math.ceil(text.length / 4), 0),
-      },
-      warnings: [],
-    };
+        providerMetadata: {
+          oci: {
+            requestId: response.opcRequestId,
+            modelId: response.embedTextResult.modelId ?? this.modelId,
+          },
+        },
+        response: {
+          headers: response.opcRequestId ? { 'opc-request-id': response.opcRequestId } : undefined,
+          body: response,
+        },
+        warnings: [],
+      };
+    } catch (error) {
+      throw handleOCIError(error);
+    }
   }
 }

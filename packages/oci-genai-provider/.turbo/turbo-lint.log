@@ -1,0 +1,45 @@
+
+> @acedergren/oci-genai-provider@0.1.0 lint /Users/acedergr/Projects/opencode-oci-genai/packages/oci-genai-provider
+> eslint src
+
+
+/Users/acedergr/Projects/opencode-oci-genai/packages/oci-genai-provider/src/config/__tests__/oci-config.test.ts
+  15:34  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+
+/Users/acedergr/Projects/opencode-oci-genai/packages/oci-genai-provider/src/config/discovery.ts
+  52:21  error  Unexpected `await` of a non-Promise (non-"Thenable") value  @typescript-eslint/await-thenable
+
+/Users/acedergr/Projects/opencode-oci-genai/packages/oci-genai-provider/src/config/fallback.ts
+   72:11  error  "eu-frankfurt-1" | "eu-stockholm-1" | "us-ashburn-1" | "us-phoenix-1" | "us-chicago-1" | "uk-london-1" | "ap-tokyo-1" | "ap-osaka-1" | "ap-mumbai-1" | "ap-sydney-1" | "ap-melbourne-1" | "ca-toronto-1" | "ca-montreal-1" | "sa-saopaulo-1" | "me-dubai-1" | "me-jeddah-1" is overridden by string in this union type  @typescript-eslint/no-redundant-type-constituents
+  219:7   error  'OCID_TYPES' is assigned a value but only used as a type                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+
+/Users/acedergr/Projects/opencode-oci-genai/packages/oci-genai-provider/src/config/validation.ts
+  63:22  error  Unexpected `await` of a non-Promise (non-"Thenable") value  @typescript-eslint/await-thenable
+
+/Users/acedergr/Projects/opencode-oci-genai/packages/oci-genai-provider/src/language-models/__tests__/seed-parameter.test.ts
+  110:7   warning  Missing return type on function                      @typescript-eslint/explicit-function-return-type
+  124:22  error    '_' is assigned a value but never used               @typescript-eslint/no-unused-vars
+  148:48  warning  Unexpected any. Specify a different type             @typescript-eslint/no-explicit-any
+  150:24  error    Unsafe member access .chatDetails on an `any` value  @typescript-eslint/no-unsafe-member-access
+
+/Users/acedergr/Projects/opencode-oci-genai/packages/oci-genai-provider/src/reranking-models/OCIRerankingModel.ts
+  137:7   warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+  138:24  error    This assertion is unnecessary since it does not change the type of the expression                      @typescript-eslint/no-unnecessary-type-assertion
+  140:11  error    Unsafe return of a value of type `any`                                                                 @typescript-eslint/no-unsafe-return
+  140:11  error    Unsafe call of an `any` typed value                                                                    @typescript-eslint/no-unsafe-call
+  140:22  warning  Unexpected any. Specify a different type                                                               @typescript-eslint/no-explicit-any
+  140:27  error    Unsafe member access .rerankText on an `any` value                                                     @typescript-eslint/no-unsafe-member-access
+  168:11  error    Unsafe assignment of an `any` value                                                                    @typescript-eslint/no-unsafe-assignment
+  168:23  error    Unsafe member access .index on an `any` value                                                          @typescript-eslint/no-unsafe-member-access
+  169:11  error    Unsafe assignment of an `any` value                                                                    @typescript-eslint/no-unsafe-assignment
+  169:32  error    Unsafe member access .relevanceScore on an `any` value                                                 @typescript-eslint/no-unsafe-member-access
+
+/Users/acedergr/Projects/opencode-oci-genai/packages/oci-genai-provider/src/reranking-models/__tests__/OCIRerankingModel.test.ts
+  21:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  22:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  23:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+
+✖ 22 problems (14 errors, 8 warnings)
+  1 error and 1 warning potentially fixable with the `--fix` option.
+
+ ELIFECYCLE  Command failed with exit code 1.

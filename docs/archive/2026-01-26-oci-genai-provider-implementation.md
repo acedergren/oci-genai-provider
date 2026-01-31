@@ -424,7 +424,7 @@ import { getModelMetadata, isValidModelId } from '../registry.js';
 describe('Model Registry', () => {
   describe('isValidModelId', () => {
     it('should validate Grok models', () => {
-      expect(isValidModelId('xai.grok-4-maverick')).toBe(true);
+      expect(isValidModelId('xai.grok-4')).toBe(true);
       expect(isValidModelId('xai.grok-3')).toBe(true);
       expect(isValidModelId('xai.invalid')).toBe(false);
     });
@@ -447,10 +447,10 @@ describe('Model Registry', () => {
 
   describe('getModelMetadata', () => {
     it('should return metadata for valid model', () => {
-      const metadata = getModelMetadata('xai.grok-4-maverick');
+      const metadata = getModelMetadata('xai.grok-4');
 
       expect(metadata).toBeDefined();
-      expect(metadata?.id).toBe('xai.grok-4-maverick');
+      expect(metadata?.id).toBe('xai.grok-4');
       expect(metadata?.family).toBe('grok');
       expect(metadata?.capabilities.streaming).toBe(true);
       expect(metadata?.capabilities.tools).toBe(true);
@@ -488,16 +488,16 @@ import type { ModelMetadata } from '../types.js';
  */
 const MODEL_REGISTRY: Record<string, ModelMetadata> = {
   // xAI Grok Models
-  'xai.grok-4-maverick': {
-    id: 'xai.grok-4-maverick',
+  'xai.grok-4': {
+    id: 'xai.grok-4',
     name: 'Grok 4 Maverick',
     family: 'grok',
     capabilities: { streaming: true, tools: true, vision: false },
     contextWindow: 131072,
     speed: 'very-fast',
   },
-  'xai.grok-4-scout': {
-    id: 'xai.grok-4-scout',
+  'xai.grok-4-fast-reasoning': {
+    id: 'xai.grok-4-fast-reasoning',
     name: 'Grok 4 Scout',
     family: 'grok',
     capabilities: { streaming: true, tools: true, vision: false },
@@ -556,8 +556,8 @@ const MODEL_REGISTRY: Record<string, ModelMetadata> = {
     contextWindow: 131072,
     speed: 'fast',
   },
-  'cohere.command-a': {
-    id: 'cohere.command-a',
+  'cohere.command-a-03-2025': {
+    id: 'cohere.command-a-03-2025',
     name: 'Command A',
     family: 'cohere',
     capabilities: { streaming: true, tools: true, vision: false },
@@ -1718,7 +1718,7 @@ async function main() {
   console.log('Streaming text with OCI GenAI...\n');
 
   const { textStream } = await streamText({
-    model: oci('xai.grok-4-maverick'),
+    model: oci('xai.grok-4'),
     prompt: 'Write a haiku about cloud computing.',
   });
 

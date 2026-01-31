@@ -9,5 +9,6 @@ export default defineConfig({
   sourcemap: true,
   treeshake: true,
   splitting: false,
+  noExternal: ['@acedergren/oci-genai-provider'],
   outDir: 'dist',
 });

@@ -120,7 +120,10 @@ describe('Tool Calling Integration', () => {
               type: 'tool-result' as const,
               toolCallId: 'call_123',
               toolName: 'get_weather',
-              output: { type: 'text' as const, value: '{"temperature": 15, "condition": "cloudy"}' },
+              output: {
+                type: 'text' as const,
+                value: '{"temperature": 15, "condition": "cloudy"}',
+              },
             },
           ],
         },
@@ -257,7 +260,9 @@ describe('Tool Calling Integration', () => {
         name: 'get_time',
       });
       // Cohere should not have parameterDefinitions for empty properties
-      expect((cohereTools[0] as { parameterDefinitions?: unknown }).parameterDefinitions).toBeUndefined();
+      expect(
+        (cohereTools[0] as { parameterDefinitions?: unknown }).parameterDefinitions
+      ).toBeUndefined();
     });
 
     it('should handle malformed tool call arguments', () => {

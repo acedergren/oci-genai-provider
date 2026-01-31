@@ -1,12 +1,27 @@
-import { RerankingModelV3, RerankingModelV3CallOptions } from '@ai-sdk/provider';
+import type {
+  RerankingModelV3,
+  RerankingModelV3CallOptions,
+  JSONObject,
+  SharedV3Warning,
+} from '@ai-sdk/provider';
+import { InvalidArgumentError, NoSuchModelError } from '@ai-sdk/provider';
 import { GenerativeAiInferenceClient } from 'oci-generativeaiinference';
 import { Region } from 'oci-common';
 import { createAuthProvider, getCompartmentId, getRegion } from '../auth';
 import { getRerankingModelMetadata, isValidRerankingModelId } from './registry';
-import type { OCIRerankingSettings } from '../types';
+import type { OCIRerankingSettings, RequestOptions } from '../types';
+import { handleOCIError } from '../shared/errors';
+import { withRetry, withTimeout, isRetryableError } from '../shared/utils';
+import {
+  getOCIProviderOptions,
+  resolveCompartmentId,
+  resolveEndpoint,
+  resolveServingMode,
+} from '../shared/provider-options';
+import { resolveRequestOptions } from '../shared/request-options';
 
 export class OCIRerankingModel implements RerankingModelV3 {
-  readonly specificationVersion = 'V3';
+  readonly specificationVersion = 'v3';
   readonly provider = 'oci-genai';
 
   private _client?: GenerativeAiInferenceClient;
@@ -16,28 +31,65 @@ export class OCIRerankingModel implements RerankingModelV3 {
     private config: OCIRerankingSettings
   ) {
     if (!isValidRerankingModelId(modelId)) {
-      throw new Error(`Invalid reranking model ID: ${modelId}. Valid models: cohere.rerank-v3.5`);
+      throw new NoSuchModelError({
+        modelId,
+        modelType: 'rerankingModel',
+      });
     }
   }
 
-  private async getClient(): Promise<GenerativeAiInferenceClient> {
-    if (!this._client) {
+  private async getClient(endpointOverride?: string): Promise<GenerativeAiInferenceClient> {
+    const resolvedEndpoint = resolveEndpoint(this.config.endpoint, endpointOverride);
+
+    if (!this._client || (endpointOverride && endpointOverride !== this.config.endpoint)) {
       const authProvider = await createAuthProvider(this.config);
       const regionId = getRegion(this.config);
 
-      this._client = new GenerativeAiInferenceClient({
+      const client = new GenerativeAiInferenceClient({
         authenticationDetailsProvider: authProvider,
       });
 
       // Set region using proper OCI Region API
-      this._client.region = Region.fromRegionId(regionId);
+      client.region = Region.fromRegionId(regionId);
 
-      if (this.config.endpoint) {
-        this._client.endpoint = this.config.endpoint;
+      if (resolvedEndpoint) {
+        client.endpoint = resolvedEndpoint;
       }
+
+      if (!endpointOverride || endpointOverride === this.config.endpoint) {
+        this._client = client;
+      }
+
+      return client;
     }
 
     return this._client;
+  }
+
+  private getRequestOptions(perRequestOptions?: RequestOptions): Required<RequestOptions> {
+    return resolveRequestOptions(this.config.requestOptions, perRequestOptions);
+  }
+
+  private async executeWithResilience<T>(
+    operation: () => Promise<T>,
+    operationName: string,
+    requestOptions?: RequestOptions
+  ): Promise<T> {
+    const options = this.getRequestOptions(requestOptions);
+
+    const withTimeoutOperation = (): Promise<T> =>
+      withTimeout(operation(), options.timeoutMs, operationName);
+
+    if (options.retry.enabled) {
+      return withRetry(withTimeoutOperation, {
+        maxRetries: options.retry.maxRetries,
+        baseDelayMs: options.retry.baseDelayMs,
+        maxDelayMs: options.retry.maxDelayMs,
+        isRetryable: isRetryableError,
+      });
+    }
+
+    return withTimeoutOperation();
   }
 
   async doRerank(options: RerankingModelV3CallOptions): Promise<{
@@ -45,16 +97,23 @@ export class OCIRerankingModel implements RerankingModelV3 {
       index: number;
       relevanceScore: number;
     }>;
+    providerMetadata?: Record<string, JSONObject>;
+    warnings?: SharedV3Warning[];
     response?: {
       id?: string;
       timestamp?: Date;
       modelId?: string;
+      headers?: Record<string, string>;
+      body?: unknown;
     };
   }> {
     const { query, documents, topN } = options;
 
     if (documents.type !== 'text') {
-      throw new Error(`OCI reranking only supports text documents, got: ${documents.type}`);
+      throw new InvalidArgumentError({
+        argument: 'documents',
+        message: `OCI reranking only supports text documents, got: ${documents.type}`,
+      });
     }
 
     const documentTexts = documents.values;
@@ -66,38 +125,61 @@ export class OCIRerankingModel implements RerankingModelV3 {
       );
     }
 
-    const client = await this.getClient();
-    const compartmentId = getCompartmentId(this.config);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const response = await (client as any).rerankText({
-      rerankTextDetails: {
-        servingMode: {
-          servingType: 'ON_DEMAND',
-          modelId: this.modelId,
-        },
-        compartmentId,
-        input: query,
-        documents: documentTexts,
-        topN: topN ?? this.config.topN,
-        isEcho: this.config.returnDocuments ?? false,
-      },
-    });
-
-    const ranking = response.rerankTextResult.documentRanks.map(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (rank: any) => ({
-        index: rank.index ?? 0,
-        relevanceScore: rank.relevanceScore ?? 0,
-      })
+    const ociOptions = getOCIProviderOptions(options.providerOptions);
+    const client = await this.getClient(ociOptions?.endpoint);
+    const compartmentId = resolveCompartmentId(
+      getCompartmentId(this.config),
+      ociOptions?.compartmentId
     );
+    const warnings: SharedV3Warning[] = [];
 
-    return {
-      ranking,
-      response: {
-        id: response.rerankTextResult.id,
-        modelId: response.rerankTextResult.modelId,
-      },
-    };
+    try {
+      const response = await this.executeWithResilience<any>(
+        () =>
+          (client as any).rerankText({
+            rerankTextDetails: {
+              servingMode: resolveServingMode(
+                this.modelId,
+                this.config.servingMode,
+                ociOptions?.servingMode
+              ),
+              compartmentId,
+              input: query,
+              documents: documentTexts,
+              topN: topN ?? this.config.topN,
+              isEcho: this.config.returnDocuments ?? false,
+            },
+          }),
+        'OCI rerank request',
+        ociOptions?.requestOptions
+      );
+
+      const ranking = response.rerankTextResult.documentRanks.map(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (rank: any) => ({
+          index: rank.index ?? 0,
+          relevanceScore: rank.relevanceScore ?? 0,
+        })
+      );
+
+      return {
+        ranking,
+        warnings,
+        providerMetadata: {
+          oci: {
+            requestId: response.opcRequestId,
+            modelId: response.rerankTextResult.modelId ?? this.modelId,
+          },
+        },
+        response: {
+          id: response.rerankTextResult.id,
+          modelId: response.rerankTextResult.modelId,
+          headers: response.opcRequestId ? { 'opc-request-id': response.opcRequestId } : undefined,
+          body: response,
+        },
+      };
+    } catch (error) {
+      throw handleOCIError(error);
+    }
   }
 }

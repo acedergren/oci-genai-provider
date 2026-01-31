@@ -1,0 +1,4 @@
+
+> @acedergren/test-utils@0.1.0 type-check /Users/acedergr/Projects/opencode-oci-genai/packages/test-utils
+> tsc --noEmit
+

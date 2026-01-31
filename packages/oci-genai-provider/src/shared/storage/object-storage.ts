@@ -18,7 +18,8 @@ export async function uploadAudioToObjectStorage(
   config: OCIConfig,
   bucketName: string,
   objectName: string,
-  audioData: Uint8Array
+  audioData: Uint8Array,
+  contentType?: string
 ): Promise<{ namespaceName: string; bucketName: string; objectName: string }> {
   const authProvider = await createAuthProvider(config);
   const region = getRegion(config);
@@ -39,7 +40,7 @@ export async function uploadAudioToObjectStorage(
     objectName,
     putObjectBody: audioData,
     contentLength: audioData.byteLength,
-    contentType: 'audio/wav',
+    contentType: contentType ?? 'audio/wav',
   });
 
   return { namespaceName, bucketName, objectName };

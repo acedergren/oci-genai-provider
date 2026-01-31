@@ -6,11 +6,11 @@ Context and guidelines for AI coding agents working with this repository.
 
 OCI Generative AI provider for Vercel AI SDK. A pnpm workspace monorepo with three packages:
 
-| Package | Purpose | Published |
-|---------|---------|-----------|
-| `@acedergren/oci-genai-provider` | Core Vercel AI SDK provider | Yes |
-| `@acedergren/opencode-oci-genai` | OpenCode convenience wrapper | Yes |
-| `@acedergren/test-utils` | Shared test infrastructure | No |
+| Package                          | Purpose                      | Published |
+| -------------------------------- | ---------------------------- | --------- |
+| `@acedergren/oci-genai-provider` | Core Vercel AI SDK provider  | Yes       |
+| `@acedergren/opencode-oci-genai` | OpenCode convenience wrapper | Yes       |
+| `@acedergren/test-utils`         | Shared test infrastructure   | No        |
 
 ## Essential Commands
 
@@ -125,7 +125,7 @@ OCI_CONFIG_PROFILE=FRANKFURT                      # Optional
 
 ## Supported Models
 
-- **xAI Grok**: grok-4-maverick, grok-4-scout, grok-3, grok-3-mini
+- **xAI Grok**: xai.grok-4, xai.grok-4-fast-reasoning, xai.grok-4-fast-non-reasoning, xai.grok-3, xai.grok-3-mini
 - **Meta Llama**: llama-3.3-70b, llama-3.2-vision, llama-3.1-405b
 - **Cohere**: command-r-plus, command-a, command-a-reasoning
 - **Google Gemini**: gemini-2.5-pro, gemini-2.5-flash

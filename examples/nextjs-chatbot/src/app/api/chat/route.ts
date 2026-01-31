@@ -36,9 +36,7 @@ export async function POST(request: Request) {
     });
   }
 
-  // Provider implements LanguageModelV3 - cast to any for AI SDK compatibility
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const languageModel = provider.languageModel(modelId) as any;
+  const languageModel = provider.languageModel(modelId);
 
   const result = await streamText({
     model: languageModel,

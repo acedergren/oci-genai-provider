@@ -75,7 +75,7 @@ import { TEST_CONFIG, TEST_MODEL_IDS, TEST_OCIDS } from '@acedergren/test-utils'
 
 // TEST_MODEL_IDS
 {
-  grok: 'xai.grok-4-maverick',
+  grok: 'xai.grok-4',
   llama: 'meta.llama-3.3-70b-instruct',
   cohere: 'cohere.command-r-plus',
   gemini: 'google.gemini-2.5-flash',

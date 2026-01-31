@@ -18,7 +18,7 @@ import {
 } from '@acedergren/oci-genai-provider';
 
 import type { CLIOptions, Logger } from '../types.js';
-import { select, confirm, multiselect, type SelectChoice } from '../utils/prompts.js';
+import { confirm, multiselect, type SelectChoice } from '../utils/prompts.js';
 
 /**
  * Family display names for grouping
@@ -34,11 +34,8 @@ const FAMILY_NAMES: Record<string, string> = {
 /**
  * Ask about coding optimization settings
  */
-export async function askCodingOptimization(
-  options: CLIOptions,
-  log: Logger
-): Promise<boolean> {
-  if (options.yes) {
+export async function askCodingOptimization(_options: CLIOptions, log: Logger): Promise<boolean> {
+  if (_options.yes) {
     // Default to enabled in non-interactive mode
     return true;
   }
@@ -60,7 +57,7 @@ export async function askCodingOptimization(
  */
 export async function selectModels(
   region: string,
-  options: CLIOptions,
+  _options: CLIOptions,
   log: Logger
 ): Promise<string[]> {
   // Get models available in this region (exclude dedicated-only by default)

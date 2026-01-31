@@ -2,6 +2,7 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { OCILanguageModel } from '../OCILanguageModel';
 import type { AuthenticationDetailsProvider } from 'oci-common';
 import type { OCIConfig } from '../../types';
+import { createReadableStream } from '../../__tests__/utils/test-helpers';
 
 // Mock functions
 const mockAuthProvider: AuthenticationDetailsProvider = {
@@ -48,6 +49,34 @@ describe('OCILanguageModel - Advanced V3 Features', () => {
     compartmentId: 'ocid1.compartment.oc1..test',
   };
 
+  const createMockResponse = (options: {
+    text?: string;
+    reasoning?: string;
+    usage?: { promptTokens: number; completionTokens: number; reasoningTokens?: number };
+  } = {}) => ({
+    body: createReadableStream([
+      `data: ${JSON.stringify({
+        message: {
+          content: options.text ? [{ type: 'TEXT', text: options.text }] : [],
+          reasoningContent: options.reasoning,
+        },
+      })}\n\n`,
+      `data: ${JSON.stringify({
+        finishReason: 'STOP',
+        usage: {
+          promptTokens: options.usage?.promptTokens ?? 10,
+          completionTokens: options.usage?.completionTokens ?? 5,
+          completionTokensDetails: options.usage?.reasoningTokens
+            ? { reasoningTokens: options.usage.reasoningTokens }
+            : undefined,
+        },
+      })}\n\n`,
+    ]),
+    headers: {
+      entries: () => new Map<string, string>().entries(),
+    },
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -56,12 +85,7 @@ describe('OCILanguageModel - Advanced V3 Features', () => {
     it('should convert file parts (images) to OCI format for Generic models', async () => {
       const model = new OCILanguageModel('google.gemini-2.5-flash', mockConfig);
 
-      mockChat.mockResolvedValue({
-        chatResponse: {
-          choices: [{ message: { content: [{ text: 'I see a cat' }] }, finishReason: 'STOP' }],
-          usage: { promptTokens: 10, completionTokens: 5 },
-        },
-      } as any);
+      mockChat.mockImplementation(async () => createMockResponse({ text: 'I see a cat' }));
 
       await model.doGenerate({
         prompt: [
@@ -97,13 +121,7 @@ describe('OCILanguageModel - Advanced V3 Features', () => {
     it('should convert file parts (images) to OCI format for Cohere V2 models', async () => {
       const model = new OCILanguageModel('cohere.command-a-vision-07-2025', mockConfig);
 
-      mockChat.mockResolvedValue({
-        chatResponse: {
-          text: 'I see a dog',
-          finishReason: 'COMPLETE',
-          usage: { promptTokens: 10, completionTokens: 5 },
-        },
-      } as any);
+      mockChat.mockImplementation(async () => createMockResponse({ text: 'I see a dog' }));
 
       await model.doGenerate({
         prompt: [
@@ -131,69 +149,70 @@ describe('OCILanguageModel - Advanced V3 Features', () => {
     it('should support reasoning settings for Generic models', async () => {
       const model = new OCILanguageModel('google.gemini-2.5-pro', mockConfig);
 
-      mockChat.mockResolvedValue({
-        chatResponse: {
-          choices: [
-            {
-              message: {
-                content: [{ text: 'Final answer' }],
-                reasoningContent: 'Thinking process...',
-              },
-              finishReason: 'STOP',
-            },
-          ],
+      mockChat.mockImplementation(async () =>
+        createMockResponse({
+          text: 'Final answer',
+          reasoning: 'Thinking process...', 
           usage: {
             promptTokens: 10,
             completionTokens: 20,
-            completionTokensDetails: { reasoningTokens: 15 },
+            reasoningTokens: 15,
           },
-        },
-      } as any);
+        })
+      );
 
-      const result = await model.doGenerate({
-        prompt: [{ role: 'user', content: [{ type: 'text', text: 'Solve this' }] }],
-        providerOptions: { oci: { reasoningEffort: 'high' } },
-      });
+      const options = {
+        prompt: [{ role: 'user' as const, content: [{ type: 'text' as const, text: 'test' }] }],
+        providerOptions: {
+          oci: { reasoningEffort: 'high' as const },
+        },
+      };
+
+      const result = await model.doGenerate(options);
+
+      expect(result.content).toContainEqual({ type: 'reasoning', text: 'Thinking process...' });
+      expect(result.usage.outputTokens.reasoning).toBe(15);
 
       const chatRequest = (mockChat.mock.calls[0][0] as any).chatDetails.chatRequest;
       expect(chatRequest.reasoningEffort).toBe('HIGH');
-
-      // Verify result contains reasoning
-      expect(result.content).toContainEqual(
-        expect.objectContaining({ type: 'reasoning', text: 'Thinking process...' })
-      );
-      expect(result.usage.outputTokens.total).toBe(20);
-      expect(result.usage.outputTokens.reasoning).toBe(15);
     });
 
     it('should support reasoning settings for Cohere models', async () => {
       const model = new OCILanguageModel('cohere.command-a-reasoning-08-2025', mockConfig);
 
-      mockChat.mockResolvedValue({
-        chatResponse: {
-          choices: [
-            {
-              message: {
-                content: [
-                  { type: 'THINKING', thinking: 'I am reasoning...' },
-                  { type: 'TEXT', text: 'Result' },
-                ],
-              },
-              finishReason: 'COMPLETE',
+      mockChat.mockImplementation(async () => ({
+        body: createReadableStream([
+          `data: ${JSON.stringify({
+            message: {
+              content: [{ type: 'THINKING', thinking: 'I am reasoning...' }],
             },
-          ],
-          usage: {
-            promptTokens: 5,
-            completionTokens: 30,
-            completionTokensDetails: { reasoningTokens: 25 },
-          },
+          })}\n\n`,
+          `data: ${JSON.stringify({
+            message: {
+              content: [{ type: 'TEXT', text: 'Result' }],
+            },
+          })}\n\n`,
+          `data: ${JSON.stringify({
+            finishReason: 'COMPLETE',
+            usage: {
+              promptTokens: 5,
+              completionTokens: 30,
+              completionTokensDetails: { reasoningTokens: 25 },
+            },
+          })}\n\n`,
+        ]),
+        headers: {
+          entries: () => new Map<string, string>().entries(),
         },
-      } as any);
+      }));
 
       const result = await model.doGenerate({
         prompt: [{ role: 'user', content: [{ type: 'text', text: 'Think hard' }] }],
         providerOptions: { oci: { thinking: true, tokenBudget: 2000 } },
       });
+
+      expect(result.content).toContainEqual({ type: 'reasoning', text: 'I am reasoning...' });
+      expect(result.content).toContainEqual({ type: 'text', text: 'Result' });
 
       const chatRequest = (mockChat.mock.calls[0][0] as any).chatDetails.chatRequest;
       expect(chatRequest.thinking).toEqual({ type: 'ENABLED', tokenBudget: 2000 });

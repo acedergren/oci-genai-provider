@@ -41,13 +41,13 @@ jest.mock('oci-generativeaiinference', () => ({
       // Create a mock streaming response
       const encoder = new TextEncoder();
       const sseData = `event: message
-data: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":"Hello"}]}}]}}
+data: {"message":{"content":[{"text":"Hello"}]}}
 
 event: message
-data: {"chatResponse":{"chatChoice":[{"message":{"content":[{"text":" world"}]}}]}}
+data: {"message":{"content":[{"text":" world"}]}}
 
 event: message
-data: {"chatResponse":{"chatChoice":[{"finishReason":"STOP"}],"usage":{"promptTokens":10,"completionTokens":5}}}
+data: {"finishReason":"STOP"}
 
 `;
       const stream = new ReadableStream({
@@ -103,12 +103,20 @@ describe('OCILanguageModel.doStream', () => {
       }
     }
 
+    // Should have stream start
+    const streamStart = parts.find((p) => (p as { type: string }).type === 'stream-start');
+    expect(streamStart).toBeDefined();
+
     // Should have text deltas
     const textDeltas = parts.filter(
       (p): p is { type: 'text-delta'; delta: string } =>
         (p as { type: string }).type === 'text-delta'
     );
     expect(textDeltas.length).toBeGreaterThan(0);
+
+    // Should have text end
+    const textEnd = parts.find((p) => (p as { type: string }).type === 'text-end');
+    expect(textEnd).toBeDefined();
   });
 
   it('should include finish part with usage', async () => {
@@ -137,6 +145,30 @@ describe('OCILanguageModel.doStream', () => {
     );
     expect(finishPart).toBeDefined();
     expect(finishPart?.finishReason).toEqual({ unified: 'stop', raw: 'STOP' });
+  });
+
+  it('should include raw parts when includeRawChunks is true', async () => {
+    const model = new OCILanguageModel('cohere.command-r-plus', mockConfig);
+
+    const result = await model.doStream({
+      prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
+      includeRawChunks: true,
+    });
+
+    const reader = result.stream.getReader();
+    const parts: unknown[] = [];
+    let done = false;
+
+    while (!done) {
+      const { value, done: isDone } = await reader.read();
+      done = isDone;
+      if (value) {
+        parts.push(value);
+      }
+    }
+
+    const rawParts = parts.filter((p) => (p as { type: string }).type === 'raw');
+    expect(rawParts.length).toBeGreaterThan(0);
   });
 
   it('should set isStream flag in request', () => {

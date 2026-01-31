@@ -13,6 +13,7 @@ import { OCIEmbeddingModel } from './embedding-models/OCIEmbeddingModel';
 import { OCISpeechModel } from './speech-models/OCISpeechModel';
 import { OCIRerankingModel } from './reranking-models/OCIRerankingModel';
 import { OCITranscriptionModel } from './transcription-models/OCITranscriptionModel';
+import { OCIRealtimeTranscription } from './realtime/OCIRealtimeTranscription';
 import type {
   OCIConfig,
   OCILanguageModelSettings,
@@ -21,6 +22,7 @@ import type {
   OCITranscriptionSettings,
   OCIRerankingSettings,
 } from './types';
+import type { OCIRealtimeSettings } from './realtime/types';
 
 /**
  * OCI GenAI Provider implementing ProviderV3 interface.
@@ -33,7 +35,7 @@ import type {
  * - Reranking (coming in Plan 5)
  */
 export class OCIGenAIProvider implements ProviderV3 {
-  readonly specificationVersion = 'V3' as const;
+  readonly specificationVersion = 'v3' as const;
 
   constructor(private readonly config: OCIConfig = {}) {}
 
@@ -53,6 +55,17 @@ export class OCIGenAIProvider implements ProviderV3 {
   languageModel(modelId: string, settings?: OCILanguageModelSettings): LanguageModelV3 {
     const mergedConfig: OCIConfig = { ...this.config, ...settings };
     return new OCILanguageModel(modelId, mergedConfig);
+  }
+
+  /**
+   * Create a language model instance for chat/completion.
+   * Alias for `languageModel`.
+   *
+   * @param modelId - OCI model identifier
+   * @param settings - Optional model-specific settings
+   */
+  chat(modelId: string, settings?: OCILanguageModelSettings): LanguageModelV3 {
+    return this.languageModel(modelId, settings);
   }
 
   /**
@@ -130,5 +143,42 @@ export class OCIGenAIProvider implements ProviderV3 {
   rerankingModel(modelId: string, settings?: OCIRerankingSettings): RerankingModelV3 {
     const mergedConfig: OCIConfig = { ...this.config, ...settings };
     return new OCIRerankingModel(modelId, mergedConfig);
+  }
+
+  /**
+   * Create a realtime transcription session for low-latency streaming STT.
+   *
+   * Unlike the batch `transcriptionModel()`, this uses OCI's WebSocket-based
+   * realtime speech service for sub-second latency streaming transcription.
+   *
+   * @param settings - Realtime transcription settings
+   * @returns Realtime transcription session
+   *
+   * @example Event-based API
+   * ```typescript
+   * const session = oci.realtimeTranscription({
+   *   language: 'en-US',
+   *   model: 'ORACLE',
+   * });
+   *
+   * session.on('partial', (result) => console.log('Partial:', result.text));
+   * session.on('final', (result) => console.log('Final:', result.text));
+   *
+   * await session.connect();
+   * session.sendAudio(audioChunk);
+   * await session.close();
+   * ```
+   *
+   * @example Async Iterator API
+   * ```typescript
+   * const session = oci.realtimeTranscription({ language: 'en-US' });
+   *
+   * for await (const result of session.transcribe(audioStream)) {
+   *   console.log(result.isFinal ? 'FINAL:' : 'PARTIAL:', result.text);
+   * }
+   * ```
+   */
+  realtimeTranscription(settings?: OCIRealtimeSettings): OCIRealtimeTranscription {
+    return new OCIRealtimeTranscription(this.config, settings);
   }
 }

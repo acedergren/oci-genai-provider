@@ -23,7 +23,7 @@ import { CODING_SETTINGS } from '../types.js';
 /**
  * Install the OpenCode OCI package
  */
-export async function installPackage(log: Logger): Promise<void> {
+export function installPackage(log: Logger): void {
   const opencodeDir = path.join(os.homedir(), '.config/opencode');
   const installSpinner = ora('Installing @acedergren/opencode-oci-genai...').start();
 
@@ -65,14 +65,14 @@ export async function installPackage(log: Logger): Promise<void> {
 /**
  * Generate opencode.json configuration
  */
-export async function generateConfig(
+export function generateConfig(
   profileName: string,
   compartmentId: string,
   selectedModels: string[],
   enableCodingOptimization: boolean,
   existingConfig: Record<string, unknown> | undefined,
   log: Logger
-): Promise<void> {
+): void {
   const configSpinner = ora('Generating opencode.json...').start();
 
   const allModels = getAllModels();
@@ -185,5 +185,7 @@ export function showSuccessMessage(
   }
   log.log('');
 
-  log.log(chalk.gray('Tip: Run this wizard again anytime with: npx @acedergren/opencode-oci-setup\n'));
+  log.log(
+    chalk.gray('Tip: Run this wizard again anytime with: npx @acedergren/opencode-oci-setup\n')
+  );
 }

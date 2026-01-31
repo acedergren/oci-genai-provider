@@ -88,7 +88,7 @@ import { generateText } from 'ai';
 
 export default async function Page() {
   const result = await generateText({
-    model: oci('xai.grok-4-maverick'),
+    model: oci('xai.grok-4'),
     prompt: 'Explain Next.js App Router',
   });
 

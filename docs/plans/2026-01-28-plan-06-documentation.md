@@ -179,9 +179,9 @@ const provider = createOCI({
 | Model ID | Family | Context | Best For |
 |----------|--------|---------|----------|
 | `cohere.command-r-plus` | Cohere | 128K | Long context, RAG |
-| `cohere.command-r` | Cohere | 128K | General purpose |
+| `cohere.command-r-08-2024` | Cohere | 128K | General purpose |
 | `meta.llama-3.3-70b` | Meta | 8K | Instruction following |
-| `meta.llama-3.1-405b` | Meta | 128K | Most capable |
+| `meta.llama-3.1-405b-instruct` | Meta | 128K | Most capable |
 | `anthropic.claude-3-5-sonnet-v2` | Anthropic | 200K | Analysis, coding |
 | `mistral.mistral-large-2` | Mistral | 128K | Multilingual |
 

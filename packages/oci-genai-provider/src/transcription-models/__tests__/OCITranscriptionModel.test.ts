@@ -65,6 +65,7 @@ jest.mock('../../shared/storage/object-storage', () => ({
 }));
 
 // Import after mocks
+import { NoSuchModelError } from '@ai-sdk/provider';
 import { OCITranscriptionModel } from '../OCITranscriptionModel';
 
 describe('OCITranscriptionModel', () => {
@@ -123,7 +124,7 @@ describe('OCITranscriptionModel', () => {
       compartmentId: 'ocid1.compartment.test',
     });
 
-    expect(model.specificationVersion).toBe('V3');
+    expect(model.specificationVersion).toBe('v3');
     expect(model.provider).toBe('oci-genai');
     expect(model.modelId).toBe('ORACLE');
   });
@@ -145,13 +146,13 @@ describe('OCITranscriptionModel', () => {
   it('should throw error for invalid model ID', () => {
     expect(() => {
       new OCITranscriptionModel('invalid-model', {});
-    }).toThrow('Invalid transcription model ID');
+    }).toThrow(NoSuchModelError);
   });
 
   it('should reject old-style model IDs', () => {
     expect(() => {
       new OCITranscriptionModel('oci.speech.standard', {});
-    }).toThrow('Invalid transcription model ID');
+    }).toThrow(NoSuchModelError);
   });
 
   it('should accept language setting', () => {
@@ -289,7 +290,8 @@ describe('OCITranscriptionModel', () => {
         expect.anything(),
         'my-custom-bucket',
         expect.any(String),
-        expect.any(Uint8Array)
+        expect.any(Uint8Array),
+        'audio/wav'
       );
     });
 
@@ -318,7 +320,8 @@ describe('OCITranscriptionModel', () => {
         expect.anything(),
         expect.any(String),
         expect.any(String),
-        expect.any(Uint8Array)
+        expect.any(Uint8Array),
+        'audio/wav'
       );
     });
   });

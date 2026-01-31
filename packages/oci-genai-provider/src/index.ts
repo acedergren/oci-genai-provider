@@ -75,6 +75,7 @@ export type {
   OCISpeechSettings,
   OCITranscriptionSettings,
   OCIRerankingSettings,
+  OCIRealtimeSettings,
   ModelMetadata,
   RequestOptions,
   OCIGenAIRegion,
@@ -174,3 +175,36 @@ export type {
 export { withRetry, withTimeout, TimeoutError, isRetryableError } from './shared/utils';
 
 export type { RetryOptions } from './shared/utils';
+
+// ============================================================================
+// Realtime Transcription Exports (Streaming STT)
+// ============================================================================
+
+export {
+  OCIRealtimeTranscription,
+  OCIRealtimeClient,
+  WebSocketAdapter,
+  WebSocketReadyState,
+} from './realtime';
+
+export type {
+  // Settings
+  RealtimeAudioEncoding,
+  PartialResultStability,
+  RealtimeModelDomain,
+  RealtimePunctuation,
+  RealtimeModelType,
+  // Results
+  RealtimeTranscriptionResult,
+  TranscriptionToken,
+  // Events
+  RealtimeTranscriptionEvents,
+  RealtimeClientEvents,
+  AudioAckDetails,
+  // State
+  RealtimeConnectionState,
+  RealtimeSessionInfo,
+  // Errors
+  RealtimeErrorCode,
+  RealtimeError,
+} from './realtime';
