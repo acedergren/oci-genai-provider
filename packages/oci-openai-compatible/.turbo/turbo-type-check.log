@@ -1,0 +1,4 @@
+
+> @acedergren/oci-openai-compatible@0.1.0 type-check /Users/acedergr/Projects/opencode-oci-genai/packages/oci-openai-compatible
+> tsc --noEmit
+

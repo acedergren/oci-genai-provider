@@ -163,6 +163,7 @@ export class OCILanguageModel implements LanguageModelV3 {
       unified: 'other',
       raw: 'initializing',
     };
+    let providerMetadata: Record<string, any> | undefined;
 
     try {
       while (true) {
@@ -199,6 +200,7 @@ export class OCILanguageModel implements LanguageModelV3 {
           case 'finish':
             finishReason = value.finishReason;
             usage = value.usage;
+            providerMetadata = value.providerMetadata;
             break;
           case 'error':
             throw value.error;
@@ -215,6 +217,7 @@ export class OCILanguageModel implements LanguageModelV3 {
       request,
       response,
       warnings,
+      providerMetadata,
     };
   }
 
@@ -325,10 +328,9 @@ export class OCILanguageModel implements LanguageModelV3 {
           apiFormat,
           messages: messages.map((m) => ({
             role: m.role,
-            content: m.content.map((c) => ({
-              type: 'TEXT',
-              text: c.text ?? '',
-            })) as OCIModel.ChatContent[],
+            content: m.content as OCIModel.ChatContent[],
+            toolCalls: m.toolCalls,
+            toolCallId: m.toolCallId,
           })) as OCIModel.Message[],
           ...commonParams,
           ...toolParams,
@@ -379,6 +381,8 @@ export class OCILanguageModel implements LanguageModelV3 {
       const stream = parseSSEStream(streamInput, {
         includeRawChunks: options.includeRawChunks,
       });
+
+      const headers = response.headers ? Object.fromEntries(response.headers.entries()) : undefined;
 
       return {
         stream: new ReadableStream<LanguageModelV3StreamPart>({
@@ -442,9 +446,15 @@ export class OCILanguageModel implements LanguageModelV3 {
                         },
                         outputTokens: {
                           total: part.usage.completionTokens,
-                          text: undefined,
+                          text:
+                            part.usage.reasoningTokens !== undefined
+                              ? part.usage.completionTokens - part.usage.reasoningTokens
+                              : part.usage.completionTokens,
                           reasoning: part.usage.reasoningTokens,
                         },
+                      },
+                      providerMetadata: {
+                        oci: { requestId: headers?.['opc-request-id'] },
                       },
                     });
                     break;
@@ -462,7 +472,7 @@ export class OCILanguageModel implements LanguageModelV3 {
         }),
         request: { body: JSON.stringify(messages) },
         response: {
-          headers: response.headers ? Object.fromEntries(response.headers.entries()) : undefined,
+          headers,
         },
       };
     } catch (error) {

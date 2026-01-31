@@ -7,17 +7,23 @@ Integrating OCI GenAI into CI/CD pipelines for automated code review, testing, a
 Automate development workflows using OCI GenAI in GitHub Actions, GitLab CI, and other CI/CD platforms.
 
 **Best Models for CI/CD:**
-- **xai.grok-4-maverick** - Code review and analysis
+
+- **xai.grok-4** - Code review and analysis
 - **meta.llama-3.3-70b-instruct** - Cost-effective automation
 - **cohere.command-r-plus** - Documentation generation
 
 ## Use Cases
 
 ### 1. Automated Code Review
+
 ### 2. Test Generation
+
 ### 3. Documentation Updates
+
 ### 4. Commit Message Generation
+
 ### 5. PR Summarization
+
 ### 6. Security Scanning
 
 ## Example: GitHub Actions Code Review
@@ -26,16 +32,15 @@ Automate development workflows using OCI GenAI in GitHub Actions, GitLab CI, and
 name: AI Code Review
 
 on:
-  pull_request:
-    types: [opened, synchronize]
+pull_request:
+types: [opened, synchronize]
 
 jobs:
-  review:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+review:
+runs-on: ubuntu-latest
+steps: - uses: actions/checkout@v3
+with:
+fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -58,6 +63,7 @@ jobs:
           OCI_COMPARTMENT_ID: \${{ secrets.OCI_COMPARTMENT_ID }}
           OCI_REGION: eu-frankfurt-1
           GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+
 \`\`\`
 
 ## Example: Review Script
@@ -70,14 +76,15 @@ import { execFileSync } from 'child_process';
 const oci = createOCI({ region: 'eu-frankfurt-1' });
 
 async function reviewPR() {
-  // Get diff
-  const diff = execFileSync('git', ['diff', 'origin/main...HEAD'], 
-    { encoding: 'utf-8' }
-  );
+// Get diff
+const diff = execFileSync('git', ['diff', 'origin/main...HEAD'],
+{ encoding: 'utf-8' }
+);
 
-  const { text } = await generateText({
-    model: oci('xai.grok-4-maverick'),
-    prompt: \`Review this code change and provide:
+const { text } = await generateText({
+model: oci('xai.grok-4'),
+prompt: \`Review this code change and provide:
+
 1. Potential bugs or issues
 2. Security concerns
 3. Performance considerations
@@ -85,10 +92,10 @@ async function reviewPR() {
 
 Diff:
 \${diff}\`,
-  });
+});
 
-  console.log('## AI Code Review\n');
-  console.log(text);
+console.log('## AI Code Review\n');
+console.log(text);
 }
 
 reviewPR();
@@ -97,23 +104,27 @@ reviewPR();
 ## Best Practices
 
 ### Authentication
+
 - Use GitHub Secrets for OCI credentials
 - Never commit credentials to repository
 - Use instance principals on OCI Compute runners
 - Rotate secrets regularly
 
 ### Rate Limiting
+
 - Implement retry logic
 - Use caching for repeated analysis
 - Consider dedicated clusters for high-frequency CI/CD
 
 ### Security
+
 - Scan for secrets before sending to AI
 - Validate AI outputs before taking action
 - Log all AI interactions for audit
 - Use private repositories for sensitive code
 
 ### Webhook Integration
+
 - Process events asynchronously
 - Implement queue for high-volume repos
 - Set appropriate timeouts

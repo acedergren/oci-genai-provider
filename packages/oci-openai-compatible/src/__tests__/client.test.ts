@@ -48,8 +48,6 @@ describe('createOCIOpenAI', () => {
       region: 'us-ashburn-1',
     };
 
-    expect(() => createOCIOpenAI(config)).toThrow(
-      'OCI compartment ID must be provided'
-    );
+    expect(() => createOCIOpenAI(config)).toThrow('OCI compartment ID must be provided');
   });
 });

@@ -79,10 +79,10 @@ async function main(options: CLIOptions): Promise<void> {
   const enableCodingOptimization = await askCodingOptimization(options, log);
 
   // Step 5: Install package
-  await installPackage(log);
+  installPackage(log);
 
   // Step 6: Generate config
-  await generateConfig(
+  generateConfig(
     profile.name,
     compartmentId,
     selectedModels,

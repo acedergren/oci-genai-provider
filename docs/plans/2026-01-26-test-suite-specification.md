@@ -246,8 +246,8 @@ describe('Type Definitions', () => {
   describe('ModelMetadata', () => {
     it('should define Grok model metadata', () => {
       const metadata: any = {
-        id: 'xai.grok-4-maverick',
-        name: 'Grok 4 Maverick',
+        id: 'xai.grok-4',
+        name: 'Grok 4',
         family: 'grok',
         capabilities: {
           streaming: true,
@@ -456,12 +456,12 @@ import { describe, it, expect } from '@jest/globals';
 describe('Model Registry', () => {
   describe('isValidModelId', () => {
     describe('Grok models', () => {
-      it('should validate xai.grok-4-maverick', () => {
-        expect('xai.grok-4-maverick').toContain('xai.grok');
+      it('should validate xai.grok-4', () => {
+        expect('xai.grok-4').toContain('xai.grok');
       });
 
-      it('should validate xai.grok-4-scout', () => {
-        expect('xai.grok-4-scout').toContain('xai.grok');
+      it('should validate xai.grok-4-fast-reasoning', () => {
+        expect('xai.grok-4-fast-reasoning').toContain('xai.grok');
       });
 
       it('should validate xai.grok-3', () => {
@@ -473,7 +473,7 @@ describe('Model Registry', () => {
       });
 
       it('should reject invalid Grok model', () => {
-        expect('xai.invalid').not.toBe('xai.grok-4-maverick');
+        expect('xai.invalid').not.toBe('xai.grok-4');
       });
     });
 
@@ -496,8 +496,8 @@ describe('Model Registry', () => {
         expect('cohere.command-r-plus').toContain('cohere');
       });
 
-      it('should validate cohere.command-a', () => {
-        expect('cohere.command-a').toContain('command-a');
+      it('should validate cohere.command-a-03-2025', () => {
+        expect('cohere.command-a-03-2025').toContain('command-a');
       });
 
       it('should validate cohere.command-a-reasoning', () => {
@@ -531,7 +531,7 @@ describe('Model Registry', () => {
   describe('getModelMetadata', () => {
     it('should return Grok 4 Maverick metadata', () => {
       const expected = {
-        id: 'xai.grok-4-maverick',
+        id: 'xai.grok-4',
         family: 'grok',
         capabilities: { streaming: true, tools: true, vision: false },
         contextWindow: 131072,
@@ -596,7 +596,7 @@ describe('Model Registry', () => {
   describe('getModelsByFamily', () => {
     it('should return Grok models', () => {
       const family = 'grok';
-      const expectedCount = 4; // grok-4-maverick, scout, 3, 3-mini
+      const expectedCount = 4; // grok-4, grok-4-fast-reasoning, 3, 3-mini
       expect(expectedCount).toBeGreaterThanOrEqual(3);
     });
 
@@ -881,8 +881,8 @@ describe('OCILanguageModel', () => {
     });
 
     it('should have correct model ID', () => {
-      const modelId = 'xai.grok-4-maverick';
-      expect(modelId).toBe('xai.grok-4-maverick');
+      const modelId = 'xai.grok-4';
+      expect(modelId).toBe('xai.grok-4');
     });
 
     it('should have tool default object generation mode', () => {
@@ -1335,7 +1335,7 @@ describe('createOCI Provider Factory', () => {
     });
 
     it('should create Grok model', () => {
-      const modelId = 'xai.grok-4-maverick';
+      const modelId = 'xai.grok-4';
       expect(modelId).toContain('grok');
     });
 
@@ -1405,7 +1405,7 @@ describe('createOCI Provider Factory', () => {
         model: (id: string) => ({ modelId: id }),
       };
 
-      const model = oci.model('xai.grok-4-maverick');
+      const model = oci.model('xai.grok-4');
       expect(model.modelId).toContain('grok');
     });
   });

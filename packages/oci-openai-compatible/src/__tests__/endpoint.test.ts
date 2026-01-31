@@ -1,6 +1,6 @@
 import { describe, it, expect } from '@jest/globals';
 import { getBaseURL } from '../endpoint';
-import type { OCIOpenAIConfig } from '../types';
+import type { OCIOpenAIConfig, OCIRegion } from '../types';
 
 describe('getBaseURL', () => {
   it('should use custom endpoint if provided', () => {
@@ -55,7 +55,7 @@ describe('getBaseURL', () => {
     ];
 
     regions.forEach(([region, expectedURL]) => {
-      const config: OCIOpenAIConfig = { region: region as any };
+      const config: OCIOpenAIConfig = { region: region as OCIRegion };
       expect(getBaseURL(config)).toBe(expectedURL);
     });
   });

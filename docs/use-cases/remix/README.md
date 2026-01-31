@@ -87,7 +87,7 @@ import { useLoaderData } from '@remix-run/react';
 
 export const loader: LoaderFunction = async ({ params }) => {
   const result = await generateText({
-    model: oci('xai.grok-4-maverick'),
+    model: oci('xai.grok-4'),
     prompt: `Summarize document ${params.id}`,
   });
 

@@ -1,13 +1,20 @@
 import { AIServiceSpeechClient, models } from 'oci-aispeech';
 import { Region } from 'oci-common';
 import type { SharedV3Warning, SharedV2Headers, JSONObject } from '@ai-sdk/provider';
+import { NoSuchModelError } from '@ai-sdk/provider';
 import { createAuthProvider, getRegion, getCompartmentId } from '../auth';
 import { getSpeechModelMetadata, isValidSpeechModelId } from './registry';
 import type { OCISpeechSettings } from '../types';
 import type { SpeechModelV3, SpeechModelV3CallOptions } from '@ai-sdk/provider';
+import { handleOCIError } from '../shared/errors';
+import {
+  getOCIProviderOptions,
+  resolveCompartmentId,
+  resolveEndpoint,
+} from '../shared/provider-options';
 
 export class OCISpeechModel implements SpeechModelV3 {
-  readonly specificationVersion = 'V3';
+  readonly specificationVersion = 'v3';
   readonly provider = 'oci-genai';
   private readonly voice: string;
   private readonly _config: OCISpeechSettings;
@@ -18,9 +25,10 @@ export class OCISpeechModel implements SpeechModelV3 {
     config: OCISpeechSettings
   ) {
     if (!isValidSpeechModelId(modelId)) {
-      throw new Error(
-        `Invalid speech model ID: ${modelId}. ` + `Valid models: TTS_1_STANDARD, TTS_2_NATURAL`
-      );
+      throw new NoSuchModelError({
+        modelId,
+        modelType: 'speechModel',
+      });
     }
     const metadata = getSpeechModelMetadata(modelId);
     const defaultVoice = metadata?.defaultVoice;
@@ -28,20 +36,28 @@ export class OCISpeechModel implements SpeechModelV3 {
     this._config = config;
   }
 
-  private async getClient(): Promise<AIServiceSpeechClient> {
-    if (!this._client) {
+  private async getClient(endpointOverride?: string): Promise<AIServiceSpeechClient> {
+    const resolvedEndpoint = resolveEndpoint(this._config.endpoint, endpointOverride);
+
+    if (!this._client || (endpointOverride && endpointOverride !== this._config.endpoint)) {
       const authProvider = await createAuthProvider(this._config);
       const region = getRegion(this._config);
 
-      this._client = new AIServiceSpeechClient({
+      const client = new AIServiceSpeechClient({
         authenticationDetailsProvider: authProvider,
       });
 
-      this._client.region = Region.fromRegionId(region);
+      client.region = Region.fromRegionId(region);
 
-      if (this._config.endpoint) {
-        this._client.endpoint = this._config.endpoint;
+      if (resolvedEndpoint) {
+        client.endpoint = resolvedEndpoint;
       }
+
+      if (!endpointOverride || endpointOverride === this._config.endpoint) {
+        this._client = client;
+      }
+
+      return client;
     }
 
     return this._client;
@@ -60,6 +76,31 @@ export class OCISpeechModel implements SpeechModelV3 {
   }> {
     const startTime = new Date();
     const { text } = options;
+    const warnings: SharedV3Warning[] = [];
+
+    if (options.instructions) {
+      warnings.push({
+        type: 'unsupported',
+        feature: 'instructions',
+        details: 'OCI speech does not support instruction prompts.',
+      });
+    }
+
+    if (options.speed !== undefined) {
+      warnings.push({
+        type: 'unsupported',
+        feature: 'speed',
+        details: 'OCI speech does not support speed adjustments.',
+      });
+    }
+
+    if (options.language) {
+      warnings.push({
+        type: 'unsupported',
+        feature: 'language',
+        details: 'OCI speech does not support language override per request.',
+      });
+    }
 
     const metadata = getSpeechModelMetadata(this.modelId);
     if (!metadata) throw new Error('Invalid model metadata');
@@ -70,11 +111,16 @@ export class OCISpeechModel implements SpeechModelV3 {
       );
     }
 
-    const client = await this.getClient();
-    const compartmentId = getCompartmentId(this._config);
+    const ociOptions = getOCIProviderOptions(options.providerOptions);
+    const client = await this.getClient(ociOptions?.endpoint);
+    const compartmentId = resolveCompartmentId(
+      getCompartmentId(this._config),
+      ociOptions?.compartmentId
+    );
+    const voice = options.voice ?? this.voice;
 
     // Map format to OCI output format enum
-    const outputFormat = this.mapOutputFormat(this._config.format);
+    const outputFormat = this.mapOutputFormat(options.outputFormat ?? this._config.format);
 
     // Build synthesize speech request using proper OCI SDK types
     const synthesizeSpeechDetails: models.SynthesizeSpeechDetails = {
@@ -85,7 +131,7 @@ export class OCISpeechModel implements SpeechModelV3 {
         modelFamily: 'ORACLE',
         modelDetails: {
           modelName: metadata.modelName,
-          voiceId: this.voice,
+          voiceId: voice,
         },
         speechSettings: {
           outputFormat,
@@ -93,32 +139,37 @@ export class OCISpeechModel implements SpeechModelV3 {
       },
     };
 
-    const response = await client.synthesizeSpeech({
-      synthesizeSpeechDetails,
-    });
+    try {
+      const response = await client.synthesizeSpeech({
+        synthesizeSpeechDetails,
+      });
 
-    // Convert response stream to Uint8Array
-    const audioData = await this.streamToUint8Array(response.value as NodeJS.ReadableStream);
+      // Convert response stream to Uint8Array
+      const audioData = await this.streamToUint8Array(response.value);
 
-    return {
-      audio: audioData,
-      warnings: [],
-      request: {
-        body: synthesizeSpeechDetails,
-      },
-      response: {
-        timestamp: startTime,
-        modelId: this.modelId,
-        headers: {},
-      },
-      providerMetadata: {
-        oci: {
-          compartmentId,
-          voice: this.voice,
-          format: this._config.format || 'mp3',
+      return {
+        audio: audioData,
+        warnings,
+        request: {
+          body: synthesizeSpeechDetails,
         },
-      },
-    };
+        response: {
+          timestamp: startTime,
+          modelId: this.modelId,
+          headers: response.opcRequestId ? { 'opc-request-id': response.opcRequestId } : {},
+        },
+        providerMetadata: {
+          oci: {
+            compartmentId,
+            voice,
+            format: (options.outputFormat ?? this._config.format) || 'mp3',
+            requestId: response.opcRequestId,
+          },
+        },
+      };
+    } catch (error) {
+      throw handleOCIError(error);
+    }
   }
 
   /**
@@ -138,9 +189,50 @@ export class OCISpeechModel implements SpeechModelV3 {
   }
 
   /**
-   * Convert a Node.js readable stream to Uint8Array
+   * Convert a Web Streams API ReadableStream or Node.js stream to Uint8Array
    */
-  private async streamToUint8Array(stream: NodeJS.ReadableStream): Promise<Uint8Array> {
+  private async streamToUint8Array(stream: any): Promise<Uint8Array> {
+    // Check if it's a Web Streams API ReadableStream
+    if (stream && typeof stream.getReader === 'function') {
+      return this.webStreamToUint8Array(stream);
+    }
+
+    // Otherwise, treat as Node.js stream
+    return this.nodeStreamToUint8Array(stream);
+  }
+
+  /**
+   * Convert Web Streams API ReadableStream to Uint8Array
+   */
+  private async webStreamToUint8Array(stream: ReadableStream): Promise<Uint8Array> {
+    const reader = stream.getReader();
+    const chunks: Uint8Array[] = [];
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value) chunks.push(value);
+      }
+
+      // Calculate total length and combine chunks
+      const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+      const result = new Uint8Array(totalLength);
+      let offset = 0;
+      for (const chunk of chunks) {
+        result.set(chunk, offset);
+        offset += chunk.length;
+      }
+      return result;
+    } finally {
+      reader.releaseLock();
+    }
+  }
+
+  /**
+   * Convert Node.js readable stream to Uint8Array
+   */
+  private async nodeStreamToUint8Array(stream: NodeJS.ReadableStream): Promise<Uint8Array> {
     const chunks: Buffer[] = [];
 
     return new Promise((resolve, reject) => {

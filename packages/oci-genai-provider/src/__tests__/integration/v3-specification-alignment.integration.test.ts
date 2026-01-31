@@ -34,14 +34,6 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { NoSuchModelError } from '@ai-sdk/provider';
 import type {
   LanguageModelV3,
-  LanguageModelV3CallOptions,
-  LanguageModelV3StreamPart,
-  LanguageModelV3FinishReason,
-  LanguageModelV3Usage,
-  LanguageModelV3FunctionTool,
-  LanguageModelV3ToolChoice,
-  LanguageModelV3Content,
-  SharedV3Warning,
 } from '@ai-sdk/provider';
 import { OCILanguageModel } from '../../language-models/OCILanguageModel';
 import type { AuthenticationDetailsProvider } from 'oci-common';
@@ -53,18 +45,14 @@ import type { OCIConfig } from '../../types';
 
 const mockAuthProvider: AuthenticationDetailsProvider = {
   getKeyId: jest.fn(() => Promise.resolve('mock-key-id')),
-  getPrivateKey: jest.fn(
-    () => '-----BEGIN PRIVATE KEY-----\nMOCK\n-----END PRIVATE KEY-----'
-  ),
+  getPrivateKey: jest.fn(() => '-----BEGIN PRIVATE KEY-----\nMOCK\n-----END PRIVATE KEY-----'),
   getPassphrase: jest.fn(() => null),
 };
 
 const mockCreateAuthProvider = jest.fn<
   (config: OCIConfig) => Promise<AuthenticationDetailsProvider>
 >(() => Promise.resolve(mockAuthProvider));
-const mockGetRegion = jest.fn<(config: OCIConfig) => string>(
-  () => 'eu-frankfurt-1'
-);
+const mockGetRegion = jest.fn<(config: OCIConfig) => string>(() => 'eu-frankfurt-1');
 const mockGetCompartmentId = jest.fn<(config: OCIConfig) => string>(
   (config) => config.compartmentId ?? 'ocid1.compartment.oc1..test'
 );
@@ -125,10 +113,7 @@ describe('V3 Specification Alignment', () => {
     });
 
     it('should implement supportedUrls as Record<string, RegExp[]>', () => {
-      const model = new OCILanguageModel(
-        'cohere.command-r-plus',
-        defaultConfig
-      ) as LanguageModelV3;
+      const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig) as LanguageModelV3;
       expect(model.supportedUrls).toBeDefined();
       expect(typeof model.supportedUrls).toBe('object');
     });
@@ -166,10 +151,7 @@ describe('V3 Specification Alignment', () => {
 
     describe('prompt', () => {
       it('should accept system message with string content', async () => {
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         // OCI GenAI requires at least one USER message alongside system message
         const options: LanguageModelV3CallOptions = {
           prompt: [
@@ -182,24 +164,16 @@ describe('V3 Specification Alignment', () => {
       });
 
       it('should accept user message with text content parts', async () => {
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const options: LanguageModelV3CallOptions = {
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello world' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello world' }] }],
         };
 
         await expect(model.doGenerate(options)).resolves.toBeDefined();
       });
 
       it('should accept multi-turn conversation', async () => {
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const options: LanguageModelV3CallOptions = {
           prompt: [
             { role: 'user', content: [{ type: 'text', text: 'Question 1' }] },
@@ -215,10 +189,7 @@ describe('V3 Specification Alignment', () => {
       });
 
       it('should accept assistant message with tool-call content', async () => {
-        const model = new OCILanguageModel(
-          'meta.llama-3.1-70b-instruct',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('meta.llama-3.1-70b-instruct', defaultConfig);
         const options: LanguageModelV3CallOptions = {
           prompt: [
             { role: 'user', content: [{ type: 'text', text: 'Get weather' }] },
@@ -253,14 +224,9 @@ describe('V3 Specification Alignment', () => {
 
     describe('generation parameters', () => {
       it('should accept maxOutputTokens', async () => {
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const options: LanguageModelV3CallOptions = {
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
           maxOutputTokens: 500,
         };
 
@@ -269,14 +235,9 @@ describe('V3 Specification Alignment', () => {
       });
 
       it('should accept temperature', async () => {
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const options: LanguageModelV3CallOptions = {
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
           temperature: 0.7,
         };
 
@@ -285,14 +246,9 @@ describe('V3 Specification Alignment', () => {
       });
 
       it('should accept stopSequences', async () => {
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const options: LanguageModelV3CallOptions = {
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
           stopSequences: ['END', 'STOP'],
         };
 
@@ -301,14 +257,9 @@ describe('V3 Specification Alignment', () => {
       });
 
       it('should accept topP', async () => {
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const options: LanguageModelV3CallOptions = {
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
           topP: 0.9,
         };
 
@@ -317,14 +268,9 @@ describe('V3 Specification Alignment', () => {
       });
 
       it('should accept topK', async () => {
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const options: LanguageModelV3CallOptions = {
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
           topK: 40,
         };
 
@@ -333,14 +279,9 @@ describe('V3 Specification Alignment', () => {
       });
 
       it('should accept presencePenalty', async () => {
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const options: LanguageModelV3CallOptions = {
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
           presencePenalty: 0.5,
         };
 
@@ -349,14 +290,9 @@ describe('V3 Specification Alignment', () => {
       });
 
       it('should accept frequencyPenalty', async () => {
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const options: LanguageModelV3CallOptions = {
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
           frequencyPenalty: 0.5,
         };
 
@@ -365,14 +301,9 @@ describe('V3 Specification Alignment', () => {
       });
 
       it('should accept seed for deterministic output', async () => {
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const options: LanguageModelV3CallOptions = {
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
           seed: 42,
         };
 
@@ -383,14 +314,9 @@ describe('V3 Specification Alignment', () => {
 
     describe('responseFormat', () => {
       it('should accept text response format (default)', async () => {
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const options: LanguageModelV3CallOptions = {
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
           responseFormat: { type: 'text' },
         };
 
@@ -399,14 +325,9 @@ describe('V3 Specification Alignment', () => {
       });
 
       it('should warn when JSON response format is requested (unsupported)', async () => {
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const options: LanguageModelV3CallOptions = {
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
           responseFormat: { type: 'json' },
         };
 
@@ -418,10 +339,7 @@ describe('V3 Specification Alignment', () => {
 
     describe('tools and toolChoice', () => {
       it('should accept function tools', async () => {
-        const model = new OCILanguageModel(
-          'meta.llama-3.1-70b-instruct',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('meta.llama-3.1-70b-instruct', defaultConfig);
         const tools: LanguageModelV3FunctionTool[] = [
           {
             type: 'function',
@@ -436,9 +354,7 @@ describe('V3 Specification Alignment', () => {
         ];
 
         const options: LanguageModelV3CallOptions = {
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Get weather' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Get weather' }] }],
           tools,
         };
 
@@ -447,14 +363,9 @@ describe('V3 Specification Alignment', () => {
       });
 
       it('should accept toolChoice auto', async () => {
-        const model = new OCILanguageModel(
-          'meta.llama-3.1-70b-instruct',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('meta.llama-3.1-70b-instruct', defaultConfig);
         const options: LanguageModelV3CallOptions = {
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
           tools: [
             {
               type: 'function',
@@ -470,14 +381,9 @@ describe('V3 Specification Alignment', () => {
       });
 
       it('should accept toolChoice required', async () => {
-        const model = new OCILanguageModel(
-          'meta.llama-3.1-70b-instruct',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('meta.llama-3.1-70b-instruct', defaultConfig);
         const options: LanguageModelV3CallOptions = {
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
           tools: [
             {
               type: 'function',
@@ -493,14 +399,9 @@ describe('V3 Specification Alignment', () => {
       });
 
       it('should accept toolChoice none', async () => {
-        const model = new OCILanguageModel(
-          'meta.llama-3.1-70b-instruct',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('meta.llama-3.1-70b-instruct', defaultConfig);
         const options: LanguageModelV3CallOptions = {
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
           tools: [
             {
               type: 'function',
@@ -516,14 +417,9 @@ describe('V3 Specification Alignment', () => {
       });
 
       it('should accept toolChoice with specific tool', async () => {
-        const model = new OCILanguageModel(
-          'meta.llama-3.1-70b-instruct',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('meta.llama-3.1-70b-instruct', defaultConfig);
         const options: LanguageModelV3CallOptions = {
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
           tools: [
             {
               type: 'function',
@@ -548,14 +444,9 @@ describe('V3 Specification Alignment', () => {
           getModelMetadata: () => ({ family: 'other' }),
         }));
 
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const options: LanguageModelV3CallOptions = {
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
           tools: [
             {
               type: 'function',
@@ -602,14 +493,9 @@ describe('V3 Specification Alignment', () => {
 
     describe('content', () => {
       it('should return content as Array<LanguageModelV3Content>', async () => {
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const result = await model.doGenerate({
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
         });
 
         expect(Array.isArray(result.content)).toBe(true);
@@ -617,14 +503,9 @@ describe('V3 Specification Alignment', () => {
       });
 
       it('should return text content with correct structure', async () => {
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const result = await model.doGenerate({
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
         });
 
         const textContent = result.content.find(
@@ -662,14 +543,9 @@ describe('V3 Specification Alignment', () => {
           },
         });
 
-        const model = new OCILanguageModel(
-          'meta.llama-3.1-70b-instruct',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('meta.llama-3.1-70b-instruct', defaultConfig);
         const result = await model.doGenerate({
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Get weather' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Get weather' }] }],
           tools: [
             {
               type: 'function',
@@ -707,17 +583,14 @@ describe('V3 Specification Alignment', () => {
           },
         });
 
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const result = await model.doGenerate({
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Think step by step' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Think step by step' }] }],
         });
 
-        const reasoning = result.content.find((c: LanguageModelV3Content) => c.type === 'reasoning');
+        const reasoning = result.content.find(
+          (c: LanguageModelV3Content) => c.type === 'reasoning'
+        );
         expect(reasoning).toBeDefined();
       });
     });
@@ -730,54 +603,40 @@ describe('V3 Specification Alignment', () => {
         ['TOOL_CALLS', 'tool-calls'],
         ['ERROR', 'error'],
         ['UNKNOWN_REASON', 'other'],
-      ])(
-        'should map OCI finish reason %s to unified %s',
-        async (ociReason, unified) => {
-          mockChat.mockResolvedValue({
-            chatResult: {
-              chatResponse: {
-                choices: [
-                  {
-                    message: { content: [{ type: 'TEXT', text: 'Response' }] },
-                    finishReason: ociReason,
-                  },
-                ],
-                usage: { promptTokens: 10, completionTokens: 5 },
-              },
+      ])('should map OCI finish reason %s to unified %s', async (ociReason, unified) => {
+        mockChat.mockResolvedValue({
+          chatResult: {
+            chatResponse: {
+              choices: [
+                {
+                  message: { content: [{ type: 'TEXT', text: 'Response' }] },
+                  finishReason: ociReason,
+                },
+              ],
+              usage: { promptTokens: 10, completionTokens: 5 },
             },
-          });
+          },
+        });
 
-          const model = new OCILanguageModel(
-            'cohere.command-r-plus',
-            defaultConfig
-          );
-          const result = await model.doGenerate({
-            prompt: [
-              { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-            ],
-          });
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
+        const result = await model.doGenerate({
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
+        });
 
-          const finishReason =
-            result.finishReason as LanguageModelV3FinishReason;
-          expect(finishReason.unified).toBe(unified);
-          expect(finishReason.raw).toBe(ociReason);
-        }
-      );
+        const finishReason = result.finishReason;
+        expect(finishReason.unified).toBe(unified);
+        expect(finishReason.raw).toBe(ociReason);
+      });
     });
 
     describe('usage', () => {
       it('should return usage with inputTokens structure', async () => {
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const result = await model.doGenerate({
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
         });
 
-        const usage = result.usage as LanguageModelV3Usage;
+        const usage = result.usage;
         expect(usage.inputTokens).toBeDefined();
         expect(usage.inputTokens.total).toBe(25);
         expect(usage.inputTokens.noCache).toBeUndefined();
@@ -786,17 +645,12 @@ describe('V3 Specification Alignment', () => {
       });
 
       it('should return usage with outputTokens structure', async () => {
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const result = await model.doGenerate({
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
         });
 
-        const usage = result.usage as LanguageModelV3Usage;
+        const usage = result.usage;
         expect(usage.outputTokens).toBeDefined();
         expect(usage.outputTokens.total).toBe(15);
         expect(usage.outputTokens.reasoning).toBe(5);
@@ -805,28 +659,18 @@ describe('V3 Specification Alignment', () => {
 
     describe('warnings', () => {
       it('should return warnings array', async () => {
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const result = await model.doGenerate({
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
         });
 
         expect(Array.isArray(result.warnings)).toBe(true);
       });
 
       it('should include unsupported feature warnings', async () => {
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const result = await model.doGenerate({
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
           responseFormat: { type: 'json' },
         });
 
@@ -839,14 +683,9 @@ describe('V3 Specification Alignment', () => {
 
     describe('request and response metadata', () => {
       it('should include request.body', async () => {
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const result = await model.doGenerate({
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
         });
 
         expect(result.request).toBeDefined();
@@ -854,42 +693,27 @@ describe('V3 Specification Alignment', () => {
       });
 
       it('should include response.id (opcRequestId)', async () => {
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const result = await model.doGenerate({
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
         });
 
         expect(result.response?.id).toBe('req-123');
       });
 
       it('should include response.modelId', async () => {
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const result = await model.doGenerate({
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
         });
 
         expect(result.response?.modelId).toBe('cohere.command-r-plus');
       });
 
       it('should include providerMetadata', async () => {
-        const model = new OCILanguageModel(
-          'cohere.command-r-plus',
-          defaultConfig
-        );
+        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const result = await model.doGenerate({
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
         });
 
         expect(result.providerMetadata).toBeDefined();
@@ -1058,15 +882,10 @@ data: {"finishReason":"TOOL_CALLS","usage":{"promptTokens":10,"completionTokens"
 
       mockChat.mockResolvedValue(new Response(stream));
 
-      const model = new OCILanguageModel(
-        'meta.llama-3.1-70b-instruct',
-        defaultConfig
-      );
+      const model = new OCILanguageModel('meta.llama-3.1-70b-instruct', defaultConfig);
       const result = await model.doStream({
         prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
-        tools: [
-          { type: 'function', name: 'test_tool', inputSchema: { type: 'object' } },
-        ],
+        tools: [{ type: 'function', name: 'test_tool', inputSchema: { type: 'object' } }],
       });
 
       const parts: LanguageModelV3StreamPart[] = [];
@@ -1106,9 +925,7 @@ data: {"finishReason":"STOP","usage":{"promptTokens":10,"completionTokens":15,"c
 
       const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
       const result = await model.doStream({
-        prompt: [
-          { role: 'user', content: [{ type: 'text', text: 'Think step by step' }] },
-        ],
+        prompt: [{ role: 'user', content: [{ type: 'text', text: 'Think step by step' }] }],
       });
 
       const parts: LanguageModelV3StreamPart[] = [];
@@ -1176,9 +993,9 @@ data: {"finishReason":"STOP","usage":{"promptTokens":10,"completionTokens":15,"c
   // ==========================================================================
   describe('Error Handling', () => {
     it('should throw NoSuchModelError for invalid model', () => {
-      expect(
-        () => new OCILanguageModel('invalid.model.id', defaultConfig)
-      ).toThrow(NoSuchModelError);
+      expect(() => new OCILanguageModel('invalid.model.id', defaultConfig)).toThrow(
+        NoSuchModelError
+      );
     });
 
     it('should include model context in NoSuchModelError', () => {

@@ -1,0 +1,5 @@
+
+> @acedergren/oci-openai-compatible@0.1.0 test /Users/acedergr/Projects/opencode-oci-genai/packages/oci-openai-compatible
+> jest --passWithNoTests
+
+ ELIFECYCLE  Test failed. See above for more details.

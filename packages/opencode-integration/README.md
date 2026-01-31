@@ -66,8 +66,8 @@ Create `~/.config/opencode/opencode.json`:
         "configProfile": "{env:OCI_CONFIG_PROFILE}"
       },
       "models": {
-        "xai.grok-4-maverick": {
-          "name": "Grok 4 Maverick",
+        "xai.grok-4": {
+          "name": "Grok 4",
           "limit": { "context": 131072, "output": 8192 }
         },
         "meta.llama-3.3-70b-instruct": {
@@ -90,30 +90,35 @@ opencode
 
 ## Configuration Options
 
-| Option | Required | Description |
-|--------|----------|-------------|
-| `compartmentId` | Yes | OCI Compartment OCID for API calls |
-| `configProfile` | No | Profile name from `~/.oci/config` (default: `DEFAULT`) |
-| `region` | No | Override region from profile (usually not needed) |
+| Option          | Required | Description                                            |
+| --------------- | -------- | ------------------------------------------------------ |
+| `compartmentId` | Yes      | OCI Compartment OCID for API calls                     |
+| `configProfile` | No       | Profile name from `~/.oci/config` (default: `DEFAULT`) |
+| `region`        | No       | Override region from profile (usually not needed)      |
 
 ## Available Models
 
 ### Grok (xAI)
-- `xai.grok-4-maverick` - Fast, 131K context
-- `xai.grok-4-scout` - Balanced, 131K context
+
+- `xai.grok-4` - Base Grok 4
+- `xai.grok-4-fast-reasoning` - Faster reasoning
+- `xai.grok-4-fast-non-reasoning` - Faster non-reasoning
 - `xai.grok-3` - Previous generation
 
 ### Llama (Meta)
+
 - `meta.llama-3.3-70b-instruct` - Latest Llama, 131K context
 - `meta.llama-3.2-vision-90b-instruct` - Vision support, 131K context
 - `meta.llama-3.1-405b-instruct` - Largest Llama, 131K context
 
 ### Command (Cohere)
-- `cohere.command-plus-latest` - Command R+, 131K context
-- `cohere.command-latest` - Command R, 131K context
-- `cohere.command-a-vision` - Vision support, 131K context
+
+- `cohere.command-plus-latest` - Command+ latest
+- `cohere.command-latest` - Command latest
+- `cohere.command-a-vision` - Vision support
 
 ### Gemini (Google)
+
 - `google.gemini-2.5-pro` - Best quality, 1M context, vision
 - `google.gemini-2.5-flash` - Fast, 1M context, vision
 
@@ -126,6 +131,7 @@ npx @acedergren/opencode-oci-setup
 ```
 
 This will:
+
 1. Discover profiles from `~/.oci/config`
 2. Validate your credentials
 3. List available compartments
@@ -136,11 +142,13 @@ This will:
 ### "Missing compartmentId" Error
 
 Set the environment variable:
+
 ```bash
 export OCI_COMPARTMENT_ID=ocid1.compartment.oc1..aaaaaaa...
 ```
 
 Or add it directly to `opencode.json`:
+
 ```json
 "options": {
   "compartmentId": "ocid1.compartment.oc1..aaaaaaa..."
@@ -150,11 +158,13 @@ Or add it directly to `opencode.json`:
 ### Authentication Failures
 
 Verify OCI credentials work:
+
 ```bash
 oci iam user get --user-id me
 ```
 
 Check that your profile has the correct region:
+
 ```bash
 cat ~/.oci/config
 ```
@@ -164,6 +174,7 @@ cat ~/.oci/config
 Not all models are available in all regions. Check the [OCI GenAI Regions](https://docs.oracle.com/iaas/generative-ai/overview.htm) documentation.
 
 Common regions with GenAI support:
+
 - `eu-frankfurt-1` - Germany
 - `us-ashburn-1` - US East
 - `us-chicago-1` - US Midwest
@@ -239,7 +250,7 @@ const provider = createOCI({
 });
 
 // Use default provider
-const model = oci.languageModel('xai.grok-4-maverick');
+const model = oci.languageModel('xai.grok-4');
 
 // List all available models
 const models = getAllModels();

@@ -44,28 +44,28 @@ describe('createOCI Provider Factory (ProviderV3)', () => {
   describe('Factory Creation', () => {
     it('should create provider with default config', () => {
       const provider = createOCI();
-      expect(provider.specificationVersion).toBe('V3');
+      expect(provider.specificationVersion).toBe('v3');
       expect(typeof provider.languageModel).toBe('function');
     });
 
     it('should create provider with Frankfurt region', () => {
       const provider = createOCI({ region: 'eu-frankfurt-1' });
-      expect(provider.specificationVersion).toBe('V3');
+      expect(provider.specificationVersion).toBe('v3');
     });
 
     it('should create provider with custom profile', () => {
       const provider = createOCI({ region: 'eu-frankfurt-1', profile: 'FRANKFURT' });
-      expect(provider.specificationVersion).toBe('V3');
+      expect(provider.specificationVersion).toBe('v3');
     });
 
     it('should create provider with compartment ID', () => {
       const provider = createOCI({ compartmentId: 'ocid1.compartment.oc1..test' });
-      expect(provider.specificationVersion).toBe('V3');
+      expect(provider.specificationVersion).toBe('v3');
     });
 
     it('should create provider with instance principal auth', () => {
       const provider = createOCI({ auth: 'instance_principal' });
-      expect(provider.specificationVersion).toBe('V3');
+      expect(provider.specificationVersion).toBe('v3');
     });
   });
 
@@ -79,7 +79,7 @@ describe('createOCI Provider Factory (ProviderV3)', () => {
 
     it('should create Grok model', () => {
       const provider = createOCI();
-      const model = provider.languageModel('xai.grok-4-maverick');
+      const model = provider.languageModel('xai.grok-4');
       expect(model.modelId).toContain('grok');
     });
 
@@ -103,7 +103,7 @@ describe('createOCI Provider Factory (ProviderV3)', () => {
 
     it('should throw error for invalid model ID', () => {
       const provider = createOCI();
-      expect(() => provider.languageModel('invalid.model')).toThrow('Invalid model ID');
+      expect(() => provider.languageModel('invalid.model')).toThrow(NoSuchModelError);
     });
   });
 
@@ -131,13 +131,13 @@ describe('createOCI Provider Factory (ProviderV3)', () => {
   describe('oci default instance', () => {
     it('should export default provider instance', () => {
       expect(oci).toBeInstanceOf(OCIGenAIProvider);
-      expect(oci.specificationVersion).toBe('V3');
+      expect(oci.specificationVersion).toBe('v3');
     });
 
     it('should create language models from default instance', () => {
-      const model = oci.languageModel('cohere.command-r');
+      const model = oci.languageModel('cohere.command-r-08-2024');
       expect(model).toBeDefined();
-      expect(model.modelId).toBe('cohere.command-r');
+      expect(model.modelId).toBe('cohere.command-r-08-2024');
     });
   });
 });
@@ -162,7 +162,7 @@ describe('OCIGenAIProvider (ProviderV3)', () => {
   describe('specificationVersion', () => {
     it('should have specificationVersion V3', () => {
       const provider = new OCIGenAIProvider();
-      expect(provider.specificationVersion).toBe('V3');
+      expect(provider.specificationVersion).toBe('v3');
     });
   });
 
@@ -188,7 +188,7 @@ describe('OCIGenAIProvider (ProviderV3)', () => {
 
     it('should merge provider config with model-specific settings', () => {
       const provider = new OCIGenAIProvider({ region: 'eu-frankfurt-1' });
-      const model = provider.languageModel('cohere.command-r', {
+      const model = provider.languageModel('cohere.command-r-08-2024', {
         region: 'us-ashburn-1', // Override provider region
         requestOptions: { timeoutMs: 60000 },
       });
@@ -198,7 +198,7 @@ describe('OCIGenAIProvider (ProviderV3)', () => {
 
     it('should throw error for invalid model ID', () => {
       const provider = new OCIGenAIProvider();
-      expect(() => provider.languageModel('invalid.model')).toThrow('Invalid model ID');
+      expect(() => provider.languageModel('invalid.model')).toThrow(NoSuchModelError);
     });
   });
 
@@ -238,7 +238,7 @@ describe('OCIGenAIProvider (ProviderV3)', () => {
     it('should throw error for invalid embedding model ID', () => {
       const provider = new OCIGenAIProvider();
 
-      expect(() => provider.embeddingModel('invalid-model')).toThrow('Invalid embedding model ID');
+      expect(() => provider.embeddingModel('invalid-model')).toThrow(NoSuchModelError);
     });
   });
 
@@ -283,9 +283,7 @@ describe('OCIGenAIProvider (ProviderV3)', () => {
     it('should throw error for invalid model ID', () => {
       const provider = new OCIGenAIProvider();
 
-      expect(() => provider.transcriptionModel('invalid-model')).toThrow(
-        'Invalid transcription model ID'
-      );
+      expect(() => provider.transcriptionModel('invalid-model')).toThrow(NoSuchModelError);
     });
   });
 
@@ -310,7 +308,7 @@ describe('OCIGenAIProvider (ProviderV3)', () => {
     it('should throw error for invalid model ID', () => {
       const provider = new OCIGenAIProvider();
 
-      expect(() => provider.speechModel('invalid-tts')).toThrow('Invalid speech model ID');
+      expect(() => provider.speechModel('invalid-tts')).toThrow(NoSuchModelError);
     });
   });
 
@@ -339,7 +337,7 @@ describe('OCIGenAIProvider (ProviderV3)', () => {
 
       expect(() => {
         provider.rerankingModel('invalid-model');
-      }).toThrow('Invalid reranking model ID');
+      }).toThrow(NoSuchModelError);
     });
   });
 
@@ -519,33 +517,89 @@ describe('OCIGenAIProvider (ProviderV3)', () => {
     it('should throw for invalid language model ID format', () => {
       const provider = new OCIGenAIProvider();
 
-      expect(() => provider.languageModel('invalid-format')).toThrow('Invalid model ID');
+      expect(() => provider.languageModel('invalid-format')).toThrow(NoSuchModelError);
     });
 
     it('should throw for invalid embedding model ID format', () => {
       const provider = new OCIGenAIProvider();
 
-      expect(() => provider.embeddingModel('invalid-format')).toThrow('Invalid embedding model ID');
+      expect(() => provider.embeddingModel('invalid-format')).toThrow(NoSuchModelError);
     });
 
     it('should throw for invalid speech model ID format', () => {
       const provider = new OCIGenAIProvider();
 
-      expect(() => provider.speechModel('invalid-id')).toThrow('Invalid speech model ID');
+      expect(() => provider.speechModel('invalid-id')).toThrow(NoSuchModelError);
     });
 
     it('should throw for invalid transcription model ID format', () => {
       const provider = new OCIGenAIProvider();
 
-      expect(() => provider.transcriptionModel('invalid-id')).toThrow(
-        'Invalid transcription model ID'
-      );
+      expect(() => provider.transcriptionModel('invalid-id')).toThrow(NoSuchModelError);
     });
 
     it('should throw for invalid reranking model ID format', () => {
       const provider = new OCIGenAIProvider();
 
-      expect(() => provider.rerankingModel('invalid-model')).toThrow('Invalid reranking model ID');
+      expect(() => provider.rerankingModel('invalid-model')).toThrow(NoSuchModelError);
+    });
+  });
+
+  describe('realtimeTranscription()', () => {
+    it('should create realtime transcription session', () => {
+      const provider = new OCIGenAIProvider({
+        region: 'us-phoenix-1',
+        compartmentId: 'ocid1.compartment.test',
+      });
+
+      const session = provider.realtimeTranscription();
+
+      expect(session).toBeDefined();
+      expect(session.state).toBe('disconnected');
+      expect(typeof session.connect).toBe('function');
+      expect(typeof session.sendAudio).toBe('function');
+      expect(typeof session.close).toBe('function');
+      expect(typeof session.on).toBe('function');
+    });
+
+    it('should accept realtime-specific settings', () => {
+      const provider = new OCIGenAIProvider({
+        region: 'us-phoenix-1',
+        compartmentId: 'ocid1.compartment.test',
+      });
+
+      const session = provider.realtimeTranscription({
+        language: 'es-ES',
+        model: 'WHISPER',
+        partialResults: true,
+      });
+
+      expect(session).toBeDefined();
+    });
+
+    it('should merge provider config with realtime settings', () => {
+      const provider = new OCIGenAIProvider({
+        region: 'eu-frankfurt-1',
+        compartmentId: 'provider-compartment',
+      });
+
+      const session = provider.realtimeTranscription({
+        region: 'us-phoenix-1', // Override
+        language: 'de-DE',
+      });
+
+      expect(session).toBeDefined();
+    });
+
+    it('should implement AsyncIterable', () => {
+      const provider = new OCIGenAIProvider({
+        region: 'us-phoenix-1',
+        compartmentId: 'ocid1.compartment.test',
+      });
+
+      const session = provider.realtimeTranscription();
+
+      expect(typeof session[Symbol.asyncIterator]).toBe('function');
     });
   });
 });

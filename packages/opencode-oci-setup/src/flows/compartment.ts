@@ -54,7 +54,7 @@ export async function getCompartmentId(
     }
 
     return compartment;
-  } catch (error) {
+  } catch {
     compartmentSpinner.fail('Could not auto-discover compartments');
     log.log(chalk.yellow(`\nThis usually means the credentials couldn't connect to OCI API.`));
     log.log(chalk.yellow(`You can still enter a compartment OCID manually.\n`));

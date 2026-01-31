@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { NoSuchModelError, TooManyEmbeddingValuesForCallError } from '@ai-sdk/provider';
 import { OCIEmbeddingModel } from '../OCIEmbeddingModel';
 import type { EmbeddingModelV3CallOptions } from '@ai-sdk/provider';
 
@@ -40,7 +41,7 @@ describe('OCIEmbeddingModel', () => {
       compartmentId: 'ocid1.compartment.test',
     });
 
-    expect(model.specificationVersion).toBe('V3');
+    expect(model.specificationVersion).toBe('v3');
     expect(model.provider).toBe('oci-genai');
     expect(model.modelId).toBe('cohere.embed-multilingual-v3.0');
   });
@@ -54,7 +55,7 @@ describe('OCIEmbeddingModel', () => {
   it('should throw error for invalid model ID', () => {
     expect(() => {
       new OCIEmbeddingModel('invalid-model', {});
-    }).toThrow('Invalid embedding model ID');
+    }).toThrow(NoSuchModelError);
   });
 
   it('should validate embeddings count does not exceed max', async () => {
@@ -68,9 +69,7 @@ describe('OCIEmbeddingModel', () => {
       values: texts,
     };
 
-    await expect(model.doEmbed(options)).rejects.toThrow(
-      'Batch size (97) exceeds maximum allowed (96)'
-    );
+    await expect(model.doEmbed(options)).rejects.toThrow(TooManyEmbeddingValuesForCallError);
   });
 
   describe('getClient', () => {
@@ -166,7 +165,7 @@ describe('OCIEmbeddingModel', () => {
           }),
           inputs: ['test text'],
           truncate: 'END',
-          inputType: 'DOCUMENT',
+          inputType: 'SEARCH_DOCUMENT',
         }),
       });
     });

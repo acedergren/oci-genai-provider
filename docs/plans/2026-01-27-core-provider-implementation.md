@@ -26,6 +26,7 @@
 ## Task 1: Type Definitions
 
 **Files:**
+
 - Implement: `packages/oci-genai-provider/src/types.ts`
 
 **Step 1: Define OCIConfig interface**
@@ -108,6 +109,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 2: Model Registry
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/models/registry.ts`
 
 **Step 1: Define model catalog**
@@ -118,7 +120,7 @@ Create array of all 16+ models with complete metadata:
 export const MODEL_CATALOG: ModelMetadata[] = [
   // Grok models
   {
-    id: 'xai.grok-4-maverick',
+    id: 'xai.grok-4',
     name: 'Grok 4 Maverick',
     family: 'grok',
     capabilities: { streaming: true, tools: true, vision: false },
@@ -148,9 +150,7 @@ export function getAllModels(): ModelMetadata[] {
   return MODEL_CATALOG;
 }
 
-export function getModelsByFamily(
-  family: ModelMetadata['family']
-): ModelMetadata[] {
+export function getModelsByFamily(family: ModelMetadata['family']): ModelMetadata[] {
   return MODEL_CATALOG.filter((m) => m.family === family);
 }
 ```
@@ -180,6 +180,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 3: Authentication Module
 
 **Files:**
+
 - Implement: `packages/oci-genai-provider/src/auth/index.ts`
 
 **Step 1: Implement createAuthProvider**
@@ -197,15 +198,11 @@ export async function createAuthProvider(
     case 'config_file': {
       const configPath = config.configPath || undefined;
       const profile = config.profile || 'DEFAULT';
-      return new common.ConfigFileAuthenticationDetailsProvider(
-        configPath,
-        profile
-      );
+      return new common.ConfigFileAuthenticationDetailsProvider(configPath, profile);
     }
 
     case 'instance_principal': {
-      const builder =
-        new common.InstancePrincipalsAuthenticationDetailsProviderBuilder();
+      const builder = new common.InstancePrincipalsAuthenticationDetailsProviderBuilder();
       return await builder.build();
     }
 
@@ -264,6 +261,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 4: Message Conversion
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/converters/messages.ts`
 
 **Step 1: Implement AI SDK → OCI conversion**
@@ -311,6 +309,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 5: Error Handling
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/errors/index.ts`
 
 **Step 1: Define error class**
@@ -389,6 +388,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 6: SSE Stream Parser
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/streaming/sse-parser.ts`
 
 **Step 1: Implement SSE parser**
@@ -458,6 +458,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 7: Language Model (doGenerate)
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/models/oci-language-model.ts`
 
 **Step 1: Implement model class**
@@ -521,6 +522,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 8: Language Model (doStream)
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/models/oci-language-model.ts`
 
 **Step 1: Implement doStream**
@@ -573,6 +575,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 9: Provider Factory
 
 **Files:**
+
 - Implement: `packages/oci-genai-provider/src/index.ts`
 
 **Step 1: Implement createOCI factory**
@@ -648,6 +651,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 10: Build & Verify
 
 **Files:**
+
 - Run build and verify outputs
 
 **Step 1: Build the package**
@@ -666,6 +670,7 @@ ls -la dist/
 ```
 
 Expected files:
+
 - `index.js` (ESM)
 - `index.cjs` (CommonJS)
 - `index.d.ts` (TypeScript declarations)

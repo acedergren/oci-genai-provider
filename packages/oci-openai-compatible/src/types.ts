@@ -13,10 +13,7 @@ export type OCIRegion =
 /**
  * Authentication method for OCI API access
  */
-export type OCIAuthMethod =
-  | 'api_key'
-  | 'instance_principal'
-  | 'resource_principal';
+export type OCIAuthMethod = 'api_key' | 'instance_principal' | 'resource_principal';
 
 /**
  * Configuration for OCI OpenAI-compatible client
@@ -72,18 +69,12 @@ export type OCIModelId =
  * Regional endpoint mapping for OCI Generative AI OpenAI-compatible API
  */
 export const REGION_ENDPOINTS: Record<OCIRegion, string> = {
-  'us-ashburn-1':
-    'https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com',
-  'us-chicago-1':
-    'https://inference.generativeai.us-chicago-1.oci.oraclecloud.com',
-  'us-phoenix-1':
-    'https://inference.generativeai.us-phoenix-1.oci.oraclecloud.com',
-  'eu-frankfurt-1':
-    'https://inference.generativeai.eu-frankfurt-1.oci.oraclecloud.com',
-  'ap-hyderabad-1':
-    'https://inference.generativeai.ap-hyderabad-1.oci.oraclecloud.com',
-  'ap-osaka-1':
-    'https://inference.generativeai.ap-osaka-1.oci.oraclecloud.com',
+  'us-ashburn-1': 'https://inference.generativeai.us-ashburn-1.oci.oraclecloud.com',
+  'us-chicago-1': 'https://inference.generativeai.us-chicago-1.oci.oraclecloud.com',
+  'us-phoenix-1': 'https://inference.generativeai.us-phoenix-1.oci.oraclecloud.com',
+  'eu-frankfurt-1': 'https://inference.generativeai.eu-frankfurt-1.oci.oraclecloud.com',
+  'ap-hyderabad-1': 'https://inference.generativeai.ap-hyderabad-1.oci.oraclecloud.com',
+  'ap-osaka-1': 'https://inference.generativeai.ap-osaka-1.oci.oraclecloud.com',
 };
 
 /**

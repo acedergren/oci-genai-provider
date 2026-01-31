@@ -7,6 +7,7 @@ Complete guide to implementing real-time streaming responses with the OCI GenAI 
 Streaming allows tokens to be delivered incrementally as they're generated, providing a better user experience for long-form content generation.
 
 **Benefits:**
+
 - Lower perceived latency (first token arrives faster)
 - Real-time feedback for users
 - Better UX for chat interfaces
@@ -23,7 +24,7 @@ import { createOCI } from '@acedergren/oci-genai-provider';
 import { streamText } from 'ai';
 
 const oci = createOCI({
-  region: 'us-ashburn-1'
+  region: 'us-ashburn-1',
 });
 
 const { textStream } = await streamText({
@@ -83,6 +84,7 @@ User Application
 Server-Sent Events is a standard for server-to-client streaming over HTTP.
 
 **Event Structure:**
+
 ```
 event: message
 data: {"text": "Hello", "finishReason": null}
@@ -95,12 +97,14 @@ data: {"finishReason": "COMPLETE"}
 ```
 
 **Fields:**
+
 - `event`: Event type (`message`, `done`, `error`)
 - `data`: JSON payload with chunk data
 
 ### OCI GenAI SSE Format
 
 **Text Delta Event:**
+
 ```
 event: message
 data: {
@@ -110,6 +114,7 @@ data: {
 ```
 
 **Completion Event:**
+
 ```
 event: done
 data: {
@@ -122,6 +127,7 @@ data: {
 ```
 
 **Error Event:**
+
 ```
 event: error
 data: {
@@ -237,7 +243,7 @@ for await (const part of fullStream) {
 ```typescript
 try {
   const { textStream } = await streamText({
-    model: oci('xai.grok-4-maverick'),
+    model: oci('xai.grok-4'),
     prompt: 'Generate code',
   });
 
@@ -398,7 +404,7 @@ async function streamToConsole() {
   console.log('Generating response...\n');
 
   const { textStream } = await streamText({
-    model: oci('xai.grok-4-maverick'),
+    model: oci('xai.grok-4'),
     prompt: 'Explain how streaming works in 3 paragraphs',
   });
 
@@ -542,10 +548,11 @@ cancellableStream();
 Errors can occur at different stages of streaming.
 
 **Connection Errors:**
+
 ```typescript
 try {
   const { textStream } = await streamText({
-    model: oci('xai.grok-4-maverick'),
+    model: oci('xai.grok-4'),
     prompt: 'Hello',
   });
 
@@ -562,6 +569,7 @@ try {
 ```
 
 **Mid-Stream Errors:**
+
 ```typescript
 const { fullStream } = await streamText({
   model: oci('cohere.command-r-plus'),
@@ -579,6 +587,7 @@ for await (const part of fullStream) {
 ```
 
 **Timeout Handling:**
+
 ```typescript
 import { setTimeout } from 'timers/promises';
 
@@ -614,6 +623,7 @@ async function streamWithTimeout(timeoutMs: number) {
 ### Buffering Strategies
 
 **No Buffering (lowest latency):**
+
 ```typescript
 for await (const text of textStream) {
   process.stdout.write(text); // Immediately output
@@ -621,6 +631,7 @@ for await (const text of textStream) {
 ```
 
 **Character Buffering:**
+
 ```typescript
 let buffer = '';
 for await (const text of textStream) {
@@ -634,6 +645,7 @@ if (buffer) process.stdout.write(buffer);
 ```
 
 **Word Buffering:**
+
 ```typescript
 let buffer = '';
 for await (const text of textStream) {
@@ -670,11 +682,13 @@ for await (const text of textStream) {
 **Problem:** No chunks received.
 
 **Check:**
+
 1. `isStream: true` set in request
 2. Response has `Content-Type: text/event-stream`
 3. No proxy/middleware buffering responses
 
 **Debug:**
+
 ```typescript
 const response = await fetch(url, { ...options });
 console.log('Content-Type:', response.headers.get('content-type'));
@@ -686,11 +700,13 @@ console.log('Status:', response.status);
 **Problem:** Long delays between tokens.
 
 **Possible Causes:**
+
 - Network latency
 - Model generating slowly (complex prompt)
 - Rate limiting
 
 **Solutions:**
+
 - Use faster model (`gemini-2.5-flash`)
 - Reduce prompt complexity
 - Check rate limits
@@ -700,11 +716,13 @@ console.log('Status:', response.status);
 **Problem:** Stream ends unexpectedly.
 
 **Check:**
+
 1. Network stability
 2. Timeout settings
 3. Error events in stream
 
 **Debug:**
+
 ```typescript
 const { fullStream } = await streamText({ ... });
 
@@ -728,6 +746,7 @@ for await (const part of fullStream) {
 ---
 
 **Sources:**
+
 - [Vercel AI SDK Documentation](https://sdk.vercel.ai/docs/ai-sdk-core/stream-text)
 - [EventSource API Standard](https://html.spec.whatwg.org/multipage/server-sent-events.html)
 - [eventsource-parser Library](https://www.npmjs.com/package/eventsource-parser)

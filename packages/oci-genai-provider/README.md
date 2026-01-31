@@ -30,6 +30,7 @@ This provider implements the Vercel AI SDK's `ProviderV3` interface, which means
 - **Streaming Support** - Full streaming for language models
 - **Type Safety** - Complete TypeScript definitions
 - **Auth Flexibility** - Config file, instance principal, resource principal
+
 ## Why Use OCI GenAI?
 
 | Feature                | OCI GenAI               | Other Providers |
@@ -77,6 +78,7 @@ console.log(result.text);
 This provider supports most Vercel AI SDK v6 features for text generation. See [FEATURES.md](./FEATURES.md) for complete details.
 
 ### Supported ✅
+
 - Streaming and non-streaming generation
 - Temperature, topP, topK, penalties
 - Seed parameter (best-effort determinism)
@@ -84,6 +86,7 @@ This provider supports most Vercel AI SDK v6 features for text generation. See [
 - Retry logic and timeout control
 
 ### Not Supported ❌
+
 - Tool/function calling (OCI API limitation)
 - Multi-modal input (vision, audio, documents)
 - JSON mode (pending AI SDK integration)
@@ -143,15 +146,15 @@ Generate text using powerful language models from multiple providers.
 
 ### Available Models
 
-| Model ID | Family | Context | Best For |
-|----------|--------|---------|----------|
-| `cohere.command-r-plus` | Cohere | 128K | Long context, RAG |
-| `cohere.command-r` | Cohere | 128K | General purpose |
-| `meta.llama-3.3-70b-instruct` | Meta | 8K | Instruction following |
-| `meta.llama-3.1-405b-instruct` | Meta | 128K | Most capable |
-| `anthropic.claude-3-5-sonnet-v2` | Anthropic | 200K | Analysis, coding |
-| `mistral.mistral-large-2` | Mistral | 128K | Multilingual |
-| `xai.grok-4-maverick` | xAI | 131K | Most capable |
+| Model ID                         | Family    | Context | Best For              |
+| -------------------------------- | --------- | ------- | --------------------- |
+| `cohere.command-r-plus`          | Cohere    | 128K    | Long context, RAG     |
+| `cohere.command-r`               | Cohere    | 128K    | General purpose       |
+| `meta.llama-3.3-70b-instruct`    | Meta      | 8K      | Instruction following |
+| `meta.llama-3.1-405b-instruct`   | Meta      | 128K    | Most capable          |
+| `anthropic.claude-3-5-sonnet-v2` | Anthropic | 200K    | Analysis, coding      |
+| `mistral.mistral-large-2`        | Mistral   | 128K    | Multilingual          |
+| `xai.grok-4`                     | xAI       | 131K    | Most capable          |
 
 [See full model list in API Reference](./docs/api-reference.md)
 
@@ -163,9 +166,7 @@ import { streamText } from 'ai';
 
 const result = streamText({
   model: oci.languageModel('cohere.command-r-plus'),
-  messages: [
-    { role: 'user', content: 'Write a poem about clouds' }
-  ],
+  messages: [{ role: 'user', content: 'Write a poem about clouds' }],
   temperature: 0.7,
   maxTokens: 500,
 });
@@ -181,9 +182,7 @@ Use the seed parameter for more consistent outputs (best-effort):
 
 ```typescript
 const result = await model.doGenerate({
-  prompt: [
-    { role: 'user', content: [{ type: 'text', text: 'Generate a random story' }] }
-  ],
+  prompt: [{ role: 'user', content: [{ type: 'text', text: 'Generate a random story' }] }],
   seed: 42,
   temperature: 0.7,
 });
@@ -198,21 +197,21 @@ See [Language Models Documentation](./docs/language-models.md) for complete refe
 Convert audio files to text using OCI Speech:
 
 ```typescript
-import { oci } from "@acedergren/oci-genai-provider";
-import { transcribe } from "ai";
-import { readFileSync } from "fs";
+import { oci } from '@acedergren/oci-genai-provider';
+import { transcribe } from 'ai';
+import { readFileSync } from 'fs';
 
-const audioData = readFileSync("audio.wav");
+const audioData = readFileSync('audio.wav');
 
 const { text } = await transcribe({
-  model: oci.transcriptionModel("oci.speech.standard", {
-    language: "en-US",
-    vocabulary: ["OpenCode", "GenAI"],
+  model: oci.transcriptionModel('oci.speech.standard', {
+    language: 'en-US',
+    vocabulary: ['OpenCode', 'GenAI'],
   }),
   audioData,
 });
 
-console.log("Transcript:", text);
+console.log('Transcript:', text);
 ```
 
 ### Available Transcription Models
@@ -225,9 +224,9 @@ console.log("Transcript:", text);
 ### Transcription Options
 
 ```typescript
-oci.transcriptionModel("oci.speech.standard", {
-  language: "en-US",
-  vocabulary: ["term1"],
+oci.transcriptionModel('oci.speech.standard', {
+  language: 'en-US',
+  vocabulary: ['term1'],
 });
 ```
 
@@ -235,18 +234,17 @@ oci.transcriptionModel("oci.speech.standard", {
 
 21+ languages including: English (US/UK/AU/IN), Spanish, Portuguese, French, German, Italian, Japanese, Korean, Chinese, Dutch, Polish, Russian, Turkish, Hindi, Arabic.
 
-
 ## Embeddings
 
 Generate text embeddings for semantic search, clustering, and RAG applications.
 
 ### Available Embedding Models
 
-| Model ID | Dimensions | Max Batch | Use Case |
-|----------|-----------|-----------|----------|
-| `cohere.embed-multilingual-v3.0` | 1024 | 96 | Multilingual semantic search |
-| `cohere.embed-english-v3.0` | 1024 | 96 | English semantic search |
-| `cohere.embed-english-light-v3.0` | 384 | 96 | Fast English embeddings |
+| Model ID                          | Dimensions | Max Batch | Use Case                     |
+| --------------------------------- | ---------- | --------- | ---------------------------- |
+| `cohere.embed-multilingual-v3.0`  | 1024       | 96        | Multilingual semantic search |
+| `cohere.embed-english-v3.0`       | 1024       | 96        | English semantic search      |
+| `cohere.embed-english-light-v3.0` | 384        | 96        | Fast English embeddings      |
 
 ### Usage
 
@@ -351,13 +349,13 @@ See [Reranking Models Documentation](./docs/reranking.md) for complete reference
 
 ## Regional Availability
 
-| Service | Available Regions |
-|---------|-------------------|
-| Language Models | All OCI regions |
-| Embeddings | All OCI regions |
-| Speech (TTS) | **us-phoenix-1 only** |
+| Service             | Available Regions     |
+| ------------------- | --------------------- |
+| Language Models     | All OCI regions       |
+| Embeddings          | All OCI regions       |
+| Speech (TTS)        | **us-phoenix-1 only** |
 | Transcription (STT) | **us-phoenix-1 only** |
-| Reranking | All OCI regions |
+| Reranking           | All OCI regions       |
 
 Supported regions include: `us-phoenix-1`, `us-ashburn-1`, `eu-frankfurt-1`, `eu-stockholm-1`, `uk-london-1`, `ap-tokyo-1`, `ap-mumbai-1`, and more.
 
@@ -496,6 +494,7 @@ pnpm test:integration
 ### Coverage
 
 We maintain 80%+ test coverage across:
+
 - Language models
 - Embedding models
 - Speech models (TTS)
@@ -503,6 +502,7 @@ We maintain 80%+ test coverage across:
 - Reranking models
 
 View coverage report:
+
 ```bash
 pnpm test:coverage
 open coverage/lcov-report/index.html
@@ -511,11 +511,11 @@ open coverage/lcov-report/index.html
 ### Contributing Tests
 
 See [Testing Guide](../../docs/testing-guide.md) for detailed information on:
+
 - Writing unit tests
 - Writing integration tests
 - Using test helpers and mocks
 - Test fixtures and best practices
-
 
 ## Development
 

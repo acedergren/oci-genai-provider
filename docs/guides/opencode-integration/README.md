@@ -39,8 +39,8 @@ Then configure in `opencode.json`:
       "npm": "@acedergren/oci-genai-provider",
       "name": "OCI GenAI",
       "models": {
-        "xai.grok-4-maverick": {
-          "name": "Grok 4 Maverick",
+        "xai.grok-4": {
+          "name": "Grok 4",
           "limit": {
             "context": 131072,
             "output": 8192
@@ -152,9 +152,9 @@ opencode
 
 All models from the core provider are available:
 
-- **xAI Grok**: `xai.grok-4-maverick`, `xai.grok-4-scout`, `xai.grok-3`
+- **xAI Grok**: `xai.grok-4`, `xai.grok-4-fast-reasoning`, `xai.grok-4-fast-non-reasoning`, `xai.grok-3`
 - **Meta Llama**: `meta.llama-3.3-70b-instruct`, `meta.llama-3.2-vision-90b-instruct`
-- **Cohere**: `cohere.command-r-plus`, `cohere.command-a`, `cohere.command-a-vision`
+- **Cohere**: `cohere.command-r-plus`, `cohere.command-a-03-2025`, `cohere.command-a-vision`
 - **Google Gemini**: `google.gemini-2.5-pro`, `google.gemini-2.5-flash`
 
 [Full model list →](../../../packages/oci-genai-provider/README.md#available-models)

@@ -111,7 +111,7 @@ describe('Message Conversion', () => {
           content: [
             { type: 'text' as const, text: 'Text part' },
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            { type: 'image' as const, image: 'base64...' } as any,
+            { type: 'unsupported' as const, data: '...' } as any,
           ],
         },
       ];
@@ -120,6 +120,43 @@ describe('Message Conversion', () => {
 
       expect(result[0].content).toHaveLength(1);
       expect(result[0].content[0].text).toBe('Text part');
+    });
+
+    it('should handle image content type (via file type)', () => {
+      const aiPrompt = [
+        {
+          role: 'user' as const,
+          content: [
+            {
+              type: 'file' as const,
+              data: new Uint8Array([1, 2, 3]),
+              mediaType: 'image/png',
+            } as any,
+          ],
+        },
+      ];
+
+      const result = convertToOCIMessages(aiPrompt);
+
+      expect(result[0].content).toHaveLength(1);
+      expect(result[0].content[0].type).toBe('IMAGE');
+    });
+
+    it('should handle file content type (non-text branch)', () => {
+      const aiPrompt = [
+        {
+          role: 'user' as const,
+          content: [
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            { type: 'file' as const, data: new Uint8Array(), mediaType: 'application/pdf' } as any,
+          ],
+        },
+      ];
+
+      const result = convertToOCIMessages(aiPrompt);
+
+      // File content should be filtered out if not image, leaving empty content array
+      expect(result[0].content).toHaveLength(0);
     });
 
     it('should handle image content type (non-text branch)', () => {
@@ -145,14 +182,14 @@ describe('Message Conversion', () => {
           role: 'user' as const,
           content: [
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            { type: 'file' as const, data: new Uint8Array(), mimeType: 'application/pdf' } as any,
+            { type: 'file' as const, data: new Uint8Array(), mediaType: 'application/pdf' } as any,
           ],
         },
       ];
 
       const result = convertToOCIMessages(aiPrompt);
 
-      // File content should be filtered out, leaving empty content array
+      // File content should be filtered out (only images supported), leaving empty content array
       expect(result[0].content).toHaveLength(0);
     });
 
@@ -162,8 +199,12 @@ describe('Message Conversion', () => {
           role: 'user' as const,
           content: [
             { type: 'text' as const, text: 'What is this?' },
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            { type: 'image' as const, image: new Uint8Array([1, 2, 3]) } as any,
+
+            {
+              type: 'file' as const,
+              data: new Uint8Array([1, 2, 3]),
+              mediaType: 'image/png',
+            } as any,
             { type: 'text' as const, text: 'Can you analyze?' },
           ],
         },
@@ -171,10 +212,11 @@ describe('Message Conversion', () => {
 
       const result = convertToOCIMessages(aiPrompt);
 
-      // Only text parts should be included
-      expect(result[0].content).toHaveLength(2);
+      // Text parts and images should be included
+      expect(result[0].content).toHaveLength(3);
       expect(result[0].content[0].text).toBe('What is this?');
-      expect(result[0].content[1].text).toBe('Can you analyze?');
+      expect(result[0].content[1].type).toBe('IMAGE');
+      expect(result[0].content[2].text).toBe('Can you analyze?');
     });
 
     it('should handle mixed text, image, and file content types', () => {
@@ -184,10 +226,10 @@ describe('Message Conversion', () => {
           content: [
             { type: 'text' as const, text: 'Text 1' },
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            { type: 'image' as const, image: new Uint8Array() } as any,
+            { type: 'file' as const, data: new Uint8Array(), mediaType: 'image/png' } as any,
             { type: 'text' as const, text: 'Text 2' },
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            { type: 'file' as const, data: new Uint8Array(), mimeType: 'application/pdf' } as any,
+            { type: 'file' as const, data: new Uint8Array(), mediaType: 'application/pdf' } as any,
             { type: 'text' as const, text: 'Text 3' },
           ],
         },
@@ -195,11 +237,12 @@ describe('Message Conversion', () => {
 
       const result = convertToOCIMessages(aiPrompt);
 
-      // Only text parts should be included
-      expect(result[0].content).toHaveLength(3);
+      // Text and image parts should be included
+      expect(result[0].content).toHaveLength(4);
       expect(result[0].content[0].text).toBe('Text 1');
-      expect(result[0].content[1].text).toBe('Text 2');
-      expect(result[0].content[2].text).toBe('Text 3');
+      expect(result[0].content[1].type).toBe('IMAGE');
+      expect(result[0].content[2].text).toBe('Text 2');
+      expect(result[0].content[3].text).toBe('Text 3');
     });
 
     it('should handle assistant message with non-text content', () => {
@@ -226,18 +269,22 @@ describe('Message Conversion', () => {
         {
           role: 'user' as const,
           content: [
+            {
+              type: 'file' as const,
+              data: new Uint8Array([1, 2, 3]),
+              mediaType: 'image/png',
+            } as any,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            { type: 'image' as const, image: new Uint8Array() } as any,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            { type: 'file' as const, data: new Uint8Array(), mimeType: 'text/plain' } as any,
+            { type: 'file' as const, data: new Uint8Array(), mediaType: 'text/plain' } as any,
           ],
         },
       ];
 
       const result = convertToOCIMessages(aiPrompt);
 
-      // All non-text content filtered out
-      expect(result[0].content).toHaveLength(0);
+      // image should be preserved, text/plain filtered out
+      expect(result[0].content).toHaveLength(1);
+      expect(result[0].content[0].type).toBe('IMAGE');
       expect(result[0].role).toBe('USER');
     });
 

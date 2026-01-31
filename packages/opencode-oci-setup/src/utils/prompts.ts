@@ -42,7 +42,7 @@ export interface MultiSelectOptions<T = string> {
  * Select a single option from a list
  */
 export async function select<T = string>(options: SelectOptions<T>): Promise<T | undefined> {
-  const { value } = await prompts({
+  const result = (await prompts({
     type: 'select',
     name: 'value',
     message: options.message,
@@ -52,42 +52,42 @@ export async function select<T = string>(options: SelectOptions<T>): Promise<T |
       description: c.description,
       disabled: c.disabled,
     })),
-  });
-  return value as T | undefined;
+  })) as { value?: T };
+  return result.value;
 }
 
 /**
  * Get text input from user
  */
 export async function text(options: TextOptions): Promise<string | undefined> {
-  const { value } = await prompts({
+  const result = (await prompts({
     type: 'text',
     name: 'value',
     message: options.message,
     initial: options.initial,
     validate: options.validate,
-  });
-  return value as string | undefined;
+  })) as { value?: string };
+  return result.value;
 }
 
 /**
  * Get yes/no confirmation
  */
 export async function confirm(options: ConfirmOptions): Promise<boolean> {
-  const { value } = await prompts({
+  const result = (await prompts({
     type: 'confirm',
     name: 'value',
     message: options.message,
     initial: options.initial ?? false,
-  });
-  return value ?? false;
+  })) as { value?: boolean };
+  return result.value ?? false;
 }
 
 /**
  * Select multiple options from a list
  */
 export async function multiselect<T = string>(options: MultiSelectOptions<T>): Promise<T[]> {
-  const { values } = await prompts({
+  const result = (await prompts({
     type: 'multiselect',
     name: 'values',
     message: options.message,
@@ -101,6 +101,6 @@ export async function multiselect<T = string>(options: MultiSelectOptions<T>): P
       })),
     min: options.min,
     hint: options.hint,
-  });
-  return (values ?? []) as T[];
+  })) as { values?: T[] };
+  return result.values ?? [];
 }

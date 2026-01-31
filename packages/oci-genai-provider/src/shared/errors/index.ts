@@ -3,7 +3,7 @@
  * Provides specific error classes for different failure scenarios.
  */
 
-import { APICallError, AISDKError } from '@ai-sdk/provider';
+import { APICallError, AISDKError, InvalidResponseDataError } from '@ai-sdk/provider';
 
 export interface OCIGenAIErrorOptions {
   cause?: Error;
@@ -151,6 +151,13 @@ export function handleOCIError(error: unknown): AISDKError {
   }
 
   if (error instanceof OCIGenAIError) {
+    if (error instanceof OCIValidationError) {
+      return new InvalidResponseDataError({
+        message: error.message,
+        data: error.details,
+      });
+    }
+
     return new APICallError({
       message: error.message,
       url: 'oci-genai',

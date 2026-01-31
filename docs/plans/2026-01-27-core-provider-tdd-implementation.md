@@ -73,12 +73,12 @@ import { isValidModelId, getModelMetadata, getAllModels, getModelsByFamily } fro
 describe('Model Registry', () => {
   describe('isValidModelId', () => {
     describe('Grok models', () => {
-      it('should validate xai.grok-4-maverick', () => {
-        expect(isValidModelId('xai.grok-4-maverick')).toBe(true);
+      it('should validate xai.grok-4', () => {
+        expect(isValidModelId('xai.grok-4')).toBe(true);
       });
 
-      it('should validate xai.grok-4-scout', () => {
-        expect(isValidModelId('xai.grok-4-scout')).toBe(true);
+      it('should validate xai.grok-4-fast-reasoning', () => {
+        expect(isValidModelId('xai.grok-4-fast-reasoning')).toBe(true);
       });
 
       it('should validate xai.grok-3', () => {
@@ -113,8 +113,8 @@ describe('Model Registry', () => {
         expect(isValidModelId('cohere.command-r-plus')).toBe(true);
       });
 
-      it('should validate cohere.command-a', () => {
-        expect(isValidModelId('cohere.command-a')).toBe(true);
+      it('should validate cohere.command-a-03-2025', () => {
+        expect(isValidModelId('cohere.command-a-03-2025')).toBe(true);
       });
 
       it('should validate cohere.command-a-reasoning', () => {
@@ -147,7 +147,7 @@ describe('Model Registry', () => {
 
   describe('getModelMetadata', () => {
     it('should return Grok 4 Maverick metadata', () => {
-      const metadata = getModelMetadata('xai.grok-4-maverick');
+      const metadata = getModelMetadata('xai.grok-4');
       expect(metadata).toBeDefined();
       expect(metadata?.family).toBe('grok');
       expect(metadata?.capabilities.streaming).toBe(true);
@@ -251,7 +251,7 @@ import type { ModelMetadata } from '../types';
 export const MODEL_CATALOG: ModelMetadata[] = [
   // Grok models
   {
-    id: 'xai.grok-4-maverick',
+    id: 'xai.grok-4',
     name: 'Grok 4 Maverick',
     family: 'grok',
     capabilities: { streaming: true, tools: true, vision: false },
@@ -259,7 +259,7 @@ export const MODEL_CATALOG: ModelMetadata[] = [
     speed: 'very-fast',
   },
   {
-    id: 'xai.grok-4-scout',
+    id: 'xai.grok-4-fast-reasoning',
     name: 'Grok 4 Scout',
     family: 'grok',
     capabilities: { streaming: true, tools: true, vision: false },
@@ -325,7 +325,7 @@ export const MODEL_CATALOG: ModelMetadata[] = [
     speed: 'fast',
   },
   {
-    id: 'cohere.command-r',
+    id: 'cohere.command-r-08-2024',
     name: 'Command R',
     family: 'cohere',
     capabilities: { streaming: true, tools: true, vision: false },
@@ -333,7 +333,7 @@ export const MODEL_CATALOG: ModelMetadata[] = [
     speed: 'fast',
   },
   {
-    id: 'cohere.command-a',
+    id: 'cohere.command-a-03-2025',
     name: 'Command A',
     family: 'cohere',
     capabilities: { streaming: true, tools: true, vision: false },
@@ -1957,7 +1957,7 @@ describe('createOCI Provider Factory', () => {
 
     it('should create Grok model', () => {
       const provider = createOCI();
-      const model = provider.model('xai.grok-4-maverick');
+      const model = provider.model('xai.grok-4');
       expect(model.modelId).toContain('grok');
     });
 
@@ -2014,8 +2014,8 @@ describe('createOCI Provider Factory', () => {
     });
 
     it('should accept config', () => {
-      const model = oci('xai.grok-4-maverick', { region: 'eu-frankfurt-1' });
-      expect(model.modelId).toBe('xai.grok-4-maverick');
+      const model = oci('xai.grok-4', { region: 'us-chicago-1' });
+      expect(model.modelId).toBe('xai.grok-4');
     });
   });
 });

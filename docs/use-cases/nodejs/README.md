@@ -51,7 +51,7 @@ app.post('/api/chat', async (req, res) => {
   const { messages } = req.body;
 
   const result = streamText({
-    model: oci('xai.grok-4-maverick'),
+    model: oci('xai.grok-4'),
     messages,
   });
 
@@ -115,7 +115,7 @@ import { program } from 'commander';
 
 program.argument('<prompt>', 'The prompt to send to the AI').action(async (prompt) => {
   const result = await generateText({
-    model: oci('xai.grok-4-maverick'),
+    model: oci('xai.grok-4'),
     prompt,
   });
 

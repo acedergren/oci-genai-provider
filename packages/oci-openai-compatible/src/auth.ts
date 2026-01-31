@@ -19,9 +19,7 @@ export function getCompartmentId(config: OCIOpenAIConfig): string {
 /**
  * Create authentication headers for OCI OpenAI-compatible API
  */
-export function createOCIAuthHeaders(
-  config: OCIOpenAIConfig
-): Record<string, string> {
+export function createOCIAuthHeaders(config: OCIOpenAIConfig): Record<string, string> {
   const headers: Record<string, string> = {};
 
   // Add Bearer token if API key provided

@@ -1,6 +1,7 @@
 import { AIServiceSpeechClient, models } from 'oci-aispeech';
 import { Region } from 'oci-common';
 import { createAuthProvider, getCompartmentId, getRegion } from '../auth';
+import { NoSuchModelError } from '@ai-sdk/provider';
 import { getTranscriptionModelMetadata, isValidTranscriptionModelId } from './registry';
 import {
   uploadAudioToObjectStorage,
@@ -15,6 +16,12 @@ import type {
   TranscriptionModelV3,
   TranscriptionModelV3CallOptions,
 } from '@ai-sdk/provider';
+import { handleOCIError } from '../shared/errors';
+import {
+  getOCIProviderOptions,
+  resolveCompartmentId,
+  resolveEndpoint,
+} from '../shared/provider-options';
 
 interface TranscriptionOutput {
   text: string;
@@ -38,7 +45,7 @@ interface TranscriptionOutput {
 }
 
 export class OCITranscriptionModel implements TranscriptionModelV3 {
-  readonly specificationVersion = 'V3';
+  readonly specificationVersion = 'v3';
   readonly provider = 'oci-genai';
 
   private _client?: AIServiceSpeechClient;
@@ -48,27 +55,35 @@ export class OCITranscriptionModel implements TranscriptionModelV3 {
     private config: OCITranscriptionSettings
   ) {
     if (isValidTranscriptionModelId(modelId) === false) {
-      throw new Error(
-        `Invalid transcription model ID: ${modelId}. ` +
-          `Valid models: ORACLE, WHISPER_MEDIUM, WHISPER_LARGE_V2`
-      );
+      throw new NoSuchModelError({
+        modelId,
+        modelType: 'transcriptionModel',
+      });
     }
   }
 
-  private async getClient(): Promise<AIServiceSpeechClient> {
-    if (!this._client) {
+  private async getClient(endpointOverride?: string): Promise<AIServiceSpeechClient> {
+    const resolvedEndpoint = resolveEndpoint(this.config.endpoint, endpointOverride);
+
+    if (!this._client || (endpointOverride && endpointOverride !== this.config.endpoint)) {
       const authProvider = await createAuthProvider(this.config);
       const region = getRegion(this.config);
 
-      this._client = new AIServiceSpeechClient({
+      const client = new AIServiceSpeechClient({
         authenticationDetailsProvider: authProvider,
       });
 
-      this._client.region = Region.fromRegionId(region);
+      client.region = Region.fromRegionId(region);
 
-      if (this.config.endpoint) {
-        this._client.endpoint = this.config.endpoint;
+      if (resolvedEndpoint) {
+        client.endpoint = resolvedEndpoint;
       }
+
+      if (!endpointOverride || endpointOverride === this.config.endpoint) {
+        this._client = client;
+      }
+
+      return client;
     }
 
     return this._client;
@@ -99,8 +114,12 @@ export class OCITranscriptionModel implements TranscriptionModelV3 {
       );
     }
 
-    const client = await this.getClient();
-    const compartmentId = getCompartmentId(this.config);
+    const ociOptions = getOCIProviderOptions(options.providerOptions);
+    const client = await this.getClient(ociOptions?.endpoint);
+    const compartmentId = resolveCompartmentId(
+      getCompartmentId(this.config),
+      ociOptions?.compartmentId
+    );
     const metadata = getTranscriptionModelMetadata(this.modelId);
 
     // Collect warning if vocabulary used with Whisper
@@ -126,7 +145,8 @@ export class OCITranscriptionModel implements TranscriptionModelV3 {
         this.config,
         bucketName,
         objectName,
-        audioData
+        audioData,
+        options.mediaType
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
@@ -183,12 +203,12 @@ export class OCITranscriptionModel implements TranscriptionModelV3 {
         durationInSeconds: undefined,
         warnings,
         request: {
-          body: JSON.stringify({ audioSize: audioData.byteLength }),
+          body: JSON.stringify({ audioSize: audioData.byteLength, mediaType: options.mediaType }),
         },
         response: {
           timestamp: startTime,
           modelId: this.modelId,
-          headers: {},
+          headers: jobResponse.opcRequestId ? { 'opc-request-id': jobResponse.opcRequestId } : {},
         },
         providerMetadata: {
           oci: {
@@ -196,9 +216,12 @@ export class OCITranscriptionModel implements TranscriptionModelV3 {
             modelType: metadata?.modelType || 'ORACLE',
             jobId,
             taskId,
+            requestId: jobResponse.opcRequestId,
           },
         },
       };
+    } catch (error) {
+      throw handleOCIError(error);
     } finally {
       // Cleanup: delete uploaded audio file
       try {

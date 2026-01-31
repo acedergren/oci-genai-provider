@@ -15,6 +15,7 @@
 After evaluating 5 architectural approaches against success criteria (Simplicity, User Experience, Flexibility, Security, Extensibility), **Architecture E: Hybrid with Layered Configuration** was selected as the winner with a score of 4.8/5.0.
 
 Key benefits:
+
 - Single package for core functionality with subpath exports
 - Config utilities reusable by CLI and future OAuth module
 - Tree-shaking support (don't import config if you don't need it)
@@ -27,6 +28,7 @@ Key benefits:
 ### Task 1.1: Create Config Types
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/config/types.ts`
 
 **Step 1: Write the type definitions**
@@ -107,6 +109,7 @@ git commit -m "feat(config): add OCI config types for auto-discovery"
 ### Task 1.2: Implement OCI Config Parser
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/config/oci-config.ts`
 - Test: `packages/oci-genai-provider/src/config/__tests__/oci-config.test.ts`
 
@@ -247,6 +250,7 @@ describe('hasOCIConfig', () => {
 ```bash
 pnpm --filter @acedergren/oci-genai-provider test src/config/__tests__/oci-config.test.ts
 ```
+
 Expected: FAIL with "Cannot find module '../oci-config'"
 
 **Step 3: Write minimal implementation**
@@ -396,6 +400,7 @@ export function getProfile(profileName = 'DEFAULT'): OCIProfile | undefined {
 ```bash
 pnpm --filter @acedergren/oci-genai-provider test src/config/__tests__/oci-config.test.ts
 ```
+
 Expected: PASS
 
 **Step 5: Commit**
@@ -410,6 +415,7 @@ git commit -m "feat(config): implement OCI config parser with ~/.oci/config supp
 ### Task 1.3: Implement Credential Validation
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/config/validation.ts`
 - Test: `packages/oci-genai-provider/src/config/__tests__/validation.test.ts`
 
@@ -451,6 +457,7 @@ describe('validateCredentials', () => {
 ```bash
 pnpm --filter @acedergren/oci-genai-provider test src/config/__tests__/validation.test.ts
 ```
+
 Expected: FAIL
 
 **Step 3: Write minimal implementation**
@@ -539,6 +546,7 @@ export async function validateCredentials(
 ```bash
 pnpm --filter @acedergren/oci-genai-provider test src/config/__tests__/validation.test.ts
 ```
+
 Expected: PASS
 
 **Step 5: Commit**
@@ -553,6 +561,7 @@ git commit -m "feat(config): add credential validation via OCI API"
 ### Task 1.4: Implement Compartment Discovery
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/config/discovery.ts`
 - Test: `packages/oci-genai-provider/src/config/__tests__/discovery.test.ts`
 
@@ -566,8 +575,18 @@ vi.mock('oci-identity', () => ({
   IdentityClient: vi.fn().mockImplementation(() => ({
     listCompartments: vi.fn().mockResolvedValue({
       items: [
-        { id: 'ocid1.compartment.oc1..aaa', name: 'root', description: 'Root compartment', lifecycleState: 'ACTIVE' },
-        { id: 'ocid1.compartment.oc1..bbb', name: 'dev', description: 'Development', lifecycleState: 'ACTIVE' },
+        {
+          id: 'ocid1.compartment.oc1..aaa',
+          name: 'root',
+          description: 'Root compartment',
+          lifecycleState: 'ACTIVE',
+        },
+        {
+          id: 'ocid1.compartment.oc1..bbb',
+          name: 'dev',
+          description: 'Development',
+          lifecycleState: 'ACTIVE',
+        },
       ],
     }),
   })),
@@ -595,6 +614,7 @@ describe('discoverCompartments', () => {
 ```bash
 pnpm --filter @acedergren/oci-genai-provider test src/config/__tests__/discovery.test.ts
 ```
+
 Expected: FAIL
 
 **Step 3: Write minimal implementation**
@@ -615,10 +635,7 @@ export async function discoverCompartments(
   profileName = 'DEFAULT',
   includeRoot = true
 ): Promise<OCICompartment[]> {
-  const authProvider = new common.ConfigFileAuthenticationDetailsProvider(
-    undefined,
-    profileName
-  );
+  const authProvider = new common.ConfigFileAuthenticationDetailsProvider(undefined, profileName);
 
   const identityClient = new identity.IdentityClient({
     authenticationDetailsProvider: authProvider,
@@ -665,6 +682,7 @@ export async function discoverCompartments(
 ```bash
 pnpm --filter @acedergren/oci-genai-provider test src/config/__tests__/discovery.test.ts
 ```
+
 Expected: PASS
 
 **Step 5: Commit**
@@ -679,6 +697,7 @@ git commit -m "feat(config): add compartment discovery via OCI API"
 ### Task 1.5: Create Fallback Module
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/config/fallback.ts`
 
 **Step 1: Write the implementation**
@@ -842,6 +861,7 @@ git commit -m "feat(config): add fallback module for users without OCI CLI"
 ### Task 1.6: Create Config Module Index with Subpath Export
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/config/index.ts`
 - Modify: `packages/oci-genai-provider/package.json`
 - Modify: `packages/oci-genai-provider/tsup.config.ts`
@@ -852,21 +872,10 @@ git commit -m "feat(config): add fallback module for users without OCI CLI"
 // packages/oci-genai-provider/src/config/index.ts
 
 // Types
-export type {
-  OCIProfile,
-  OCIConfigResult,
-  OCICompartment,
-  ValidationResult,
-} from './types';
+export type { OCIProfile, OCIConfigResult, OCICompartment, ValidationResult } from './types';
 
 // OCI Config parsing
-export {
-  parseOCIConfig,
-  hasOCIConfig,
-  getConfigPath,
-  getProfile,
-  expandPath,
-} from './oci-config';
+export { parseOCIConfig, hasOCIConfig, getConfigPath, getProfile, expandPath } from './oci-config';
 
 // Credential validation
 export { validateCredentials } from './validation';
@@ -932,6 +941,7 @@ export default defineConfig({
 ```bash
 pnpm --filter @acedergren/oci-genai-provider build
 ```
+
 Expected: dist/index.js and dist/config/index.js created
 
 **Step 5: Commit**
@@ -948,6 +958,7 @@ git commit -m "feat(config): expose config utilities via subpath export"
 ### Task 2.1: Implement OpenCode Factory Function
 
 **Files:**
+
 - Modify: `packages/opencode-integration/src/index.ts`
 
 **Step 1: Write the implementation**
@@ -1010,9 +1021,7 @@ export interface OpenCodeOCIOptions {
  * @param options - Configuration from opencode.json
  * @returns ProviderV3 instance
  */
-export default function createOpenCodeOCIProvider(
-  options: OpenCodeOCIOptions
-): ProviderV3 {
+export default function createOpenCodeOCIProvider(options: OpenCodeOCIOptions): ProviderV3 {
   // Build config, preferring explicit options over environment variables
   const config: OCIConfig = {
     // Compartment ID is required
@@ -1101,6 +1110,7 @@ git commit -m "feat(opencode): implement factory function with auto-discovery su
 ### Task 2.2: Create Configuration Templates
 
 **Files:**
+
 - Create: `packages/opencode-integration/templates/opencode.json.minimal`
 - Create: `packages/opencode-integration/templates/opencode.json.full`
 - Create: `packages/opencode-integration/templates/.env.example`
@@ -1119,7 +1129,7 @@ git commit -m "feat(opencode): implement factory function with auto-discovery su
         "configProfile": "{env:OCI_CONFIG_PROFILE}"
       },
       "models": {
-        "xai.grok-4-maverick": {
+        "xai.grok-4": {
           "name": "Grok 4 Maverick",
           "limit": { "context": 131072, "output": 8192 }
         },
@@ -1147,11 +1157,11 @@ git commit -m "feat(opencode): implement factory function with auto-discovery su
         "configProfile": "{env:OCI_CONFIG_PROFILE}"
       },
       "models": {
-        "xai.grok-4-maverick": {
+        "xai.grok-4": {
           "name": "Grok 4 Maverick",
           "limit": { "context": 131072, "output": 8192 }
         },
-        "xai.grok-4-scout": {
+        "xai.grok-4-fast-reasoning": {
           "name": "Grok 4 Scout",
           "limit": { "context": 131072, "output": 8192 }
         },
@@ -1229,6 +1239,7 @@ git commit -m "feat(opencode): add configuration templates"
 ### Task 2.3: Write Setup Documentation
 
 **Files:**
+
 - Modify: `packages/opencode-integration/README.md`
 
 **Step 1: Write comprehensive README** (see full content in docs/guides/opencode-integration/)
@@ -1247,6 +1258,7 @@ git commit -m "docs(opencode): comprehensive setup documentation"
 ### Task 3.1: Create Setup CLI Package Structure
 
 **Files:**
+
 - Create: `packages/opencode-oci-setup/package.json`
 - Create: `packages/opencode-oci-setup/tsconfig.json`
 - Create: `packages/opencode-oci-setup/tsup.config.ts`
@@ -1340,6 +1352,7 @@ git commit -m "feat(setup): initialize CLI package structure"
 ### Task 3.2: Implement CLI Main Entry Point
 
 **Files:**
+
 - Create: `packages/opencode-oci-setup/src/cli.ts`
 
 **Step 1: Write the CLI implementation**
@@ -1544,10 +1557,22 @@ async function main(options: {
     name: 'selectedModels',
     message: 'Select models to enable (space to select):',
     choices: [
-      { title: 'xai.grok-4-maverick (Fast, 131K)', value: 'xai.grok-4-maverick', selected: true },
-      { title: 'meta.llama-3.3-70b-instruct (131K)', value: 'meta.llama-3.3-70b-instruct', selected: true },
-      { title: 'cohere.command-plus-latest (131K)', value: 'cohere.command-plus-latest', selected: false },
-      { title: 'google.gemini-2.5-flash (Vision, 1M)', value: 'google.gemini-2.5-flash', selected: false },
+      { title: 'xai.grok-4 (Fast, 131K)', value: 'xai.grok-4', selected: true },
+      {
+        title: 'meta.llama-3.3-70b-instruct (131K)',
+        value: 'meta.llama-3.3-70b-instruct',
+        selected: true,
+      },
+      {
+        title: 'cohere.command-plus-latest (131K)',
+        value: 'cohere.command-plus-latest',
+        selected: false,
+      },
+      {
+        title: 'google.gemini-2.5-flash (Vision, 1M)',
+        value: 'google.gemini-2.5-flash',
+        selected: false,
+      },
       { title: 'All models', value: 'all', selected: false },
     ],
     min: 1,
@@ -1709,6 +1734,7 @@ opencode
 ## Success Criteria Checklist
 
 ### Phase 1 (Config Utilities)
+
 - [ ] `parseOCIConfig()` correctly parses `~/.oci/config`
 - [ ] `validateCredentials()` tests API connectivity
 - [ ] `discoverCompartments()` lists available compartments
@@ -1716,6 +1742,7 @@ opencode
 - [ ] All tests pass
 
 ### Phase 2 (OpenCode Integration)
+
 - [ ] Factory function creates valid ProviderV3
 - [ ] OpenCode loads provider without errors
 - [ ] Can select OCI models from OpenCode UI
@@ -1723,6 +1750,7 @@ opencode
 - [ ] Documentation allows manual setup in <10 minutes
 
 ### Phase 3 (Setup CLI)
+
 - [ ] `npx @acedergren/opencode-oci-setup` runs without errors
 - [ ] Auto-discovers profiles from `~/.oci/config`
 - [ ] Validates credentials via OCI API
@@ -1736,6 +1764,7 @@ opencode
 ## File Summary
 
 ### New Files
+
 - `packages/oci-genai-provider/src/config/types.ts`
 - `packages/oci-genai-provider/src/config/oci-config.ts`
 - `packages/oci-genai-provider/src/config/validation.ts`
@@ -1747,6 +1776,7 @@ opencode
 - `packages/opencode-oci-setup/` (entire new package)
 
 ### Modified Files
+
 - `packages/oci-genai-provider/package.json` (add exports)
 - `packages/oci-genai-provider/tsup.config.ts` (add entry)
 - `packages/opencode-integration/src/index.ts` (factory function)

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return */
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import type { RerankingModelV3CallOptions } from '@ai-sdk/provider';
+import { InvalidArgumentError, NoSuchModelError } from '@ai-sdk/provider';
 
 // Define mocks at module scope - must be before jest.mock calls
 const mockRerankText = jest.fn<(...args: any[]) => Promise<any>>();
@@ -50,7 +51,7 @@ describe('OCIRerankingModel', () => {
       compartmentId: 'ocid1.compartment.test',
     });
 
-    expect(model.specificationVersion).toBe('V3');
+    expect(model.specificationVersion).toBe('v3');
     expect(model.provider).toBe('oci-genai');
     expect(model.modelId).toBe('cohere.rerank-v3.5');
   });
@@ -58,7 +59,7 @@ describe('OCIRerankingModel', () => {
   it('should throw error for invalid model ID', () => {
     expect(() => {
       new OCIRerankingModel('invalid-model', {});
-    }).toThrow('Invalid reranking model ID');
+    }).toThrow(NoSuchModelError);
   });
 
   // Client initialization tests (getClient - lines 31-48)
@@ -150,7 +151,7 @@ describe('OCIRerankingModel', () => {
             values: [{ type: 'image', image: new Uint8Array() }] as unknown as string[],
           },
         })
-      ).rejects.toThrow('OCI reranking only supports text documents');
+      ).rejects.toThrow(InvalidArgumentError);
     });
 
     it('should accept text documents', async () => {
@@ -229,10 +230,12 @@ describe('OCIRerankingModel', () => {
         { index: 1, relevanceScore: 0.45 },
       ]);
 
-      expect(result.response).toEqual({
-        id: 'rerank-job-123',
-        modelId: 'cohere.rerank-v3.5',
-      });
+      expect(result.response).toEqual(
+        expect.objectContaining({
+          id: 'rerank-job-123',
+          modelId: 'cohere.rerank-v3.5',
+        })
+      );
     });
 
     it('should call OCI API with correct parameters', async () => {

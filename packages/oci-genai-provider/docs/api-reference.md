@@ -9,11 +9,13 @@ Complete API documentation for `@acedergren/oci-genai-provider`.
 Creates a new OCI provider instance with custom configuration.
 
 **Parameters:**
+
 - `config` (optional): Base configuration object
 
 **Returns:** `OCIProvider` instance
 
 **Example:**
+
 ```typescript
 import { createOCI } from '@acedergren/oci-genai-provider';
 
@@ -28,6 +30,7 @@ const provider = createOCI({
 Default provider instance using environment variables or OCI config file.
 
 **Example:**
+
 ```typescript
 import { oci } from '@acedergren/oci-genai-provider';
 
@@ -41,12 +44,14 @@ const model = oci.languageModel('cohere.command-r-plus');
 Creates a language model instance.
 
 **Parameters:**
+
 - `modelId`: Model identifier (e.g., 'cohere.command-r-plus')
 - `settings` (optional): Language model configuration
 
 **Returns:** `LanguageModelV3` instance
 
 **Example:**
+
 ```typescript
 const model = oci.languageModel('cohere.command-r-plus', {
   requestOptions: {
@@ -60,12 +65,14 @@ const model = oci.languageModel('cohere.command-r-plus', {
 Creates an embedding model instance.
 
 **Parameters:**
+
 - `modelId`: Embedding model identifier (e.g., 'cohere.embed-multilingual-v3.0')
 - `settings` (optional): Embedding configuration
 
 **Returns:** `EmbeddingModelV3` instance
 
 **Example:**
+
 ```typescript
 const model = oci.embeddingModel('cohere.embed-multilingual-v3.0', {
   truncate: 'END',
@@ -78,12 +85,14 @@ const model = oci.embeddingModel('cohere.embed-multilingual-v3.0', {
 Creates a speech synthesis model instance.
 
 **Parameters:**
+
 - `modelId`: Speech model identifier (e.g., 'oci-tts-standard')
 - `settings` (optional): Speech configuration
 
 **Returns:** `SpeechModelV3` instance
 
 **Example:**
+
 ```typescript
 const model = oci.speechModel('oci-tts-standard', {
   voice: 'en-US-Standard-A',
@@ -97,6 +106,7 @@ const model = oci.speechModel('oci-tts-standard', {
 Creates a speech-to-text model instance.
 
 **Parameters:**
+
 - `modelId`: Transcription model identifier (e.g., 'oci-stt-standard')
 - `settings` (optional): Transcription configuration
 
@@ -107,6 +117,7 @@ Creates a speech-to-text model instance.
 Creates a reranking model instance.
 
 **Parameters:**
+
 - `modelId`: Reranking model identifier (e.g., 'cohere.rerank-v3.0')
 - `settings` (optional): Reranking configuration
 
@@ -247,18 +258,37 @@ class ModelNotFoundError extends OCIGenAIError {
 
 ### Language Models
 
-- `cohere.command-r-plus`
-- `cohere.command-r`
-- `cohere.command-a`
-- `cohere.command-a-vision`
+- `xai.grok-4`
+- `xai.grok-4-fast-reasoning`
+- `xai.grok-4-fast-non-reasoning`
+- `xai.grok-4-1-fast-reasoning`
+- `xai.grok-4-1-fast-non-reasoning`
+- `xai.grok-code-fast-1`
+- `xai.grok-3`
+- `xai.grok-3-fast`
+- `xai.grok-3-mini`
+- `xai.grok-3-mini-fast`
+- `meta.llama-4-maverick-17b-128e-instruct-fp8`
+- `meta.llama-4-scout-17b-16e-instruct`
 - `meta.llama-3.3-70b-instruct`
+- `meta.llama-3.2-90b-vision-instruct`
+- `meta.llama-3.2-11b-vision-instruct`
 - `meta.llama-3.1-405b-instruct`
-- `meta.llama-3.2-vision-90b-instruct`
-- `anthropic.claude-3-5-sonnet-v2`
-- `mistral.mistral-large-2`
-- `mistral.mistral-7b-instruct`
-- `xai.grok-4-maverick`
-- `xai.grok-4-scout`
+- `meta.llama-3.1-70b-instruct`
+- `google.gemini-2.5-pro`
+- `google.gemini-2.5-flash`
+- `google.gemini-2.5-flash-lite`
+- `cohere.command-a-03-2025`
+- `cohere.command-a-vision`
+- `cohere.command-a-reasoning`
+- `cohere.command-plus-latest`
+- `cohere.command-latest`
+- `cohere.command-r-plus-08-2024`
+- `cohere.command-r-08-2024`
+- `cohere.command-r-plus`
+- `cohere.command-r-16k`
+- `openai.gpt-oss-120b`
+- `openai.gpt-oss-20b`
 
 ### Embedding Models
 
@@ -292,8 +322,7 @@ class ModelNotFoundError extends OCIGenAIError {
 Provider methods:
 
 - **languageModel()** - Create language model instances
-- **embeddingModel()** - Create embedding model instances  
+- **embeddingModel()** - Create embedding model instances
 - **speechModel()** - Create speech synthesis model instances
 - **transcriptionModel()** - Create transcription model instances
 - **rerankingModel()** - Create reranking model instances
-

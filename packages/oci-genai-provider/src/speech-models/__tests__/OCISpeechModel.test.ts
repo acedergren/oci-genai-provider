@@ -53,6 +53,7 @@ jest.mock('oci-common', () => ({
 }));
 
 // Import after mocks
+import { NoSuchModelError } from '@ai-sdk/provider';
 import { OCISpeechModel } from '../OCISpeechModel';
 
 describe('OCISpeechModel', () => {
@@ -70,7 +71,7 @@ describe('OCISpeechModel', () => {
       compartmentId: 'ocid1.compartment.test',
       region: 'us-phoenix-1',
     });
-    expect(model.specificationVersion).toBe('V3');
+    expect(model.specificationVersion).toBe('v3');
     expect(model.provider).toBe('oci-genai');
     expect(model.modelId).toBe('TTS_2_NATURAL');
   });
@@ -78,13 +79,13 @@ describe('OCISpeechModel', () => {
   it('should throw error for invalid model ID', () => {
     expect(() => {
       new OCISpeechModel('invalid-model', {});
-    }).toThrow('Invalid speech model ID');
+    }).toThrow(NoSuchModelError);
   });
 
   it('should reject old-style model IDs', () => {
     expect(() => {
       new OCISpeechModel('oci.tts-1-hd', { region: 'us-phoenix-1' });
-    }).toThrow('Invalid speech model ID');
+    }).toThrow(NoSuchModelError);
   });
 
   it('should allow any region (no Phoenix-only restriction)', () => {
