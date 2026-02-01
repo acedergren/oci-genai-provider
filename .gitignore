@@ -1,2 +1,25 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Turbo cache
+.turbo/
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+
+# Environment files (contain secrets)
+.env
+.env.local
+.env.*.local
+
+# Project-specific
 .firecrawl/
 .worktrees/
