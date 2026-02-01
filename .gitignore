@@ -26,3 +26,7 @@ dist/
 
 # Claude agent configs (may contain sensitive paths)
 .claude/
+
+# Security scan artifacts
+codeql-db/
+codeql-results.sarif
