@@ -213,6 +213,7 @@ declare class OCIGenAIProvider implements ProviderV3 {
     private readonly config;
     readonly specificationVersion: "v3";
     constructor(config?: OCIConfig);
+    get models(): Record<string, any>;
     languageModel(modelId: string, settings?: OCILanguageModelSettings): LanguageModelV3;
     chat(modelId: string, settings?: OCILanguageModelSettings): LanguageModelV3;
     embeddingModel(modelId: string, settings?: OCIEmbeddingSettings): EmbeddingModelV3;

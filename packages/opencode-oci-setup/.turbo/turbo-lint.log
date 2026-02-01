@@ -1,12 +1,13 @@
 
-> @acedergren/opencode-oci-setup@0.1.0 lint /Users/acedergr/Projects/opencode-oci-genai/packages/opencode-oci-setup
+
+> @acedergren/opencode-oci-setup@0.1.0 lint /Users/acedergr/Projects/oci-genai-provider/packages/opencode-oci-setup
 > eslint src
 
-
-/Users/acedergr/Projects/opencode-oci-genai/packages/opencode-oci-setup/src/utils/logger.ts
-  12:21  warning  Missing return type on function                                                    @typescript-eslint/explicit-function-return-type
-  12:29  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
-  14:22  warning  Missing return type on function                                                    @typescript-eslint/explicit-function-return-type
-
-✖ 3 problems (0 errors, 3 warnings)
-
+[0m[0m
+[0m[4m/Users/acedergr/Projects/oci-genai-provider/packages/opencode-oci-setup/src/utils/logger.ts[24m[0m
+[0m  [2m12:21[22m  [33mwarning[39m  Missing return type on function                                                    [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m  [2m12:29[22m  [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m  [2m14:22[22m  [33mwarning[39m  Missing return type on function                                                    [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m[0m
+[0m[33m[1m✖ 3 problems (0 errors, 3 warnings)[22m[39m[0m
+[0m[33m[1m[22m[39m[0m

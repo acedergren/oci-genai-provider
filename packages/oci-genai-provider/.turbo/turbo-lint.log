@@ -1,45 +1,207 @@
 
-> @acedergren/oci-genai-provider@0.1.0 lint /Users/acedergr/Projects/opencode-oci-genai/packages/oci-genai-provider
+
+> @acedergren/oci-genai-provider@0.1.0 lint /Users/acedergr/Projects/oci-genai-provider/packages/oci-genai-provider
 > eslint src
 
-
-/Users/acedergr/Projects/opencode-oci-genai/packages/oci-genai-provider/src/config/__tests__/oci-config.test.ts
-  15:34  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
-
-/Users/acedergr/Projects/opencode-oci-genai/packages/oci-genai-provider/src/config/discovery.ts
-  52:21  error  Unexpected `await` of a non-Promise (non-"Thenable") value  @typescript-eslint/await-thenable
-
-/Users/acedergr/Projects/opencode-oci-genai/packages/oci-genai-provider/src/config/fallback.ts
-   72:11  error  "eu-frankfurt-1" | "eu-stockholm-1" | "us-ashburn-1" | "us-phoenix-1" | "us-chicago-1" | "uk-london-1" | "ap-tokyo-1" | "ap-osaka-1" | "ap-mumbai-1" | "ap-sydney-1" | "ap-melbourne-1" | "ca-toronto-1" | "ca-montreal-1" | "sa-saopaulo-1" | "me-dubai-1" | "me-jeddah-1" is overridden by string in this union type  @typescript-eslint/no-redundant-type-constituents
-  219:7   error  'OCID_TYPES' is assigned a value but only used as a type                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
-
-/Users/acedergr/Projects/opencode-oci-genai/packages/oci-genai-provider/src/config/validation.ts
-  63:22  error  Unexpected `await` of a non-Promise (non-"Thenable") value  @typescript-eslint/await-thenable
-
-/Users/acedergr/Projects/opencode-oci-genai/packages/oci-genai-provider/src/language-models/__tests__/seed-parameter.test.ts
-  110:7   warning  Missing return type on function                      @typescript-eslint/explicit-function-return-type
-  124:22  error    '_' is assigned a value but never used               @typescript-eslint/no-unused-vars
-  148:48  warning  Unexpected any. Specify a different type             @typescript-eslint/no-explicit-any
-  150:24  error    Unsafe member access .chatDetails on an `any` value  @typescript-eslint/no-unsafe-member-access
-
-/Users/acedergr/Projects/opencode-oci-genai/packages/oci-genai-provider/src/reranking-models/OCIRerankingModel.ts
-  137:7   warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
-  138:24  error    This assertion is unnecessary since it does not change the type of the expression                      @typescript-eslint/no-unnecessary-type-assertion
-  140:11  error    Unsafe return of a value of type `any`                                                                 @typescript-eslint/no-unsafe-return
-  140:11  error    Unsafe call of an `any` typed value                                                                    @typescript-eslint/no-unsafe-call
-  140:22  warning  Unexpected any. Specify a different type                                                               @typescript-eslint/no-explicit-any
-  140:27  error    Unsafe member access .rerankText on an `any` value                                                     @typescript-eslint/no-unsafe-member-access
-  168:11  error    Unsafe assignment of an `any` value                                                                    @typescript-eslint/no-unsafe-assignment
-  168:23  error    Unsafe member access .index on an `any` value                                                          @typescript-eslint/no-unsafe-member-access
-  169:11  error    Unsafe assignment of an `any` value                                                                    @typescript-eslint/no-unsafe-assignment
-  169:32  error    Unsafe member access .relevanceScore on an `any` value                                                 @typescript-eslint/no-unsafe-member-access
-
-/Users/acedergr/Projects/opencode-oci-genai/packages/oci-genai-provider/src/reranking-models/__tests__/OCIRerankingModel.test.ts
-  21:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
-  22:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
-  23:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
-
-✖ 22 problems (14 errors, 8 warnings)
-  1 error and 1 warning potentially fixable with the `--fix` option.
-
- ELIFECYCLE  Command failed with exit code 1.
+[0m[0m
+[0m[4m/Users/acedergr/Projects/oci-genai-provider/packages/oci-genai-provider/src/__tests__/integration/v3-specification-alignment.integration.test.ts[24m[0m
+[0m   [2m39:3[22m   [31merror[39m    'LanguageModelV3FinishReason' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m40:3[22m   [31merror[39m    'LanguageModelV3Usage' is defined but never used         [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m69:3[22m   [33mwarning[39m  Missing return type on function                          [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m   [2m70:3[22m   [33mwarning[39m  Missing return type on function                          [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m   [2m71:3[22m   [33mwarning[39m  Missing return type on function                          [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m  [2m451:11[22m  [33mwarning[39m  Missing return type on function                          [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m  [2m452:11[22m  [33mwarning[39m  Missing return type on function                          [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m[0m
+[0m[4m/Users/acedergr/Projects/oci-genai-provider/packages/oci-genai-provider/src/__tests__/utils/test-helpers.ts[24m[0m
+[0m  [2m129:5[22m  [33mwarning[39m  Missing return type on function  [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m[0m
+[0m[4m/Users/acedergr/Projects/oci-genai-provider/packages/oci-genai-provider/src/config/__tests__/oci-config.test.ts[24m[0m
+[0m  [2m15:34[22m  [33mwarning[39m  Missing return type on function  [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m[0m
+[0m[4m/Users/acedergr/Projects/oci-genai-provider/packages/oci-genai-provider/src/config/discovery.ts[24m[0m
+[0m  [2m52:21[22m  [31merror[39m  Unexpected `await` of a non-Promise (non-"Thenable") value  [2m@typescript-eslint/await-thenable[22m[0m
+[0m[0m
+[0m[4m/Users/acedergr/Projects/oci-genai-provider/packages/oci-genai-provider/src/config/fallback.ts[24m[0m
+[0m   [2m72:11[22m  [31merror[39m  "us-phoenix-1" | "eu-frankfurt-1" | "eu-stockholm-1" | "us-ashburn-1" | "us-chicago-1" | "uk-london-1" | "ap-tokyo-1" | "ap-osaka-1" | "ap-mumbai-1" | "ap-sydney-1" | "ap-melbourne-1" | "ca-toronto-1" | "ca-montreal-1" | "sa-saopaulo-1" | "me-dubai-1" | "me-jeddah-1" is overridden by string in this union type  [2m@typescript-eslint/no-redundant-type-constituents[22m[0m
+[0m  [2m219:7[22m   [31merror[39m  'OCID_TYPES' is assigned a value but only used as a type                                                                                                                                                                                                                                                                [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4m/Users/acedergr/Projects/oci-genai-provider/packages/oci-genai-provider/src/config/validation.ts[24m[0m
+[0m  [2m63:22[22m  [31merror[39m  Unexpected `await` of a non-Promise (non-"Thenable") value  [2m@typescript-eslint/await-thenable[22m[0m
+[0m[0m
+[0m[4m/Users/acedergr/Projects/oci-genai-provider/packages/oci-genai-provider/src/language-models/OCILanguageModel.ts[24m[0m
+[0m   [2m13:9[22m   [31merror[39m    Replace `⏎··GenerativeAiInferenceClient,⏎··models·as·OCIModel,⏎` with `·GenerativeAiInferenceClient,·models·as·OCIModel·`                                  [2mprettier/prettier[22m[0m
+[0m   [2m23:9[22m   [31merror[39m    Replace `⏎··convertToOCITools,⏎··convertToOCIToolChoice,⏎··supportsToolCalling,⏎` with `·convertToOCITools,·convertToOCIToolChoice,·supportsToolCalling·`  [2mprettier/prettier[22m[0m
+[0m  [2m166:42[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                   [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m343:9[22m   [31merror[39m    Unsafe assignment of an `any` value                                                                                                                        [2m@typescript-eslint/no-unsafe-assignment[22m[0m
+[0m  [2m343:90[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                   [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m348:9[22m   [31merror[39m    Unsafe assignment of an `any` value                                                                                                                        [2m@typescript-eslint/no-unsafe-assignment[22m[0m
+[0m  [2m348:84[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                   [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m389:11[22m  [33mwarning[39m  Missing return type on function                                                                                                                            [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m[0m
+[0m[4m/Users/acedergr/Projects/oci-genai-provider/packages/oci-genai-provider/src/language-models/__tests__/OCILanguageModel-retry.test.ts[24m[0m
+[0m   [2m65:65[22m  [33mwarning[39m  Missing return type on function                 [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m   [2m74:7[22m   [33mwarning[39m  Missing return type on function                 [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m   [2m90:42[22m  [31merror[39m    Async arrow function has no 'await' expression  [2m@typescript-eslint/require-await[22m[0m
+[0m  [2m101:9[22m   [33mwarning[39m  Missing return type on function                 [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m  [2m116:42[22m  [31merror[39m    Async arrow function has no 'await' expression  [2m@typescript-eslint/require-await[22m[0m
+[0m  [2m135:42[22m  [31merror[39m    Async arrow function has no 'await' expression  [2m@typescript-eslint/require-await[22m[0m
+[0m  [2m154:42[22m  [31merror[39m    Async arrow function has no 'await' expression  [2m@typescript-eslint/require-await[22m[0m
+[0m  [2m251:44[22m  [31merror[39m    Async arrow function has no 'await' expression  [2m@typescript-eslint/require-await[22m[0m
+[0m  [2m268:44[22m  [31merror[39m    Async arrow function has no 'await' expression  [2m@typescript-eslint/require-await[22m[0m
+[0m  [2m278:44[22m  [31merror[39m    Async arrow function has no 'await' expression  [2m@typescript-eslint/require-await[22m[0m
+[0m  [2m290:44[22m  [31merror[39m    Async arrow function has no 'await' expression  [2m@typescript-eslint/require-await[22m[0m
+[0m[0m
+[0m[4m/Users/acedergr/Projects/oci-genai-provider/packages/oci-genai-provider/src/language-models/__tests__/OCILanguageModel.advanced.test.ts[24m[0m
+[0m   [2m24:3[22m   [33mwarning[39m  Missing return type on function                          [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m   [2m25:3[22m   [33mwarning[39m  Missing return type on function                          [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m   [2m26:3[22m   [33mwarning[39m  Missing return type on function                          [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m   [2m37:26[22m  [33mwarning[39m  Unexpected any. Specify a different type                 [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m52:31[22m  [31merror[39m    Insert `⏎····`                                           [2mprettier/prettier[22m[0m
+[0m   [2m53:1[22m   [31merror[39m    Replace `····` with `······`                             [2mprettier/prettier[22m[0m
+[0m   [2m54:1[22m   [31merror[39m    Insert `··`                                              [2mprettier/prettier[22m[0m
+[0m   [2m55:1[22m   [31merror[39m    Insert `··`                                              [2mprettier/prettier[22m[0m
+[0m   [2m56:3[22m   [31merror[39m    Replace `}·=·{}` with `··}·=·{}⏎··`                      [2mprettier/prettier[22m[0m
+[0m   [2m56:11[22m  [33mwarning[39m  Missing return type on function                          [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m   [2m76:7[22m   [33mwarning[39m  Missing return type on function                          [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m   [2m88:44[22m  [31merror[39m    Async arrow function has no 'await' expression           [2m@typescript-eslint/require-await[22m[0m
+[0m  [2m107:13[22m  [31merror[39m    Unsafe assignment of an `any` value                      [2m@typescript-eslint/no-unsafe-assignment[22m[0m
+[0m  [2m107:57[22m  [33mwarning[39m  Unexpected any. Specify a different type                 [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m107:62[22m  [31merror[39m    Unsafe member access .chatDetails on an `any` value      [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m108:26[22m  [31merror[39m    Unsafe member access .messages on an `any` value         [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m124:44[22m  [31merror[39m    Async arrow function has no 'await' expression           [2m@typescript-eslint/require-await[22m[0m
+[0m  [2m135:13[22m  [31merror[39m    Unsafe assignment of an `any` value                      [2m@typescript-eslint/no-unsafe-assignment[22m[0m
+[0m  [2m135:57[22m  [33mwarning[39m  Unexpected any. Specify a different type                 [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m135:62[22m  [31merror[39m    Unsafe member access .chatDetails on an `any` value      [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m136:26[22m  [31merror[39m    Unsafe member access .apiFormat on an `any` value        [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m137:26[22m  [31merror[39m    Unsafe member access .messages on an `any` value         [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m152:44[22m  [31merror[39m    Async arrow function has no 'await' expression           [2m@typescript-eslint/require-await[22m[0m
+[0m  [2m155:44[22m  [31merror[39m    Delete `·`                                               [2mprettier/prettier[22m[0m
+[0m  [2m176:13[22m  [31merror[39m    Unsafe assignment of an `any` value                      [2m@typescript-eslint/no-unsafe-assignment[22m[0m
+[0m  [2m176:57[22m  [33mwarning[39m  Unexpected any. Specify a different type                 [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m176:62[22m  [31merror[39m    Unsafe member access .chatDetails on an `any` value      [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m177:26[22m  [31merror[39m    Unsafe member access .reasoningEffort on an `any` value  [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m183:44[22m  [31merror[39m    Async arrow function has no 'await' expression           [2m@typescript-eslint/require-await[22m[0m
+[0m  [2m205:11[22m  [33mwarning[39m  Missing return type on function                          [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m  [2m217:13[22m  [31merror[39m    Unsafe assignment of an `any` value                      [2m@typescript-eslint/no-unsafe-assignment[22m[0m
+[0m  [2m217:57[22m  [33mwarning[39m  Unexpected any. Specify a different type                 [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m217:62[22m  [31merror[39m    Unsafe member access .chatDetails on an `any` value      [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m218:26[22m  [31merror[39m    Unsafe member access .thinking on an `any` value         [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m245:13[22m  [33mwarning[39m  Missing return type on function                          [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m  [2m250:14[22m  [33mwarning[39m  Unexpected any. Specify a different type                 [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m258:20[22m  [33mwarning[39m  Unexpected any. Specify a different type                 [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m266:53[22m  [31merror[39m    Unsafe member access .type on an `any` value             [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m268:33[22m  [31merror[39m    Unsafe member access .delta on an `any` value            [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m269:33[22m  [31merror[39m    Unsafe member access .delta on an `any` value            [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m[0m
+[0m[4m/Users/acedergr/Projects/oci-genai-provider/packages/oci-genai-provider/src/language-models/__tests__/OCILanguageModel.test.ts[24m[0m
+[0m  [2m74:42[22m  [31merror[39m    Async arrow function has no 'await' expression  [2m@typescript-eslint/require-await[22m[0m
+[0m  [2m83:9[22m   [33mwarning[39m  Missing return type on function                 [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m[0m
+[0m[4m/Users/acedergr/Projects/oci-genai-provider/packages/oci-genai-provider/src/language-models/__tests__/seed-parameter.test.ts[24m[0m
+[0m   [2m72:42[22m  [31merror[39m    Async arrow function has no 'await' expression       [2m@typescript-eslint/require-await[22m[0m
+[0m   [2m83:9[22m   [33mwarning[39m  Missing return type on function                      [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m  [2m114:7[22m   [33mwarning[39m  Missing return type on function                      [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m  [2m128:22[22m  [31merror[39m    '_' is assigned a value but never used               [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m152:48[22m  [33mwarning[39m  Unexpected any. Specify a different type             [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m154:24[22m  [31merror[39m    Unsafe member access .chatDetails on an `any` value  [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m[0m
+[0m[4m/Users/acedergr/Projects/oci-genai-provider/packages/oci-genai-provider/src/language-models/converters/__tests__/messages.test.ts[24m[0m
+[0m  [2m134:18[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m207:18[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m276:18[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/Users/acedergr/Projects/oci-genai-provider/packages/oci-genai-provider/src/realtime/OCIRealtimeClient.ts[24m[0m
+[0m  [2m230:3[22m   [31merror[39m    Async method 'requestFinalResult' has no 'await' expression             [2m@typescript-eslint/require-await[22m[0m
+[0m  [2m285:24[22m  [31merror[39m    Unexpected `await` of a non-Promise (non-"Thenable") value              [2m@typescript-eslint/await-thenable[22m[0m
+[0m  [2m357:25[22m  [33mwarning[39m  Missing return type on function                                         [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m  [2m362:38[22m  [33mwarning[39m  Missing return type on function                                         [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m  [2m367:55[22m  [33mwarning[39m  Missing return type on function                                         [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m  [2m372:26[22m  [33mwarning[39m  Missing return type on function                                         [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m  [2m400:34[22m  [33mwarning[39m  Missing return type on function                                         [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m  [2m408:38[22m  [33mwarning[39m  Missing return type on function                                         [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m  [2m416:26[22m  [33mwarning[39m  Missing return type on function                                         [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m  [2m545:38[22m  [31merror[39m    Promise returned in function argument where a void return was expected  [2m@typescript-eslint/no-misused-promises[22m[0m
+[0m[0m
+[0m[4m/Users/acedergr/Projects/oci-genai-provider/packages/oci-genai-provider/src/realtime/WebSocketAdapter.ts[24m[0m
+[0m   [2m22:13[22m  [31merror[39m    'WebSocketReadyState' is already defined                                                                                                                            [2mno-redeclare[22m[0m
+[0m  [2m100:5[22m   [31merror[39m    Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  [2m@typescript-eslint/no-floating-promises[22m[0m
+[0m  [2m107:12[22m  [31merror[39m    This assertion is unnecessary since it does not change the type of the expression                                                                                   [2m@typescript-eslint/no-unnecessary-type-assertion[22m[0m
+[0m  [2m219:27[22m  [33mwarning[39m  Missing return type on function                                                                                                                                     [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m  [2m225:49[22m  [33mwarning[39m  Missing return type on function                                                                                                                                     [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m  [2m226:30[22m  [31merror[39m    Unsafe argument of type `any` assigned to a parameter of type `string | ArrayBuffer`                                                                                [2m@typescript-eslint/no-unsafe-argument[22m[0m
+[0m  [2m229:45[22m  [33mwarning[39m  Missing return type on function                                                                                                                                     [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m  [2m235:41[22m  [33mwarning[39m  Missing return type on function                                                                                                                                     [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m[0m
+[0m[4m/Users/acedergr/Projects/oci-genai-provider/packages/oci-genai-provider/src/realtime/__tests__/OCIRealtimeClient.test.ts[24m[0m
+[0m   [2m29:15[22m  [31merror[39m  Unsafe assignment of an `any` value                [2m@typescript-eslint/no-unsafe-assignment[22m[0m
+[0m   [2m30:17[22m  [31merror[39m  Unsafe member access .event on an `any` value      [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m119:23[22m  [31merror[39m  Unsafe member access .WebSocket on an `any` value  [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m122:7[22m   [31merror[39m  Unexpected aliasing of 'this' to local variable    [2m@typescript-eslint/no-this-alias[22m[0m
+[0m  [2m129:23[22m  [31merror[39m  Unsafe member access .WebSocket on an `any` value  [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m[0m
+[0m[4m/Users/acedergr/Projects/oci-genai-provider/packages/oci-genai-provider/src/realtime/__tests__/OCIRealtimeTranscription.test.ts[24m[0m
+[0m   [2m28:15[22m  [31merror[39m  Unsafe assignment of an `any` value                                     [2m@typescript-eslint/no-unsafe-assignment[22m[0m
+[0m   [2m29:17[22m  [31merror[39m  Unsafe member access .event on an `any` value                           [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m115:23[22m  [31merror[39m  Unsafe member access .WebSocket on an `any` value                       [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m118:7[22m   [31merror[39m  Unexpected aliasing of 'this' to local variable                         [2m@typescript-eslint/no-this-alias[22m[0m
+[0m  [2m125:23[22m  [31merror[39m  Unsafe member access .WebSocket on an `any` value                       [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m365:20[22m  [31merror[39m  Promise returned in function argument where a void return was expected  [2m@typescript-eslint/no-misused-promises[22m[0m
+[0m[0m
+[0m[4m/Users/acedergr/Projects/oci-genai-provider/packages/oci-genai-provider/src/realtime/__tests__/WebSocketAdapter.test.ts[24m[0m
+[0m   [2m47:23[22m  [31merror[39m  Unsafe member access .WebSocket on an `any` value  [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m   [2m52:23[22m  [31merror[39m  Unsafe member access .WebSocket on an `any` value  [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m125:50[22m  [31merror[39m  Async arrow function has no 'await' expression     [2m@typescript-eslint/require-await[22m[0m
+[0m[0m
+[0m[4m/Users/acedergr/Projects/oci-genai-provider/packages/oci-genai-provider/src/reranking-models/OCIRerankingModel.ts[24m[0m
+[0m  [2m137:13[22m  [31merror[39m    Unsafe assignment of an `any` value                       [2m@typescript-eslint/no-unsafe-assignment[22m[0m
+[0m  [2m137:57[22m  [33mwarning[39m  Unexpected any. Specify a different type                  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m139:11[22m  [31merror[39m    Unsafe return of a value of type `any`                    [2m@typescript-eslint/no-unsafe-return[22m[0m
+[0m  [2m139:11[22m  [31merror[39m    Unsafe call of an `any` typed value                       [2m@typescript-eslint/no-unsafe-call[22m[0m
+[0m  [2m139:22[22m  [33mwarning[39m  Unexpected any. Specify a different type                  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m139:27[22m  [31merror[39m    Unsafe member access .rerankText on an `any` value        [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m157:13[22m  [31merror[39m    Unsafe assignment of an `any` value                       [2m@typescript-eslint/no-unsafe-assignment[22m[0m
+[0m  [2m157:23[22m  [31merror[39m    Unsafe call of an `any` typed value                       [2m@typescript-eslint/no-unsafe-call[22m[0m
+[0m  [2m157:32[22m  [31merror[39m    Unsafe member access .rerankTextResult on an `any` value  [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m160:11[22m  [31merror[39m    Unsafe assignment of an `any` value                       [2m@typescript-eslint/no-unsafe-assignment[22m[0m
+[0m  [2m160:23[22m  [31merror[39m    Unsafe member access .index on an `any` value             [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m161:11[22m  [31merror[39m    Unsafe assignment of an `any` value                       [2m@typescript-eslint/no-unsafe-assignment[22m[0m
+[0m  [2m161:32[22m  [31merror[39m    Unsafe member access .relevanceScore on an `any` value    [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m166:9[22m   [31merror[39m    Unsafe assignment of an `any` value                       [2m@typescript-eslint/no-unsafe-assignment[22m[0m
+[0m  [2m170:13[22m  [31merror[39m    Unsafe assignment of an `any` value                       [2m@typescript-eslint/no-unsafe-assignment[22m[0m
+[0m  [2m170:33[22m  [31merror[39m    Unsafe member access .opcRequestId on an `any` value      [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m171:13[22m  [31merror[39m    Unsafe assignment of an `any` value                       [2m@typescript-eslint/no-unsafe-assignment[22m[0m
+[0m  [2m171:31[22m  [31merror[39m    Unsafe member access .rerankTextResult on an `any` value  [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m175:11[22m  [31merror[39m    Unsafe assignment of an `any` value                       [2m@typescript-eslint/no-unsafe-assignment[22m[0m
+[0m  [2m175:24[22m  [31merror[39m    Unsafe member access .rerankTextResult on an `any` value  [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m176:11[22m  [31merror[39m    Unsafe assignment of an `any` value                       [2m@typescript-eslint/no-unsafe-assignment[22m[0m
+[0m  [2m176:29[22m  [31merror[39m    Unsafe member access .rerankTextResult on an `any` value  [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m177:29[22m  [31merror[39m    Unsafe member access .opcRequestId on an `any` value      [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m177:46[22m  [31merror[39m    Unsafe assignment of an `any` value                       [2m@typescript-eslint/no-unsafe-assignment[22m[0m
+[0m  [2m177:73[22m  [31merror[39m    Unsafe member access .opcRequestId on an `any` value      [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m[0m
+[0m[4m/Users/acedergr/Projects/oci-genai-provider/packages/oci-genai-provider/src/reranking-models/__tests__/OCIRerankingModel.test.ts[24m[0m
+[0m  [2m21:3[22m  [33mwarning[39m  Missing return type on function  [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m  [2m22:3[22m  [33mwarning[39m  Missing return type on function  [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m  [2m23:3[22m  [33mwarning[39m  Missing return type on function  [2m@typescript-eslint/explicit-function-return-type[22m[0m
+[0m[0m
+[0m[4m/Users/acedergr/Projects/oci-genai-provider/packages/oci-genai-provider/src/shared/streaming/sse-parser.ts[24m[0m
+[0m  [2m171:15[22m  [31merror[39m    Unsafe assignment of an `any` value                           [2m@typescript-eslint/no-unsafe-assignment[22m[0m
+[0m  [2m172:49[22m  [33mwarning[39m  Unexpected any. Specify a different type                      [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m172:54[22m  [31merror[39m    Unsafe member access .promptTokenCount on an `any` value      [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m173:15[22m  [31merror[39m    Unsafe assignment of an `any` value                           [2m@typescript-eslint/no-unsafe-assignment[22m[0m
+[0m  [2m175:27[22m  [33mwarning[39m  Unexpected any. Specify a different type                      [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m175:32[22m  [31merror[39m    Unsafe member access .completionTokenCount on an `any` value  [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m[0m
+[0m[4m/Users/acedergr/Projects/oci-genai-provider/packages/oci-genai-provider/src/speech-models/OCISpeechModel.ts[24m[0m
+[0m  [2m194:44[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                     [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m196:33[22m  [31merror[39m    Unsafe member access .getReader on an `any` value                                            [2m@typescript-eslint/no-unsafe-member-access[22m[0m
+[0m  [2m197:41[22m  [31merror[39m    Unsafe argument of type `any` assigned to a parameter of type `ReadableStream<any>`          [2m@typescript-eslint/no-unsafe-argument[22m[0m
+[0m  [2m201:40[22m  [31merror[39m    Unsafe argument of type `any` assigned to a parameter of type `ReadableStream`               [2m@typescript-eslint/no-unsafe-argument[22m[0m
+[0m  [2m213:23[22m  [31merror[39m    Unsafe object destructuring of a property with an `any` value                                [2m@typescript-eslint/no-unsafe-assignment[22m[0m
+[0m  [2m215:32[22m  [31merror[39m    Unsafe argument of type `any` assigned to a parameter of type `Uint8Array<ArrayBufferLike>`  [2m@typescript-eslint/no-unsafe-argument[22m[0m
+[0m[0m
+[0m[31m[1m✖ 155 problems (101 errors, 54 warnings)[22m[39m[0m
+[0m[31m[1m[22m[39m[31m[1m  9 errors and 0 warnings potentially fixable with the `--fix` option.[22m[39m[0m
+[0m[31m[1m[22m[39m[0m
+[41m[30m ELIFECYCLE [39m[49m [31mCommand failed with exit code 1.[39m

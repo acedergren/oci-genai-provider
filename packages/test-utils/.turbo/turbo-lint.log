@@ -1,4 +1,5 @@
 
-> @acedergren/test-utils@0.1.0 lint /Users/acedergr/Projects/opencode-oci-genai/packages/test-utils
+
+> @acedergren/test-utils@0.1.0 lint /Users/acedergr/Projects/oci-genai-provider/packages/test-utils
 > eslint src
 
