@@ -114,16 +114,9 @@ Or via environment variable:
     );
   }
 
-  const provider = createOCI(config);
-
-  // Return provider with explicit models property for OpenCode discovery
-  const providerWithModels = {
-    ...provider,
-    models: provider.models,
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  return providerWithModels as ProviderV3;
+  // createOCI returns OCIGenAIProvider which implements ProviderV3
+  // No need to spread - return directly to preserve class methods
+  return createOCI(config);
 }
 
 // ============================================================================
