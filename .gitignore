@@ -27,6 +27,25 @@ dist/
 # Claude agent configs (may contain sensitive paths)
 .claude/
 
+# SvelteKit/Next.js build artifacts
+.svelte-kit/
+build/
+.next/
+
+# Turbo build logs
+.turbo/turbo-*.log
+
+# Temporary debug files
+PROJECT_PLAN.md
+DEBUG_REPORT.md
+oci-genai-dashboard.html
+opentui-playground.html
+tui-design-playground.html
+.oci-chat-history.json
+.gemini-clipboard/
+.codex/
+.agents/
+
 # Security scan artifacts
 codeql-db/
 codeql-results.sarif
