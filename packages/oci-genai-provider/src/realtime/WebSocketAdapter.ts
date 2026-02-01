@@ -104,7 +104,7 @@ export class WebSocketAdapter {
    * Get the current connection state.
    */
   get readyState(): WebSocketReadyState {
-    return (this.ws?.readyState ?? this._readyState) as WebSocketReadyState;
+    return this.ws?.readyState ?? this._readyState;
   }
 
   /**

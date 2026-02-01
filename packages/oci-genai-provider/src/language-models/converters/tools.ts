@@ -93,8 +93,28 @@ export function convertToOCITools(
   return tools.map((tool) => convertToGenericToolFormat(tool));
 }
 
+function sanitizeSchema(schema: any): any {
+  if (!schema || typeof schema !== 'object') {
+    return schema;
+  }
+
+  if (Array.isArray(schema)) {
+    return schema.map(sanitizeSchema);
+  }
+
+  const sanitized = { ...schema };
+  delete sanitized.$schema;
+  delete sanitized.ref;
+
+  for (const [key, value] of Object.entries(sanitized)) {
+    sanitized[key] = sanitizeSchema(value);
+  }
+
+  return sanitized;
+}
+
 function convertToGenericToolFormat(tool: LanguageModelV3FunctionTool): OCIFunctionDefinition {
-  const parameters = (tool.inputSchema as Record<string, unknown>) || {};
+  const parameters = sanitizeSchema(tool.inputSchema as Record<string, unknown>) || {};
 
   // Ensure the schema has a type 'object'
   if (!parameters.type) {

@@ -15,12 +15,13 @@ interface CohereMessage {
 
 interface CohereChatRequest {
   message: string;
-  chat_history?: CohereMessage[];
+  chatHistory?: CohereMessage[];
+  preambleOverride?: string;
 }
 
 /**
  * Converts generic OCI messages to Cohere format.
- * Extracts the last user message as 'message' and converts previous messages to 'chat_history'.
+ * Extracts the last user message as 'message' and converts previous messages to 'chatHistory'.
  */
 export function convertToCohereFormat(messages: OCIMessage[]): CohereChatRequest {
   if (messages.length === 0) {
@@ -34,6 +35,13 @@ export function convertToCohereFormat(messages: OCIMessage[]): CohereChatRequest
     throw new Error('At least one USER message is required');
   }
 
+  // Extract system messages into preamble
+  const systemMessages = messages
+    .filter((m) => m.role === 'SYSTEM')
+    .map((m) => m.content.filter((c) => c.type === 'TEXT').map((c) => c.text))
+    .flat()
+    .join('\n');
+
   // Extract the current message (last user message)
   const currentMessage = messages[lastUserIndex];
   const messageText = currentMessage.content
@@ -41,13 +49,13 @@ export function convertToCohereFormat(messages: OCIMessage[]): CohereChatRequest
     .map((c) => c.text)
     .join('\n');
 
-  // Convert previous messages to chat_history (excluding system messages for now)
-  const chat_history: CohereMessage[] = [];
+  // Convert previous messages to chatHistory
+  const chatHistory: CohereMessage[] = [];
 
   for (let i = 0; i < lastUserIndex; i++) {
     const msg = messages[i];
 
-    // Skip system messages (Cohere handles them differently)
+    // Skip system messages (handled by preambleOverride)
     if (msg.role === 'SYSTEM') {
       continue;
     }
@@ -57,7 +65,7 @@ export function convertToCohereFormat(messages: OCIMessage[]): CohereChatRequest
       .map((c) => c.text)
       .join('\n');
 
-    chat_history.push({
+    chatHistory.push({
       role: msg.role === 'USER' ? 'USER' : 'CHATBOT',
       message: text,
     });
@@ -65,6 +73,7 @@ export function convertToCohereFormat(messages: OCIMessage[]): CohereChatRequest
 
   return {
     message: messageText,
-    ...(chat_history.length > 0 ? { chat_history } : {}),
+    ...(chatHistory.length > 0 ? { chatHistory } : {}),
+    ...(systemMessages ? { preambleOverride: systemMessages } : {}),
   };
 }

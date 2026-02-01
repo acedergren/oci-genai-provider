@@ -49,11 +49,13 @@ describe('OCILanguageModel - Advanced V3 Features', () => {
     compartmentId: 'ocid1.compartment.oc1..test',
   };
 
-  const createMockResponse = (options: {
-    text?: string;
-    reasoning?: string;
-    usage?: { promptTokens: number; completionTokens: number; reasoningTokens?: number };
-  } = {}) => ({
+  const createMockResponse = (
+    options: {
+      text?: string;
+      reasoning?: string;
+      usage?: { promptTokens: number; completionTokens: number; reasoningTokens?: number };
+    } = {}
+  ) => ({
     body: createReadableStream([
       `data: ${JSON.stringify({
         message: {
@@ -152,7 +154,7 @@ describe('OCILanguageModel - Advanced V3 Features', () => {
       mockChat.mockImplementation(async () =>
         createMockResponse({
           text: 'Final answer',
-          reasoning: 'Thinking process...', 
+          reasoning: 'Thinking process...',
           usage: {
             promptTokens: 10,
             completionTokens: 20,

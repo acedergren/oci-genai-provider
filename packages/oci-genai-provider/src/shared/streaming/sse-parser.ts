@@ -111,6 +111,15 @@ export async function* parseSSEStream(
           });
         }
 
+        // Support for top-level text or content[0].text (Older Cohere format)
+        const topLevelText = (parsed as any).text || (parsed as any).textDelta;
+        if (topLevelText) {
+          parts.push({
+            type: 'text-delta',
+            textDelta: topLevelText,
+          });
+        }
+
         if (parsed.message?.content) {
           for (const part of parsed.message.content) {
             if (part.type === 'THINKING' && part.thinking) {
@@ -122,7 +131,7 @@ export async function* parseSSEStream(
           }
         }
 
-        // Check for text delta
+        // Check for text delta in message content
         const contentParts = parsed.message?.content;
         if (contentParts) {
           for (const part of contentParts) {
