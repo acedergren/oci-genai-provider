@@ -3,14 +3,6 @@
  * These tests verify critical behaviors that must not break between releases
  *
  * Test naming: REG-XXX for traceability
- *
- * AI SDK Reference (/ai-sdk):
- * - LanguageModelV3 must have specificationVersion: 'v3'
- * - Provider must implement doGenerate and doStream
- *
- * OCI Reference (/OCI Generative AI Services):
- * - Model families: cohere.*, google.*, xai.*, meta.*
- * - API formats: COHERE (for cohere.*), GENERIC (for others)
  */
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { NoSuchModelError } from '@ai-sdk/provider';
@@ -22,52 +14,33 @@ import {
   getModelsByFamily,
 } from '../language-models/registry';
 
-// Mock OCI SDK - structure matches oci-generativeaiinference
-jest.mock('oci-generativeaiinference', () => {
-  return {
-    GenerativeAiInferenceClient: jest.fn().mockImplementation(() => ({
-      region: null,
-      endpoint: undefined,
-      chat: jest.fn().mockImplementation(() =>
-        Promise.resolve({
-          chatResult: {
-            modelId: 'test-model',
-            chatResponse: {
-              choices: [
-                {
-                  message: { content: [{ type: 'TEXT', text: 'Hello!' }] },
-                  finishReason: 'COMPLETE',
-                },
-              ],
-              usage: { promptTokens: 10, completionTokens: 5 },
-            },
-          },
-        })
-      ),
-    })),
-    models: {
-      CohereChatRequest: { apiFormat: 'COHERE' },
-      GenericChatRequest: { apiFormat: 'GENERIC' },
-      TextContent: { type: 'TEXT' },
-    },
-  };
-});
+// Mock OCI SDK - minimal mock since these tests don't call doGenerate/doStream
+jest.mock('oci-generativeaiinference', () => ({
+  GenerativeAiInferenceClient: jest.fn().mockImplementation(() => ({
+    region: null,
+    endpoint: undefined,
+  })),
+  models: {
+    CohereChatRequest: { apiFormat: 'COHERE' },
+    GenericChatRequest: { apiFormat: 'GENERIC' },
+  },
+}));
 
 // Mock OCI Common - authentication providers
-jest.mock('oci-common', () => {
-  return {
-    ConfigFileAuthenticationDetailsProvider: jest.fn().mockImplementation(() => ({})),
-    Region: {
-      fromRegionId: (id: string): { regionId: string } => ({ regionId: id }),
-    },
-    InstancePrincipalsAuthenticationDetailsProviderBuilder: jest.fn().mockImplementation(() => ({
-      build: jest.fn().mockImplementation(() => Promise.resolve({})),
-    })),
-    ResourcePrincipalAuthenticationDetailsProvider: {
-      builder: jest.fn().mockImplementation(() => ({})),
-    },
-  };
-});
+jest.mock('oci-common', () => ({
+  ConfigFileAuthenticationDetailsProvider: jest.fn().mockImplementation(() => ({})),
+  Region: { fromRegionId: (id: string): { regionId: string } => ({ regionId: id }) },
+  InstancePrincipalsAuthenticationDetailsProviderBuilder: jest.fn().mockImplementation(() => ({
+    build: jest.fn().mockImplementation(() => Promise.resolve({})),
+  })),
+  ResourcePrincipalAuthenticationDetailsProvider: {
+    builder: jest.fn().mockImplementation(() => ({})),
+  },
+}));
+
+// Shared test constants
+const TEST_COMPARTMENT = 'ocid1.compartment.oc1..test';
+const TEST_REGION = 'us-chicago-1';
 
 describe('Regression: Provider Configuration', () => {
   const originalEnv = process.env;
@@ -86,7 +59,7 @@ describe('Regression: Provider Configuration', () => {
   });
 
   it('REG-001: Provider must accept compartmentId from environment', () => {
-    process.env.OCI_COMPARTMENT_ID = 'ocid1.compartment.oc1..test';
+    process.env.OCI_COMPARTMENT_ID = TEST_COMPARTMENT;
     expect(createOCI()).toBeInstanceOf(OCIGenAIProvider);
   });
 
@@ -106,55 +79,47 @@ describe('Regression: Provider Configuration', () => {
   });
 
   it('REG-004: Provider must create valid language model', () => {
-    const model = createOCI({ region: 'us-chicago-1' }).languageModel('cohere.command-r-plus');
+    const model = createOCI({ region: TEST_REGION }).languageModel('cohere.command-r-plus');
     expect(model.specificationVersion).toBe('v3');
     expect(model.modelId).toBe('cohere.command-r-plus');
   });
 
   it.each([
-    ['REG-005', 'cohere.command-r-plus', 'cohere.', 'Cohere'],
-    ['REG-006', 'google.gemini-2.5-pro', 'google.', 'Google'],
-    ['REG-007', 'xai.grok-4', 'xai.', 'xAI/Grok'],
-    ['REG-008', 'meta.llama-3.3-70b-instruct', 'meta.', 'Meta/Llama'],
-  ])('%s: Provider must support %s model family', (_id, modelId, prefix, _familyName) => {
-    const model = createOCI({ region: 'us-chicago-1' }).languageModel(modelId);
+    ['cohere.command-r-plus', 'cohere.'],
+    ['google.gemini-2.5-pro', 'google.'],
+    ['xai.grok-4', 'xai.'],
+    ['meta.llama-3.3-70b-instruct', 'meta.'],
+  ])('REG-005-008: Provider must support %s model family', (modelId, prefix) => {
+    const model = createOCI({ region: TEST_REGION }).languageModel(modelId);
     expect(model.modelId.startsWith(prefix)).toBe(true);
     expect(model.provider).toBe('oci-genai');
   });
 });
 
-describe('Regression: Model Creation (AI SDK V3)', () => {
+describe('Regression: Model Creation & Error Handling', () => {
+  let provider: OCIGenAIProvider;
+
   beforeEach(() => {
-    process.env.OCI_COMPARTMENT_ID = 'ocid1.compartment.oc1..test';
+    process.env.OCI_COMPARTMENT_ID = TEST_COMPARTMENT;
+    provider = createOCI({ region: TEST_REGION });
   });
 
   it('REG-009: languageModel() must return LanguageModelV3 interface', () => {
-    const model = createOCI({ region: 'us-chicago-1' }).languageModel('cohere.command-r-plus');
+    const model = provider.languageModel('cohere.command-r-plus');
     expect(model.specificationVersion).toBe('v3');
     expect(typeof model.doGenerate).toBe('function');
     expect(typeof model.doStream).toBe('function');
   });
 
   it('REG-010: Provider name must be oci-genai', () => {
-    const model = createOCI({ region: 'us-chicago-1' }).languageModel('cohere.command-r-plus');
-    expect(model.provider).toBe('oci-genai');
+    expect(provider.languageModel('cohere.command-r-plus').provider).toBe('oci-genai');
   });
 
   it('REG-011: chat() must be alias for languageModel()', () => {
-    const provider = createOCI({ region: 'us-chicago-1' });
     const modelViaLanguageModel = provider.languageModel('cohere.command-r-plus');
     const modelViaChat = provider.chat('cohere.command-r-plus');
     expect(modelViaLanguageModel.modelId).toBe(modelViaChat.modelId);
     expect(modelViaLanguageModel.provider).toBe(modelViaChat.provider);
-  });
-});
-
-describe('Regression: Error Handling', () => {
-  let provider: OCIGenAIProvider;
-
-  beforeEach(() => {
-    process.env.OCI_COMPARTMENT_ID = 'ocid1.compartment.oc1..test';
-    provider = createOCI({ region: 'us-chicago-1' });
   });
 
   it('REG-012: Invalid model ID should throw NoSuchModelError', () => {
@@ -190,42 +155,38 @@ describe('Regression: Model Registry', () => {
 
   it('REG-017: getModelMetadata must return info for known models', () => {
     const metadata = getModelMetadata('xai.grok-code-fast-1');
-    expect(metadata).toBeDefined();
-    expect(metadata?.id).toBe('xai.grok-code-fast-1');
-    expect(metadata?.name).toBe('Grok Code Fast 1');
-    expect(metadata?.family).toBe('grok');
+    expect(metadata).toMatchObject({
+      id: 'xai.grok-code-fast-1',
+      name: 'Grok Code Fast 1',
+      family: 'grok',
+    });
   });
 
   it('REG-018: getModelMetadata must return undefined for unknown models', () => {
     expect(getModelMetadata('unknown.model')).toBeUndefined();
   });
 
-  it('REG-019: getAllModels must return non-empty array', () => {
+  it('REG-019: getAllModels must return non-empty array with all families', () => {
     const models = getAllModels();
-    expect(Array.isArray(models)).toBe(true);
     expect(models.length).toBeGreaterThan(0);
-  });
-
-  it('REG-020: Known models must include all provider families', () => {
-    const models = getAllModels();
     for (const prefix of REQUIRED_PREFIXES) {
       expect(models.some((m) => m.id.startsWith(prefix))).toBe(true);
     }
   });
 
-  it.each<['cohere' | 'grok', string]>([
-    ['cohere', 'cohere'],
-    ['grok', 'grok'],
-  ])('REG-021: getModelsByFamily(%s) must filter correctly', (family, expectedFamily) => {
-    const models = getModelsByFamily(family);
-    expect(models.length).toBeGreaterThan(0);
-    expect(models.every((m) => m.family === expectedFamily)).toBe(true);
-  });
+  it.each<['cohere' | 'grok']>([['cohere'], ['grok']])(
+    'REG-021: getModelsByFamily(%s) must filter correctly',
+    (family) => {
+      const models = getModelsByFamily(family);
+      expect(models.length).toBeGreaterThan(0);
+      expect(models.every((m) => m.family === family)).toBe(true);
+    }
+  );
 });
 
 describe('Regression: Provider Specification', () => {
   beforeEach(() => {
-    process.env.OCI_COMPARTMENT_ID = 'ocid1.compartment.oc1..test';
+    process.env.OCI_COMPARTMENT_ID = TEST_COMPARTMENT;
   });
 
   it('REG-022: Default oci export must be valid provider', () => {
@@ -237,22 +198,20 @@ describe('Regression: Provider Specification', () => {
   });
 
   it('REG-023: Provider must expose models catalog', () => {
-    const provider = createOCI({ region: 'us-chicago-1' });
-    expect(provider.models).toBeDefined();
-    expect(typeof provider.models).toBe('object');
+    const provider = createOCI({ region: TEST_REGION });
     expect(Object.keys(provider.models).length).toBeGreaterThan(0);
   });
 });
 
 describe('Regression: Serving Mode Configuration', () => {
   beforeEach(() => {
-    process.env.OCI_COMPARTMENT_ID = 'ocid1.compartment.oc1..test';
+    process.env.OCI_COMPARTMENT_ID = TEST_COMPARTMENT;
     delete process.env.OCI_GENAI_ENDPOINT_ID;
   });
 
   it('REG-024: Provider must accept on-demand serving mode', () => {
     const provider = createOCI({
-      region: 'us-chicago-1',
+      region: TEST_REGION,
       servingMode: { type: 'ON_DEMAND', modelId: 'cohere.command-r-plus' },
     });
     expect(provider).toBeInstanceOf(OCIGenAIProvider);
@@ -261,7 +220,7 @@ describe('Regression: Serving Mode Configuration', () => {
 
   it('REG-025: Provider must accept dedicated serving mode with endpointId', () => {
     const provider = createOCI({
-      region: 'us-chicago-1',
+      region: TEST_REGION,
       servingMode: { type: 'DEDICATED', endpointId: 'ocid1.generativeaiendpoint.oc1..test' },
     });
     expect(provider).toBeInstanceOf(OCIGenAIProvider);
@@ -270,6 +229,6 @@ describe('Regression: Serving Mode Configuration', () => {
 
   it('REG-026: Provider must accept endpointId from environment', () => {
     process.env.OCI_GENAI_ENDPOINT_ID = 'ocid1.generativeaiendpoint.oc1..env';
-    expect(createOCI({ region: 'us-chicago-1' })).toBeInstanceOf(OCIGenAIProvider);
+    expect(createOCI({ region: TEST_REGION })).toBeInstanceOf(OCIGenAIProvider);
   });
 });
