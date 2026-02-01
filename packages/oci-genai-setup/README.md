@@ -50,8 +50,8 @@ npx @acedergren/oci-genai-setup
 # OpenCode (default)
 npx @acedergren/oci-genai-setup --output opencode
 
-# Claude Code MCP
-npx @acedergren/oci-genai-setup --output claude-code
+# OpenAI-compatible (for @acedergren/oci-openai-compatible)
+npx @acedergren/oci-genai-setup --output openai-compat
 
 # Environment variables (.env)
 npx @acedergren/oci-genai-setup --output env
@@ -72,14 +72,14 @@ npx @acedergren/oci-genai-setup \
 
 ### Options
 
-| Option                     | Description                                     |
-| -------------------------- | ----------------------------------------------- |
-| `-p, --profile <name>`     | OCI profile name from `~/.oci/config`           |
-| `-c, --compartment <ocid>` | Compartment OCID for API calls                  |
-| `-o, --output <format>`    | Output format: opencode, claude-code, env, json |
-| `--output-path <path>`     | Custom output path (for env format)             |
-| `-y, --yes`                | Skip confirmations                              |
-| `-q, --quiet`              | Minimal output                                  |
+| Option                     | Description                                       |
+| -------------------------- | ------------------------------------------------- |
+| `-p, --profile <name>`     | OCI profile name from `~/.oci/config`             |
+| `-c, --compartment <ocid>` | Compartment OCID for API calls                    |
+| `-o, --output <format>`    | Output format: opencode, openai-compat, env, json |
+| `--output-path <path>`     | Custom output path (for env format)               |
+| `-y, --yes`                | Skip confirmations                                |
+| `-q, --quiet`              | Minimal output                                    |
 
 ## Output Formats
 
@@ -104,24 +104,32 @@ Generates `~/.config/opencode/opencode.json`:
 }
 ```
 
-### Claude Code MCP (`--output claude-code`)
+### OpenAI Compatible (`--output openai-compat`)
 
-Generates Claude Code desktop config with MCP server:
+Generates `.env.oci-openai` and example script for OpenAI SDK usage:
 
-```json
-{
-  "mcpServers": {
-    "oci-genai": {
-      "command": "npx",
-      "args": ["-y", "@acedergren/oci-genai-mcp"],
-      "env": {
-        "OCI_CONFIG_PROFILE": "FRANKFURT",
-        "OCI_COMPARTMENT_ID": "ocid1.compartment.oc1...",
-        "OCI_REGION": "eu-frankfurt-1"
-      }
-    }
-  }
-}
+```bash
+# .env.oci-openai
+OCI_REGION="eu-frankfurt-1"
+OCI_COMPARTMENT_ID="ocid1.compartment.oc1..."
+OCI_CONFIG_PROFILE="FRANKFURT"
+OPENAI_BASE_URL="https://inference.generativeai.eu-frankfurt-1.oci.oraclecloud.com/20231130/actions/chat"
+```
+
+Also creates `oci-openai-example.mjs`:
+
+```javascript
+import { createOCIOpenAI } from '@acedergren/oci-openai-compatible';
+
+const client = createOCIOpenAI({
+  region: 'eu-frankfurt-1',
+  compartmentId: process.env.OCI_COMPARTMENT_ID,
+});
+
+const response = await client.chat.completions.create({
+  model: 'meta.llama-3.3-70b-instruct',
+  messages: [{ role: 'user', content: 'Hello!' }],
+});
 ```
 
 ### Environment Variables (`--output env`)
