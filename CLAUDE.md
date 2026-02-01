@@ -35,27 +35,20 @@ Detailed guides for project setup and configuration:
 
 ## Project Structure
 
+Provider-focused monorepo containing core OCI GenAI integration packages and utilities.
+
 ```
 .
 ├── packages/
-│   ├── oci-genai-provider/    # Core AI SDK V3 provider
+│   ├── oci-genai-provider/    # Core OCI GenAI provider for AI SDK
 │   ├── oci-openai-compatible/ # OpenAI-compatible API wrapper
-│   ├── opencode-integration/  # OpenCode CLI integration
-│   ├── oci-genai-setup/       # Setup wizard (AI SDK, OpenCode, Claude Code)
-│   ├── agent-state/           # Agent state management
+│   ├── oci-genai-setup/       # CLI setup tool for local development
+│   ├── agent-state/           # Agent state management utilities
 │   └── test-utils/            # Shared test utilities
-├── examples/
-│   ├── oci-ai-chat/           # SvelteKit chat application
-│   ├── chatbot-demo/          # Basic chatbot demo
-│   ├── nextjs-chatbot/        # Next.js chatbot
-│   ├── cli-tool/              # Terminal REPL chat
-│   ├── fraud-analyst-agent/   # AI agent demo
-│   ├── rag-demo/              # Semantic document retrieval
-│   ├── rag-reranking-demo/    # RAG with reranking
-│   ├── stt-demo/              # Speech-to-text transcription
-│   └── realtime-stt-demo/     # Realtime STT demo
 └── .claude/                    # Agent instructions
 ```
+
+**Note:** Example applications are maintained in a separate repository ([oci-genai-examples](https://github.com/acedergren/oci-genai-examples)) and can be cloned independently for local development and testing.
 
 ---
 
