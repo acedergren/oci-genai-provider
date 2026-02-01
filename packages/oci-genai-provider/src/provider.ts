@@ -9,6 +9,7 @@ import {
   NoSuchModelError,
 } from '@ai-sdk/provider';
 import { OCILanguageModel } from './language-models/OCILanguageModel';
+import { MODEL_CATALOG } from './language-models/registry';
 import { OCIEmbeddingModel } from './embedding-models/OCIEmbeddingModel';
 import { OCISpeechModel } from './speech-models/OCISpeechModel';
 import { OCIRerankingModel } from './reranking-models/OCIRerankingModel';
@@ -38,6 +39,17 @@ export class OCIGenAIProvider implements ProviderV3 {
   readonly specificationVersion = 'v3' as const;
 
   constructor(private readonly config: OCIConfig = {}) {}
+
+  get models(): Record<string, any> {
+    const models: Record<string, any> = {};
+    for (const model of MODEL_CATALOG) {
+      models[model.id] = {
+        modelId: model.id,
+        ...model,
+      };
+    }
+    return models;
+  }
 
   /**
    * Create a language model instance for chat/completion.

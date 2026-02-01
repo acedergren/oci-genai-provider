@@ -94,6 +94,9 @@ export default function createOpenCodeOCIProvider(options: OpenCodeOCIOptions): 
     // Region override (usually not needed, comes from profile)
     region: options.region || process.env.OCI_REGION,
 
+    // Path to OCI config file
+    configPath: process.env.OCI_CONFIG_FILE,
+
     // Always use config_file auth for OpenCode (OAuth planned for future)
     auth: 'config_file',
   };
@@ -111,7 +114,20 @@ Or via environment variable:
     );
   }
 
-  return createOCI(config);
+  const provider = createOCI(config);
+
+  console.log('DEBUG: Provider created:', typeof provider, !!provider.models);
+  if (provider.models) {
+    console.log('DEBUG: Registered OCI models:', Object.keys(provider.models).join(', '));
+  }
+
+  // Return provider with explicit models property for OpenCode discovery
+  const providerWithModels = {
+    ...provider,
+    models: provider.models,
+  };
+
+  return providerWithModels as any;
 }
 
 // ============================================================================

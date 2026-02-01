@@ -10,21 +10,14 @@ import type {
   LanguageModelV3Content,
 } from '@ai-sdk/provider';
 import { NoSuchModelError } from '@ai-sdk/provider';
-import {
-  GenerativeAiInferenceClient,
-  models as OCIModel,
-} from 'oci-generativeaiinference';
+import { GenerativeAiInferenceClient, models as OCIModel } from 'oci-generativeaiinference';
 import { Region } from 'oci-common';
 import type { OCIConfig, RequestOptions } from '../types';
 import { isValidModelId, getModelMetadata, supportsReasoning } from './registry';
 import { convertToOCIMessages } from './converters/messages';
 import type { OCIMessage } from './converters/messages';
 import { convertToCohereFormat } from './converters/cohere-messages';
-import {
-  convertToOCITools,
-  convertToOCIToolChoice,
-  supportsToolCalling,
-} from './converters/tools';
+import { convertToOCITools, convertToOCIToolChoice, supportsToolCalling } from './converters/tools';
 import { parseSSEStream } from '../shared/streaming/sse-parser';
 import { createAuthProvider, getRegion, getCompartmentId } from '../auth/index.js';
 import { handleOCIError } from '../shared/errors/index.js';
@@ -108,13 +101,6 @@ export class OCILanguageModel implements LanguageModelV3 {
   private getApiFormat(): OCIApiFormat {
     const metadata = getModelMetadata(this.modelId);
     if (metadata?.family === 'cohere') {
-      if (
-        this.modelId.includes('-03-2025') ||
-        this.modelId.includes('-07-2025') ||
-        this.modelId.includes('-08-2025')
-      ) {
-        return 'COHEREV2';
-      }
       return 'COHERE';
     }
     return 'GENERIC';
@@ -273,12 +259,10 @@ export class OCILanguageModel implements LanguageModelV3 {
 
     try {
       const commonParams = {
-        maxTokens: options.maxOutputTokens,
+        maxTokens: options.maxOutputTokens ? Math.min(options.maxOutputTokens, 4000) : undefined,
         temperature: options.temperature,
         topP: options.topP,
-        topK: options.topK,
-        frequencyPenalty: options.frequencyPenalty,
-        presencePenalty: options.presencePenalty,
+        topK: options.topK ? Math.min(options.topK, 40) : undefined,
         isStream: true,
       };
 
@@ -306,14 +290,15 @@ export class OCILanguageModel implements LanguageModelV3 {
               }
               return { type: 'TEXT', text: c.text ?? '' } as OCIModel.CohereTextContentV2;
             });
+            let role = m.role;
+            if (role === 'ASSISTANT') role = 'ASSISTANT';
             return {
-              role: m.role === 'ASSISTANT' ? 'CHATBOT' : m.role,
+              role,
               content,
             } as OCIModel.CohereMessageV2;
           }),
           ...commonParams,
           ...toolParams,
-          stopSequences: options.stopSequences,
         } as OCIModel.CohereChatRequestV2;
       } else if (apiFormat === 'COHERE') {
         chatRequest = {
@@ -321,7 +306,6 @@ export class OCILanguageModel implements LanguageModelV3 {
           ...convertToCohereFormat(messages),
           ...commonParams,
           ...toolParams,
-          stopSequences: options.stopSequences,
         } as OCIModel.CohereChatRequest;
       } else {
         chatRequest = {
@@ -349,6 +333,8 @@ export class OCILanguageModel implements LanguageModelV3 {
       }
 
       if (options.seed !== undefined) chatRequest.seed = options.seed;
+
+      console.log('DEBUG: OCI Chat Request:', JSON.stringify(chatRequest, null, 2));
 
       const response = (await this.executeWithResilience<unknown>(
         () =>
@@ -436,7 +422,7 @@ export class OCILanguageModel implements LanguageModelV3 {
                     }
                     controller.enqueue({
                       type: 'finish',
-                      finishReason: part.finishReason,
+                      finishReason: part.finishReason.unified as any,
                       usage: {
                         inputTokens: {
                           total: part.usage.promptTokens,
