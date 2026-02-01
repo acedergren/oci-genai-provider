@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OCI GenAI Provider - Repo Explorer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+    .container { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; padding: 20px; height: 100vh; overflow: hidden; }
+    .controls { background: #1e293b; border-radius: 8px; padding: 20px; overflow-y: auto; border: 1px solid #334155; }
+    .preview { background: #1e293b; border-radius: 8px; padding: 20px; overflow-y: auto; border: 1px solid #334155; }
+    .control-group { margin-bottom: 20px; }
+    .control-group label { display: block; font-size: 12px; font-weight: 600; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; }
+    .control-group select { width: 100%; padding: 8px; background: #0f172a; border: 1px solid #334155; border-radius: 4px; color: #e2e8f0; }
+    .control-group select:focus { outline: none; border-color: #3b82f6; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid #334155; }
+    .tab-btn { padding: 8px 12px; background: none; border: none; color: #64748b; cursor: pointer; font-size: 13px; border-bottom: 2px solid transparent; transition: all 0.2s; }
+    .tab-btn.active { color: #3b82f6; border-bottom-color: #3b82f6; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .package-card { background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 12px; margin-bottom: 12px; }
+    .package-name { font-weight: 600; color: #f1f5f9; margin-bottom: 4px; }
+    .package-desc { font-size: 12px; color: #94a3b8; margin-bottom: 8px; }
+    .package-status { display: inline-block; font-size: 11px; padding: 2px 6px; border-radius: 3px; background: #334155; color: #cbd5e1; }
+    .status-stable { background: #10b981; color: #ecfdf5; }
+    .status-dev { background: #3b82f6; color: #eff6ff; }
+    .task-item { background: #0f172a; border-left: 3px solid #3b82f6; padding: 10px; margin-bottom: 10px; border-radius: 3px; font-size: 13px; }
+    .task-title { font-weight: 600; color: #f1f5f9; margin-bottom: 4px; }
+    .task-status { display: inline-block; font-size: 11px; padding: 2px 6px; border-radius: 2px; margin-right: 6px; }
+    .status-done { background: #10b981; color: #ecfdf5; }
+    .status-doing { background: #f59e0b; color: #fffbeb; }
+    .status-planned { background: #6366f1; color: #eef2ff; }
+    .h2 { font-size: 16px; font-weight: 700; margin: 16px 0 12px 0; color: #f1f5f9; }
+    .h3 { font-size: 14px; font-weight: 600; margin: 12px 0 8px 0; color: #cbd5e1; }
+    .copy-btn { background: #3b82f6; border: none; color: white; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-top: 10px; width: 100%; }
+    .copy-btn:hover { background: #2563eb; }
+    .stat-card { background: #0f172a; padding: 12px; border-radius: 6px; border-left: 3px solid #3b82f6; }
+    .stat-number { font-size: 24px; font-weight: 700; color: #3b82f6; }
+    .stat-label { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+    .progress-bar { background: #0f172a; height: 6px; border-radius: 3px; overflow: hidden; margin-top: 6px; }
+    .progress-fill { background: #3b82f6; height: 100%; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Controls -->
+    <div class="controls">
+      <h2 class="h2">OCI GenAI Provider</h2>
+      <p style="font-size: 12px; color: #94a3b8; margin-bottom: 20px;">Explore the monorepo structure</p>
+
+      <div class="control-group">
+        <label>View</label>
+        <select id="viewSelect" onchange="updateAll()">
+          <option value="packages">Packages</option>
+          <option value="roadmap">Roadmap</option>
+          <option value="status">Status Overview</option>
+        </select>
+      </div>
+
+      <div class="control-group" id="packageFilterGroup" style="display: none;">
+        <label>Filter by Package</label>
+        <select id="packageFilter" onchange="updateAll()">
+          <option value="">All Packages</option>
+          <option value="oci-genai-provider">OCI GenAI Provider</option>
+          <option value="oci-openai-compatible">OpenAI Compatible</option>
+          <option value="oci-genai-setup">Setup Tool</option>
+          <option value="agent-state">Agent State</option>
+          <option value="test-utils">Test Utils</option>
+        </select>
+      </div>
+
+      <div class="control-group" id="statusFilterGroup" style="display: none;">
+        <label>Task Status</label>
+        <select id="statusFilter" onchange="updateAll()">
+          <option value="">All Tasks</option>
+          <option value="completed">Completed</option>
+          <option value="in-progress">In Progress</option>
+          <option value="planned">Planned</option>
+        </select>
+      </div>
+
+      <button class="copy-btn" id="copyBtn" onclick="copyPrompt()">Copy Summary</button>
+    </div>
+
+    <!-- Preview -->
+    <div class="preview">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('packages')">Packages</button>
+        <button class="tab-btn" onclick="switchTab('roadmap')">Roadmap</button>
+        <button class="tab-btn" onclick="switchTab('status')">Status</button>
+      </div>
+
+      <div id="packages-tab" class="tab-content active"></div>
+      <div id="roadmap-tab" class="tab-content"></div>
+      <div id="status-tab" class="tab-content"></div>
+
+      <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #334155;">
+        <p id="prompt" style="font-size: 12px; color: #cbd5e1; line-height: 1.6;"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      view: 'packages',
+      packageFilter: '',
+      statusFilter: ''
+    };
+
+    const packages = [
+      { id: 'oci-genai-provider', name: 'OCI GenAI Provider', desc: 'Core OCI Generative AI SDK V3 provider', status: 'stable', deps: [], role: 'core' },
+      { id: 'oci-openai-compatible', name: 'OpenAI Compatible', desc: 'Drop-in OpenAI-compatible API wrapper', status: 'stable', deps: ['oci-genai-provider'], role: 'integration' },
+      { id: 'oci-genai-setup', name: 'OCI GenAI Setup', desc: 'CLI setup wizard for OCI credentials', status: 'stable', deps: ['oci-genai-provider'], role: 'tooling' },
+      { id: 'agent-state', name: 'Agent State', desc: 'SQLite-based agent state persistence', status: 'stable', deps: ['oci-genai-provider'], role: 'utility' },
+      { id: 'test-utils', name: 'Test Utils', desc: 'Shared testing utilities and mocks', status: 'stable', deps: [], role: 'testing' }
+    ];
+
+    const tasks = [
+      { pkg: 'oci-genai-provider', title: 'Core provider implementation', status: 'completed' },
+      { pkg: 'oci-genai-provider', title: 'Embeddings API support', status: 'completed' },
+      { pkg: 'oci-genai-provider', title: 'Speech-to-text integration', status: 'completed' },
+      { pkg: 'oci-genai-provider', title: 'Streaming implementation', status: 'completed' },
+      { pkg: 'oci-openai-compatible', title: 'OpenAI-compatible API layer', status: 'completed' },
+      { pkg: 'oci-openai-compatible', title: 'Streaming via Server-Sent Events', status: 'completed' },
+      { pkg: 'oci-openai-compatible', title: 'Security hardening', status: 'completed' },
+      { pkg: 'oci-openai-compatible', title: 'Error handling improvements', status: 'in-progress' },
+      { pkg: 'oci-genai-setup', title: 'CLI credential setup wizard', status: 'completed' },
+      { pkg: 'oci-genai-setup', title: 'Credential validation', status: 'completed' },
+      { pkg: 'oci-genai-setup', title: 'Multi-region support', status: 'in-progress' },
+      { pkg: 'oci-genai-setup', title: 'Profile management', status: 'planned' },
+      { pkg: 'agent-state', title: 'SQLite schema design', status: 'in-progress' },
+      { pkg: 'agent-state', title: 'CRUD operations', status: 'in-progress' },
+      { pkg: 'agent-state', title: 'Serialization layer', status: 'planned' },
+      { pkg: 'test-utils', title: 'Mock OCI client', status: 'completed' },
+      { pkg: 'test-utils', title: 'Test fixtures', status: 'completed' },
+      { pkg: 'test-utils', title: 'Test helpers', status: 'completed' }
+    ];
+
+    function switchTab(name) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(name + '-tab').classList.add('active');
+      event.target.classList.add('active');
+      state.view = name;
+      updateAll();
+    }
+
+    function renderPackages() {
+      const container = document.getElementById('packages-tab');
+      container.textContent = '';
+
+      const title = document.createElement('h2');
+      title.className = 'h2';
+      title.textContent = 'Core Packages';
+      container.appendChild(title);
+
+      packages.forEach(pkg => {
+        const card = document.createElement('div');
+        card.className = 'package-card';
+
+        const name = document.createElement('div');
+        name.className = 'package-name';
+        name.textContent = pkg.name;
+        card.appendChild(name);
+
+        const desc = document.createElement('div');
+        desc.className = 'package-desc';
+        desc.textContent = pkg.desc;
+        card.appendChild(desc);
+
+        const status = document.createElement('span');
+        status.className = `package-status status-${pkg.status === 'stable' ? 'stable' : 'dev'}`;
+        status.textContent = pkg.status;
+        card.appendChild(status);
+
+        if (pkg.deps.length > 0) {
+          const depsDiv = document.createElement('div');
+          depsDiv.style.fontSize = '11px';
+          depsDiv.style.color = '#64748b';
+          depsDiv.style.marginTop = '6px';
+          depsDiv.textContent = 'Depends on: ' + pkg.deps.join(', ');
+          card.appendChild(depsDiv);
+        }
+
+        container.appendChild(card);
+      });
+    }
+
+    function renderRoadmap() {
+      const container = document.getElementById('roadmap-tab');
+      container.textContent = '';
+
+      const title = document.createElement('h2');
+      title.className = 'h2';
+      title.textContent = 'Development Roadmap';
+      container.appendChild(title);
+
+      let filtered = tasks;
+      if (state.packageFilter) filtered = filtered.filter(t => t.pkg === state.packageFilter);
+      if (state.statusFilter) filtered = filtered.filter(t => t.status === state.statusFilter);
+
+      const grouped = {};
+      filtered.forEach(task => {
+        if (!grouped[task.pkg]) grouped[task.pkg] = [];
+        grouped[task.pkg].push(task);
+      });
+
+      if (Object.keys(grouped).length === 0) {
+        const empty = document.createElement('p');
+        empty.style.color = '#64748b';
+        empty.textContent = 'No tasks found';
+        container.appendChild(empty);
+        return;
+      }
+
+      Object.entries(grouped).forEach(([pkg, tasks]) => {
+        const heading = document.createElement('h3');
+        heading.className = 'h3';
+        heading.textContent = packages.find(p => p.id === pkg)?.name || pkg;
+        container.appendChild(heading);
+
+        tasks.forEach(t => {
+          const item = document.createElement('div');
+          item.className = 'task-item';
+
+          const titleEl = document.createElement('div');
+          titleEl.className = 'task-title';
+          titleEl.textContent = t.title;
+          item.appendChild(titleEl);
+
+          const statusEl = document.createElement('span');
+          statusEl.className = `task-status status-${t.status}`;
+          statusEl.textContent = t.status;
+          item.appendChild(statusEl);
+
+          container.appendChild(item);
+        });
+      });
+    }
+
+    function renderStatus() {
+      const container = document.getElementById('status-tab');
+      container.textContent = '';
+
+      const total = tasks.length;
+      const completed = tasks.filter(t => t.status === 'completed').length;
+      const inProgress = tasks.filter(t => t.status === 'in-progress').length;
+      const planned = tasks.filter(t => t.status === 'planned').length;
+
+      const statsDiv = document.createElement('div');
+      statsDiv.style.display = 'grid';
+      statsDiv.style.gridTemplateColumns = 'repeat(3, 1fr)';
+      statsDiv.style.gap = '12px';
+      statsDiv.style.marginBottom = '20px';
+
+      [
+        { num: completed, label: 'Completed', color: '#10b981' },
+        { num: inProgress, label: 'In Progress', color: '#f59e0b' },
+        { num: planned, label: 'Planned', color: '#6366f1' }
+      ].forEach(stat => {
+        const card = document.createElement('div');
+        card.className = 'stat-card';
+        card.style.borderLeftColor = stat.color;
+
+        const num = document.createElement('div');
+        num.className = 'stat-number';
+        num.style.color = stat.color;
+        num.textContent = stat.num;
+        card.appendChild(num);
+
+        const label = document.createElement('div');
+        label.className = 'stat-label';
+        label.textContent = stat.label;
+        card.appendChild(label);
+
+        statsDiv.appendChild(card);
+      });
+
+      container.appendChild(statsDiv);
+
+      const heading = document.createElement('h3');
+      heading.className = 'h3';
+      heading.textContent = 'Package Progress';
+      container.appendChild(heading);
+
+      packages.forEach(pkg => {
+        const pkgTasks = tasks.filter(t => t.pkg === pkg.id);
+        const pkgCompleted = pkgTasks.filter(t => t.status === 'completed').length;
+        const pct = pkgTasks.length > 0 ? Math.round((pkgCompleted / pkgTasks.length) * 100) : 0;
+
+        const row = document.createElement('div');
+        row.style.marginBottom = '16px';
+
+        const label = document.createElement('div');
+        label.style.display = 'flex';
+        label.style.justifyContent = 'space-between';
+        label.style.marginBottom = '6px';
+
+        const name = document.createElement('span');
+        name.textContent = pkg.name;
+        label.appendChild(name);
+
+        const pctSpan = document.createElement('span');
+        pctSpan.style.color = '#64748b';
+        pctSpan.textContent = pct + '%';
+        label.appendChild(pctSpan);
+
+        row.appendChild(label);
+
+        const bar = document.createElement('div');
+        bar.className = 'progress-bar';
+
+        const fill = document.createElement('div');
+        fill.className = 'progress-fill';
+        fill.style.width = pct + '%';
+        bar.appendChild(fill);
+
+        row.appendChild(bar);
+        container.appendChild(row);
+      });
+    }
+
+    function updateAll() {
+      state.view = document.querySelector('.tab-content.active')?.id?.split('-')[0] || 'packages';
+      state.packageFilter = document.getElementById('packageFilter')?.value || '';
+      state.statusFilter = document.getElementById('statusFilter')?.value || '';
+
+      if (state.view === 'roadmap') {
+        document.getElementById('packageFilterGroup').style.display = 'block';
+        document.getElementById('statusFilterGroup').style.display = 'block';
+      } else {
+        document.getElementById('packageFilterGroup').style.display = 'none';
+        document.getElementById('statusFilterGroup').style.display = 'none';
+      }
+
+      renderPackages();
+      renderRoadmap();
+      renderStatus();
+      updatePrompt();
+    }
+
+    function updatePrompt() {
+      const parts = [];
+
+      if (state.view === 'packages') {
+        parts.push('Exploring ' + packages.length + ' core packages in the OCI GenAI Provider monorepo');
+        parts.push('Each package has clear dependencies and roles within the ecosystem');
+      } else if (state.view === 'roadmap') {
+        const filtered = state.packageFilter ? tasks.filter(t => t.pkg === state.packageFilter) : tasks;
+        const statusFiltered = state.statusFilter ? filtered.filter(t => t.status === state.statusFilter) : filtered;
+        parts.push('Viewing ' + statusFiltered.length + ' development tasks');
+        if (state.packageFilter) {
+          const pkgName = packages.find(p => p.id === state.packageFilter)?.name;
+          parts.push('filtered to ' + pkgName);
+        }
+        if (state.statusFilter) parts.push('with status: ' + state.statusFilter);
+      } else {
+        const total = tasks.length;
+        const completed = tasks.filter(t => t.status === 'completed').length;
+        const inProgress = tasks.filter(t => t.status === 'in-progress').length;
+        const planned = tasks.filter(t => t.status === 'planned').length;
+        const pct = Math.round(completed / total * 100);
+        parts.push('Project overview: ' + completed + '/' + total + ' tasks completed (' + pct + '%)');
+        parts.push(inProgress + ' in progress, ' + planned + ' planned');
+      }
+
+      document.getElementById('prompt').textContent = parts.join('. ') + '.';
+    }
+
+    function copyPrompt() {
+      const text = document.getElementById('prompt').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('copyBtn');
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = orig; }, 2000);
+      });
+    }
+
+    updateAll();
+  </script>
+</body>
+</html>

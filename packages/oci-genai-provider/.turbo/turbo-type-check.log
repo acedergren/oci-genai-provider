@@ -1,19 +1,5 @@
 
-
 > @acedergren/oci-genai-provider@0.1.0 type-check /Users/acedergr/Projects/oci-genai-provider/packages/oci-genai-provider
 > tsc --noEmit
 
-[96msrc/__tests__/integration/v3-specification-alignment.integration.test.ts[0m:[93m39[0m:[93m3[0m - [91merror[0m[90m TS6196: [0m'LanguageModelV3FinishReason' is declared but never used.
-
-[7m39[0m   LanguageModelV3FinishReason,
-[7m  [0m [91m  ~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
-
-[96msrc/__tests__/integration/v3-specification-alignment.integration.test.ts[0m:[93m40[0m:[93m3[0m - [91merror[0m[90m TS6196: [0m'LanguageModelV3Usage' is declared but never used.
-
-[7m40[0m   LanguageModelV3Usage,
-[7m  [0m [91m  ~~~~~~~~~~~~~~~~~~~~[0m
-
-
-Found 2 errors in the same file, starting at: src/__tests__/integration/v3-specification-alignment.integration.test.ts[90m:39[0m
-
-[41m[30m ELIFECYCLE [39m[49m [31mCommand failed with exit code 2.[39m
+ ELIFECYCLE  Command failed.

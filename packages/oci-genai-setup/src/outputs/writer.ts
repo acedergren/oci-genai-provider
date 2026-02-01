@@ -8,6 +8,7 @@ import ora from 'ora';
 import type { GeneratedConfig, Logger, OutputFormat } from '../types.js';
 import { writeOpencodeConfig } from './opencode.js';
 import { writeOpenAICompatConfig } from './openai-compat.js';
+import { writeAnthropicCompatConfig } from './anthropic-compat.js';
 import { writeEnvConfig, generateShellExports } from './env.js';
 import { generateJsonConfig } from './json.js';
 
@@ -59,6 +60,17 @@ export async function writeConfig(
           log.log(chalk.gray('  Also created: oci-openai-example.mjs'));
         } else {
           spinner.fail('Failed to write OpenAI-compatible config');
+        }
+        return { success: result.success, path: result.path };
+      }
+
+      case 'anthropic-compat': {
+        const result = await writeAnthropicCompatConfig(config, log);
+        if (result.success) {
+          spinner.succeed(`Anthropic-compatible config saved to ${chalk.cyan(result.path)}`);
+          log.log(chalk.gray('  Also created: start-oci-proxy.sh, ANTHROPIC_PROXY_README.md'));
+        } else {
+          spinner.fail('Failed to write Anthropic-compatible config');
         }
         return { success: result.success, path: result.path };
       }
@@ -133,6 +145,19 @@ export function showSuccessMessage(
       log.log(`  1. Install: ${chalk.cyan('pnpm add @acedergren/oci-openai-compatible')}`);
       log.log(`  2. Source env: ${chalk.cyan('source .env.oci-openai')}`);
       log.log(`  3. Run example: ${chalk.cyan('node oci-openai-example.mjs')}`);
+      break;
+
+    case 'anthropic-compat':
+      log.log('Next steps:');
+      log.log(`  1. Install: ${chalk.cyan('pnpm add -g @acedergren/oci-anthropic-compatible')}`);
+      log.log(`  2. Start proxy: ${chalk.cyan('./start-oci-proxy.sh')}`);
+      log.log(`  3. Use Claude Code:`);
+      log.log(
+        chalk.gray(`
+     export ANTHROPIC_API_URL="http://localhost:8080"
+     claude
+`)
+      );
       break;
 
     case 'env':

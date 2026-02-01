@@ -7,7 +7,7 @@ import type { OCIProfile } from '@acedergren/oci-genai-provider/config';
 /**
  * Output format for generated configuration
  */
-export type OutputFormat = 'opencode' | 'openai-compat' | 'env' | 'json';
+export type OutputFormat = 'opencode' | 'openai-compat' | 'anthropic-compat' | 'env' | 'json';
 
 /**
  * CLI command-line options
@@ -94,6 +94,10 @@ export const OUTPUT_FORMAT_INFO: Record<OutputFormat, { name: string; descriptio
   'openai-compat': {
     name: 'OpenAI Compatible',
     description: 'Generate .env and example for OpenAI SDK usage',
+  },
+  'anthropic-compat': {
+    name: 'Anthropic Compatible',
+    description: 'Generate proxy config for Claude Code integration',
   },
   env: {
     name: 'Environment Variables',

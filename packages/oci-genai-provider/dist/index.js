@@ -4001,7 +4001,8 @@ var MODEL_CATALOG = [
     capabilities: { streaming: true, tools: true, vision: true },
     contextWindow: 128e3,
     speed: "medium",
-    regions: COHERE_REGIONS
+    regions: COHERE_REGIONS,
+    dedicatedOnly: true
   },
   {
     id: "cohere.command-a-reasoning",
@@ -4079,26 +4080,14 @@ function getModelsByFamily(family) {
   return MODEL_CATALOG.filter((m) => m.family === family);
 }
 function getModelsByRegion(region, includeDedicatedOnly = false) {
-  return MODEL_CATALOG.filter((m) => {
-    if (!m.regions.includes(region)) {
-      return false;
-    }
-    if (m.dedicatedOnly && !includeDedicatedOnly) {
-      return false;
-    }
-    return true;
-  });
+  return MODEL_CATALOG.filter(
+    (m) => m.regions.includes(region) && (includeDedicatedOnly || !m.dedicatedOnly)
+  );
 }
 function getCodingRecommendedModels(region) {
-  return MODEL_CATALOG.filter((m) => {
-    if (!m.regions.includes(region) || m.dedicatedOnly) {
-      return false;
-    }
-    if (!m.capabilities.tools) {
-      return false;
-    }
-    return m.codingRecommended === true;
-  });
+  return MODEL_CATALOG.filter(
+    (m) => m.regions.includes(region) && !m.dedicatedOnly && m.capabilities.tools && m.codingRecommended === true
+  );
 }
 function isCodingSuitable(modelId) {
   const model = MODEL_CATALOG.find((m) => m.id === modelId);
@@ -4760,6 +4749,50 @@ function parseProviderOptions(options) {
   }
   return result.data;
 }
+var ocidPattern = /^ocid1\.[a-z0-9]+\.[a-z0-9]+\.[a-z0-9-]*\.[a-z0-9]+$/i;
+var regionPattern = /^[a-z]{2,3}-[a-z]+-\d+$/;
+var CompartmentIdSchema = zod.z.string().regex(ocidPattern, {
+  message: "Invalid compartment ID format. Expected OCID format: ocid1.compartment.oc1..xxxxx"
+}).describe("The compartment OCID for OCI GenAI requests");
+var RegionSchema = zod.z.string().regex(regionPattern, {
+  message: "Invalid region format. Expected format: <geo>-<city>-<number> (e.g., us-chicago-1)"
+}).describe("The OCI region identifier");
+var ConfigProfileSchema = zod.z.string().min(1, { message: "Config profile cannot be empty" }).default("DEFAULT").describe("The OCI config profile name from ~/.oci/config");
+var ServingModeSchema = zod.z.enum(["on-demand", "dedicated"], {
+  errorMap: () => ({ message: "Serving mode must be either 'on-demand' or 'dedicated'" })
+}).default("on-demand").describe("The serving mode for model inference");
+var EndpointIdSchema = zod.z.string().regex(ocidPattern, {
+  message: "Invalid endpoint ID format. Expected OCID format: ocid1.generativeaiendpoint.oc1..xxxxx"
+}).describe("The endpoint OCID for dedicated serving mode");
+var OCIProviderSettingsSchema = zod.z.object({
+  compartmentId: CompartmentIdSchema.optional(),
+  region: RegionSchema.optional(),
+  configProfile: ConfigProfileSchema.optional(),
+  servingMode: ServingModeSchema.optional(),
+  endpointId: EndpointIdSchema.optional()
+}).refine(
+  (data) => {
+    if (data.servingMode === "dedicated" && !data.endpointId) {
+      return false;
+    }
+    return true;
+  },
+  {
+    message: "endpointId is required when servingMode is 'dedicated'",
+    path: ["endpointId"]
+  }
+).describe("Configuration settings for the OCI GenAI provider");
+function validateProviderSettings(settings) {
+  return OCIProviderSettingsSchema.safeParse(settings);
+}
+function parseProviderSettings(settings) {
+  return OCIProviderSettingsSchema.parse(settings);
+}
+var ModelIdSchema = zod.z.string().min(1, { message: "Model ID cannot be empty" }).describe("The model ID or endpoint OCID");
+var OCIChatModelIdSchema = zod.z.object({
+  modelId: ModelIdSchema,
+  isDedicatedEndpoint: zod.z.boolean().optional().default(false)
+});
 
 // src/shared/provider-options.ts
 function getOCIProviderOptions(providerOptions) {
@@ -4892,6 +4925,9 @@ var OCILanguageModel = class {
   getApiFormat() {
     const metadata = getModelMetadata(this.modelId);
     if (metadata?.family === "cohere") {
+      if (metadata.capabilities?.vision) {
+        return "COHEREV2";
+      }
       return "COHERE";
     }
     return "GENERIC";
@@ -5053,10 +5089,8 @@ var OCILanguageModel = class {
               }
               return { type: "TEXT", text: c.text ?? "" };
             });
-            let role = m.role;
-            if (role === "ASSISTANT") role = "ASSISTANT";
             return {
-              role,
+              role: m.role,
               content
             };
           }),
@@ -5093,7 +5127,6 @@ var OCILanguageModel = class {
         cohereReq.thinking = createThinkingConfig(true, ociOptions.tokenBudget);
       }
       if (options.seed !== void 0) chatRequest.seed = options.seed;
-      console.log("DEBUG: OCI Chat Request:", JSON.stringify(chatRequest, null, 2));
       const response = await this.executeWithResilience(
         () => client.chat({
           chatDetails: {
@@ -5167,7 +5200,7 @@ var OCILanguageModel = class {
                     }
                     controller.enqueue({
                       type: "finish",
-                      finishReason: part.finishReason.unified,
+                      finishReason: part.finishReason,
                       usage: {
                         inputTokens: {
                           total: part.usage.promptTokens,
@@ -7360,18 +7393,27 @@ function createOCI(config = {}) {
 var oci = createOCI();
 
 exports.AuthenticationError = AuthenticationError;
+exports.CompartmentIdSchema = CompartmentIdSchema;
+exports.ConfigProfileSchema = ConfigProfileSchema;
+exports.EndpointIdSchema = EndpointIdSchema;
+exports.ModelIdSchema = ModelIdSchema;
 exports.ModelNotFoundError = ModelNotFoundError;
 exports.NetworkError = NetworkError;
+exports.OCIChatModelIdSchema = OCIChatModelIdSchema;
 exports.OCIEmbeddingModel = OCIEmbeddingModel;
 exports.OCIGenAIError = OCIGenAIError;
 exports.OCIGenAIProvider = OCIGenAIProvider;
 exports.OCILanguageModel = OCILanguageModel;
+exports.OCIProviderOptionsSchema = OCIProviderOptionsSchema;
+exports.OCIProviderSettingsSchema = OCIProviderSettingsSchema;
 exports.OCIRealtimeClient = OCIRealtimeClient;
 exports.OCIRealtimeTranscription = OCIRealtimeTranscription;
 exports.OCIRerankingModel = OCIRerankingModel;
 exports.OCISpeechModel = OCISpeechModel;
 exports.OCITranscriptionModel = OCITranscriptionModel;
 exports.RateLimitError = RateLimitError;
+exports.RegionSchema = RegionSchema;
+exports.ServingModeSchema = ServingModeSchema;
 exports.TimeoutError = TimeoutError;
 exports.WebSocketAdapter = WebSocketAdapter;
 exports.WebSocketReadyState = WebSocketReadyState;
@@ -7401,7 +7443,10 @@ exports.isValidRerankingModelId = isValidRerankingModelId;
 exports.isValidSpeechModelId = isValidSpeechModelId;
 exports.isValidTranscriptionModelId = isValidTranscriptionModelId;
 exports.oci = oci;
+exports.parseProviderOptions = parseProviderOptions;
+exports.parseProviderSettings = parseProviderSettings;
 exports.supportsReasoning = supportsReasoning;
+exports.validateProviderSettings = validateProviderSettings;
 exports.withRetry = withRetry;
 exports.withTimeout = withTimeout;
 //# sourceMappingURL=index.js.map
