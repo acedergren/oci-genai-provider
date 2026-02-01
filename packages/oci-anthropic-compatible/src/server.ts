@@ -43,12 +43,7 @@ async function handleNonStreaming(
     stopSequences,
   });
 
-  const response = convertResponse(
-    result.text,
-    request.model,
-    result.finishReason,
-    result.usage
-  );
+  const response = convertResponse(result.text, request.model, result.finishReason, result.usage);
 
   return new Response(JSON.stringify(response), {
     status: 200,
@@ -100,7 +95,9 @@ function handleStreaming(request: AnthropicMessagesRequest, config: ProxyConfig)
           content: [],
         },
       };
-      controller.enqueue(encoder.encode(`event: message_start\ndata: ${JSON.stringify(startEvent)}\n\n`));
+      controller.enqueue(
+        encoder.encode(`event: message_start\ndata: ${JSON.stringify(startEvent)}\n\n`)
+      );
 
       // Send content_block_start
       const blockStartEvent: StreamEvent = {
@@ -108,7 +105,9 @@ function handleStreaming(request: AnthropicMessagesRequest, config: ProxyConfig)
         index: 0,
         content_block: { type: 'text', text: '' },
       };
-      controller.enqueue(encoder.encode(`event: content_block_start\ndata: ${JSON.stringify(blockStartEvent)}\n\n`));
+      controller.enqueue(
+        encoder.encode(`event: content_block_start\ndata: ${JSON.stringify(blockStartEvent)}\n\n`)
+      );
 
       try {
         // Stream text deltas
@@ -119,7 +118,9 @@ function handleStreaming(request: AnthropicMessagesRequest, config: ProxyConfig)
             index: 0,
             delta: { type: 'text_delta', text: chunk },
           };
-          controller.enqueue(encoder.encode(`event: content_block_delta\ndata: ${JSON.stringify(deltaEvent)}\n\n`));
+          controller.enqueue(
+            encoder.encode(`event: content_block_delta\ndata: ${JSON.stringify(deltaEvent)}\n\n`)
+          );
         }
 
         // Send content_block_stop
@@ -127,7 +128,9 @@ function handleStreaming(request: AnthropicMessagesRequest, config: ProxyConfig)
           type: 'content_block_stop',
           index: 0,
         };
-        controller.enqueue(encoder.encode(`event: content_block_stop\ndata: ${JSON.stringify(blockStopEvent)}\n\n`));
+        controller.enqueue(
+          encoder.encode(`event: content_block_stop\ndata: ${JSON.stringify(blockStopEvent)}\n\n`)
+        );
 
         // Send message_delta with final stats
         const messageDeltaEvent: StreamEvent = {
@@ -135,13 +138,17 @@ function handleStreaming(request: AnthropicMessagesRequest, config: ProxyConfig)
           delta: { stop_reason: 'end_turn', stop_sequence: null },
           usage: { output_tokens: outputTokens },
         };
-        controller.enqueue(encoder.encode(`event: message_delta\ndata: ${JSON.stringify(messageDeltaEvent)}\n\n`));
+        controller.enqueue(
+          encoder.encode(`event: message_delta\ndata: ${JSON.stringify(messageDeltaEvent)}\n\n`)
+        );
 
         // Send message_stop
         const stopEvent: StreamEvent = {
           type: 'message_stop',
         };
-        controller.enqueue(encoder.encode(`event: message_stop\ndata: ${JSON.stringify(stopEvent)}\n\n`));
+        controller.enqueue(
+          encoder.encode(`event: message_stop\ndata: ${JSON.stringify(stopEvent)}\n\n`)
+        );
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Unknown error';
         const errorEvent = createErrorResponse('api_error', errorMsg);
@@ -157,7 +164,7 @@ function handleStreaming(request: AnthropicMessagesRequest, config: ProxyConfig)
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
+      Connection: 'keep-alive',
       'X-Request-Id': messageId,
     },
   });
@@ -192,7 +199,9 @@ async function handleRequest(req: Request, config: ProxyConfig): Promise<Respons
   // Only handle POST /v1/messages
   if (req.method !== 'POST' || url.pathname !== '/v1/messages') {
     return new Response(
-      JSON.stringify(createErrorResponse('not_found_error', `Unknown endpoint: ${req.method} ${url.pathname}`)),
+      JSON.stringify(
+        createErrorResponse('not_found_error', `Unknown endpoint: ${req.method} ${url.pathname}`)
+      ),
       { status: 404, headers: { 'Content-Type': 'application/json' } }
     );
   }
@@ -201,14 +210,19 @@ async function handleRequest(req: Request, config: ProxyConfig): Promise<Respons
     const body = (await req.json()) as AnthropicMessagesRequest;
 
     if (config.verbose) {
-      console.warn(`[proxy] Request: model=${body.model}, messages=${body.messages.length}, stream=${body.stream}`);
+      console.warn(
+        `[proxy] Request: model=${body.model}, messages=${body.messages.length}, stream=${body.stream}`
+      );
     }
 
     // Validate required fields
     if (!body.model || !body.messages || !body.max_tokens) {
       return new Response(
         JSON.stringify(
-          createErrorResponse('invalid_request_error', 'Missing required fields: model, messages, max_tokens')
+          createErrorResponse(
+            'invalid_request_error',
+            'Missing required fields: model, messages, max_tokens'
+          )
         ),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
@@ -234,7 +248,6 @@ async function handleRequest(req: Request, config: ProxyConfig): Promise<Respons
  * Start the proxy server
  */
 export function startServer(config: ProxyConfig): { stop: () => void } {
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   const server = Bun.serve({
     port: config.port,
     hostname: config.host,
