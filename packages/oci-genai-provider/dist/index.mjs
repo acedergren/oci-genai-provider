@@ -1,4 +1,4 @@
-import { AISDKError, APICallError, NoSuchModelError, TooManyEmbeddingValuesForCallError, InvalidArgumentError } from '@ai-sdk/provider';
+import { AISDKError, InvalidResponseDataError, APICallError, NoSuchModelError, TooManyEmbeddingValuesForCallError, InvalidArgumentError } from '@ai-sdk/provider';
 import { GenerativeAiInferenceClient } from 'oci-generativeaiinference';
 import * as common2 from 'oci-common';
 import { Region } from 'oci-common';
@@ -4198,23 +4198,25 @@ function convertToCohereFormat(messages) {
   if (lastUserIndex === -1) {
     throw new Error("At least one USER message is required");
   }
+  const systemMessages = messages.filter((m) => m.role === "SYSTEM").map((m) => m.content.filter((c) => c.type === "TEXT").map((c) => c.text)).flat().join("\n");
   const currentMessage = messages[lastUserIndex];
   const messageText = currentMessage.content.filter((c) => c.type === "TEXT").map((c) => c.text).join("\n");
-  const chat_history = [];
+  const chatHistory = [];
   for (let i = 0; i < lastUserIndex; i++) {
     const msg = messages[i];
     if (msg.role === "SYSTEM") {
       continue;
     }
     const text = msg.content.filter((c) => c.type === "TEXT").map((c) => c.text).join("\n");
-    chat_history.push({
+    chatHistory.push({
       role: msg.role === "USER" ? "USER" : "CHATBOT",
       message: text
     });
   }
   return {
     message: messageText,
-    ...chat_history.length > 0 ? { chat_history } : {}
+    ...chatHistory.length > 0 ? { chatHistory } : {},
+    ...systemMessages ? { preambleOverride: systemMessages } : {}
   };
 }
 
@@ -4225,8 +4227,23 @@ function convertToOCITools(tools, apiFormat) {
   }
   return tools.map((tool) => convertToGenericToolFormat(tool));
 }
+function sanitizeSchema(schema) {
+  if (!schema || typeof schema !== "object") {
+    return schema;
+  }
+  if (Array.isArray(schema)) {
+    return schema.map(sanitizeSchema);
+  }
+  const sanitized = { ...schema };
+  delete sanitized.$schema;
+  delete sanitized.ref;
+  for (const [key, value] of Object.entries(sanitized)) {
+    sanitized[key] = sanitizeSchema(value);
+  }
+  return sanitized;
+}
 function convertToGenericToolFormat(tool) {
-  const parameters = tool.inputSchema || {};
+  const parameters = sanitizeSchema(tool.inputSchema) || {};
   if (!parameters.type) {
     parameters.type = "object";
   }
@@ -4323,6 +4340,13 @@ async function* parseSSEStream(input, options) {
           parts.push({
             type: "reasoning-delta",
             reasoningDelta: parsed.message.reasoningContent
+          });
+        }
+        const topLevelText = parsed.text || parsed.textDelta;
+        if (topLevelText) {
+          parts.push({
+            type: "text-delta",
+            textDelta: topLevelText
           });
         }
         if (parsed.message?.content) {
@@ -4517,6 +4541,12 @@ function handleOCIError(error) {
     return error;
   }
   if (error instanceof OCIGenAIError) {
+    if (error instanceof OCIValidationError) {
+      return new InvalidResponseDataError({
+        message: error.message,
+        data: error.details
+      });
+    }
     return new APICallError({
       message: error.message,
       url: "oci-genai",
@@ -4841,9 +4871,6 @@ var OCILanguageModel = class {
   getApiFormat() {
     const metadata = getModelMetadata(this.modelId);
     if (metadata?.family === "cohere") {
-      if (this.modelId.includes("-03-2025") || this.modelId.includes("-07-2025") || this.modelId.includes("-08-2025")) {
-        return "COHEREV2";
-      }
       return "COHERE";
     }
     return "GENERIC";
@@ -4883,6 +4910,7 @@ var OCILanguageModel = class {
       unified: "other",
       raw: "initializing"
     };
+    let providerMetadata;
     try {
       while (true) {
         const { done, value } = await reader.read();
@@ -4917,6 +4945,7 @@ var OCILanguageModel = class {
           case "finish":
             finishReason = value.finishReason;
             usage = value.usage;
+            providerMetadata = value.providerMetadata;
             break;
           case "error":
             throw value.error;
@@ -4931,7 +4960,8 @@ var OCILanguageModel = class {
       finishReason,
       request,
       response,
-      warnings
+      warnings,
+      providerMetadata
     };
   }
   async doStream(options) {
@@ -4978,12 +5008,10 @@ var OCILanguageModel = class {
     }
     try {
       const commonParams = {
-        maxTokens: options.maxOutputTokens,
+        maxTokens: options.maxOutputTokens ? Math.min(options.maxOutputTokens, 4e3) : void 0,
         temperature: options.temperature,
         topP: options.topP,
-        topK: options.topK,
-        frequencyPenalty: options.frequencyPenalty,
-        presencePenalty: options.presencePenalty,
+        topK: options.topK ? Math.min(options.topK, 40) : void 0,
         isStream: true
       };
       const toolParams = modelSupportsTools && functionTools.length > 0 ? {
@@ -5004,32 +5032,31 @@ var OCILanguageModel = class {
               }
               return { type: "TEXT", text: c.text ?? "" };
             });
+            let role = m.role;
+            if (role === "ASSISTANT") role = "ASSISTANT";
             return {
-              role: m.role === "ASSISTANT" ? "CHATBOT" : m.role,
+              role,
               content
             };
           }),
           ...commonParams,
-          ...toolParams,
-          stopSequences: options.stopSequences
+          ...toolParams
         };
       } else if (apiFormat === "COHERE") {
         chatRequest = {
           apiFormat,
           ...convertToCohereFormat(messages),
           ...commonParams,
-          ...toolParams,
-          stopSequences: options.stopSequences
+          ...toolParams
         };
       } else {
         chatRequest = {
           apiFormat,
           messages: messages.map((m) => ({
             role: m.role,
-            content: m.content.map((c) => ({
-              type: "TEXT",
-              text: c.text ?? ""
-            }))
+            content: m.content,
+            toolCalls: m.toolCalls,
+            toolCallId: m.toolCallId
           })),
           ...commonParams,
           ...toolParams,
@@ -5045,6 +5072,7 @@ var OCILanguageModel = class {
         cohereReq.thinking = createThinkingConfig(true, ociOptions.tokenBudget);
       }
       if (options.seed !== void 0) chatRequest.seed = options.seed;
+      console.log("DEBUG: OCI Chat Request:", JSON.stringify(chatRequest, null, 2));
       const response = await this.executeWithResilience(
         () => client.chat({
           chatDetails: {
@@ -5067,6 +5095,7 @@ var OCILanguageModel = class {
       const stream = parseSSEStream(streamInput, {
         includeRawChunks: options.includeRawChunks
       });
+      const headers = response.headers ? Object.fromEntries(response.headers.entries()) : void 0;
       return {
         stream: new ReadableStream({
           async start(controller) {
@@ -5117,7 +5146,7 @@ var OCILanguageModel = class {
                     }
                     controller.enqueue({
                       type: "finish",
-                      finishReason: part.finishReason,
+                      finishReason: part.finishReason.unified,
                       usage: {
                         inputTokens: {
                           total: part.usage.promptTokens,
@@ -5127,9 +5156,12 @@ var OCILanguageModel = class {
                         },
                         outputTokens: {
                           total: part.usage.completionTokens,
-                          text: void 0,
+                          text: part.usage.reasoningTokens !== void 0 ? part.usage.completionTokens - part.usage.reasoningTokens : part.usage.completionTokens,
                           reasoning: part.usage.reasoningTokens
                         }
+                      },
+                      providerMetadata: {
+                        oci: { requestId: headers?.["opc-request-id"] }
                       }
                     });
                     break;
@@ -5147,7 +5179,7 @@ var OCILanguageModel = class {
         }),
         request: { body: JSON.stringify(messages) },
         response: {
-          headers: response.headers ? Object.fromEntries(response.headers.entries()) : void 0
+          headers
         }
       };
     } catch (error) {
@@ -7152,6 +7184,16 @@ var OCIGenAIProvider = class {
   constructor(config = {}) {
     this.config = config;
     this.specificationVersion = "v3";
+  }
+  get models() {
+    const models3 = {};
+    for (const model of MODEL_CATALOG) {
+      models3[model.id] = {
+        modelId: model.id,
+        ...model
+      };
+    }
+    return models3;
   }
   /**
    * Create a language model instance for chat/completion.
