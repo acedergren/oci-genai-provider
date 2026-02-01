@@ -65,6 +65,55 @@ function parseJsonOrUndefined<T>(json: string | null, schema: z.ZodSchema<T>): T
   return schema.parse(JSON.parse(json));
 }
 
+/**
+ * Parse JSON string with Zod schema validation, returning default value if null.
+ * Useful for arrays that should default to empty rather than undefined.
+ */
+function parseJsonOrDefault<T>(json: string | null, schema: z.ZodSchema<T>, defaultValue: T): T {
+  if (!json) return defaultValue;
+  return schema.parse(JSON.parse(json));
+}
+
+// ============================================================================
+// Generic Update Builder
+// ============================================================================
+
+interface UpdateField<T> {
+  column: string;
+  value: T | undefined;
+  serialize?: (v: T) => string | number | null;
+}
+
+/**
+ * Build SQL UPDATE clause from a list of optional fields.
+ * Returns null if no fields need updating.
+ */
+function buildUpdateQuery(
+  table: string,
+  id: string,
+  fields: UpdateField<unknown>[],
+  baseUpdates: { column: string; value: string | number }[] = []
+): { sql: string; params: (string | number | null)[] } | null {
+  const updates: string[] = baseUpdates.map((u) => `${u.column} = ?`);
+  const params: (string | number | null)[] = baseUpdates.map((u) => u.value);
+
+  for (const field of fields) {
+    if (field.value !== undefined) {
+      updates.push(`${field.column} = ?`);
+      const serialized = field.serialize ? field.serialize(field.value as never) : field.value;
+      params.push(serialized as string | number | null);
+    }
+  }
+
+  if (updates.length === 0) return null;
+
+  params.push(id);
+  return {
+    sql: `UPDATE ${table} SET ${updates.join(', ')} WHERE id = ?`,
+    params,
+  };
+}
+
 // ============================================================================
 // Input Types
 // ============================================================================
@@ -138,7 +187,7 @@ export class StateRepository {
       createdAt: row.created_at,
       userMessage: parseJson(row.user_message, MessageSchema),
       assistantResponse: parseJsonOrUndefined(row.assistant_response, MessageSchema),
-      toolCalls: row.tool_calls ? parseJson(row.tool_calls, z.array(ToolCallSchema)) : [],
+      toolCalls: parseJsonOrDefault(row.tool_calls, z.array(ToolCallSchema), []),
       tokensUsed: row.tokens_used ?? undefined,
       costUsd: row.cost_usd ?? undefined,
       error: row.error,
@@ -200,25 +249,24 @@ export class StateRepository {
   }
 
   updateSession(id: string, input: UpdateSessionInput): Session | null {
-    const updates: string[] = ['updated_at = ?'];
-    const params: (string | number)[] = [Date.now()];
+    const query = buildUpdateQuery(
+      'sessions',
+      id,
+      [
+        { column: 'title', value: input.title },
+        { column: 'status', value: input.status },
+        {
+          column: 'config',
+          value: input.config,
+          serialize: (v): string => JSON.stringify(v),
+        },
+      ],
+      [{ column: 'updated_at', value: Date.now() }]
+    );
 
-    if (input.title !== undefined) {
-      updates.push('title = ?');
-      params.push(input.title);
+    if (query) {
+      this.db.prepare(query.sql).run(...query.params);
     }
-    if (input.status !== undefined) {
-      updates.push('status = ?');
-      params.push(input.status);
-    }
-    if (input.config !== undefined) {
-      updates.push('config = ?');
-      params.push(JSON.stringify(input.config));
-    }
-
-    params.push(id);
-
-    this.db.prepare(`UPDATE sessions SET ${updates.join(', ')} WHERE id = ?`).run(...params);
 
     return this.getSession(id);
   }
@@ -252,35 +300,25 @@ export class StateRepository {
   }
 
   updateTurn(id: string, input: UpdateTurnInput): Turn | null {
-    const updates: string[] = [];
-    const params: (string | number | null)[] = [];
+    const query = buildUpdateQuery('turns', id, [
+      {
+        column: 'assistant_response',
+        value: input.assistantResponse,
+        serialize: (v): string => JSON.stringify(v),
+      },
+      {
+        column: 'tool_calls',
+        value: input.toolCalls,
+        serialize: (v): string => JSON.stringify(v),
+      },
+      { column: 'tokens_used', value: input.tokensUsed },
+      { column: 'cost_usd', value: input.costUsd },
+      { column: 'error', value: input.error },
+    ]);
 
-    if (input.assistantResponse !== undefined) {
-      updates.push('assistant_response = ?');
-      params.push(JSON.stringify(input.assistantResponse));
-    }
-    if (input.toolCalls !== undefined) {
-      updates.push('tool_calls = ?');
-      params.push(JSON.stringify(input.toolCalls));
-    }
-    if (input.tokensUsed !== undefined) {
-      updates.push('tokens_used = ?');
-      params.push(input.tokensUsed);
-    }
-    if (input.costUsd !== undefined) {
-      updates.push('cost_usd = ?');
-      params.push(input.costUsd);
-    }
-    if (input.error !== undefined) {
-      updates.push('error = ?');
-      params.push(input.error);
-    }
+    if (!query) return this.getTurn(id);
 
-    if (updates.length === 0) return this.getTurn(id);
-
-    params.push(id);
-
-    this.db.prepare(`UPDATE turns SET ${updates.join(', ')} WHERE id = ?`).run(...params);
+    this.db.prepare(query.sql).run(...query.params);
 
     return this.getTurn(id);
   }

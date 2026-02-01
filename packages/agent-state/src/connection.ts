@@ -12,8 +12,15 @@ import { initializeSchema } from './schema.js';
  * is a synchronous library. No race condition concerns exist for the
  * connection initialization since all operations are blocking.
  */
-let connection: Database.Database | null = null;
-let connectionPath: string | null = null;
+interface ConnectionState {
+  db: Database.Database | null;
+  path: string | null;
+}
+
+const state: ConnectionState = {
+  db: null,
+  path: null,
+};
 
 const DEFAULT_DB_DIR = path.join(os.homedir(), '.oci-provider-examples');
 const DEFAULT_DB_PATH = path.join(DEFAULT_DB_DIR, 'agent-state.db');
@@ -48,33 +55,33 @@ function ensureDirectory(dbPath: string): void {
 export function getConnection(customPath?: string): Database.Database {
   const requestedPath = customPath ?? getDatabasePath();
 
-  if (connection) {
+  if (state.db) {
     // Validate that the requested path matches the existing connection
-    if (connectionPath && requestedPath !== connectionPath) {
+    if (state.path && requestedPath !== state.path) {
       throw new Error(
-        `Connection already exists to "${connectionPath}". ` +
+        `Connection already exists to "${state.path}". ` +
           `Cannot connect to "${requestedPath}". ` +
           `Call resetConnection() first to connect to a different database.`
       );
     }
-    return connection;
+    return state.db;
   }
 
   ensureDirectory(requestedPath);
 
-  connection = new Database(requestedPath);
-  connectionPath = requestedPath;
+  state.db = new Database(requestedPath);
+  state.path = requestedPath;
 
   // Enable WAL mode for better concurrent access
-  connection.pragma('journal_mode = WAL');
+  state.db.pragma('journal_mode = WAL');
 
   // Enable foreign keys
-  connection.pragma('foreign_keys = ON');
+  state.db.pragma('foreign_keys = ON');
 
   // Initialize schema
-  initializeSchema(connection);
+  initializeSchema(state.db);
 
-  return connection;
+  return state.db;
 }
 
 /**
@@ -83,9 +90,9 @@ export function getConnection(customPath?: string): Database.Database {
  * so subsequent getConnection() calls will fail until resetConnection() is called.
  */
 export function closeConnection(): void {
-  if (connection) {
-    connection.close();
-    connection = null;
+  if (state.db) {
+    state.db.close();
+    state.db = null;
   }
 }
 
@@ -99,7 +106,7 @@ export function closeConnection(): void {
  */
 export function resetConnection(): void {
   closeConnection();
-  connectionPath = null;
+  state.path = null;
 }
 
 /**
@@ -107,5 +114,5 @@ export function resetConnection(): void {
  * Useful for debugging and testing.
  */
 export function getConnectionPath(): string | null {
-  return connectionPath;
+  return state.path;
 }
