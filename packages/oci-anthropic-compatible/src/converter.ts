@@ -41,9 +41,7 @@ function convertContentBlock(block: ContentBlock): TextPart | ImagePart {
  * Convert Anthropic message to AI SDK CoreMessage format
  */
 function convertMessage(msg: AnthropicMessage): CoreMessage {
-  const content = Array.isArray(msg.content)
-    ? msg.content.map(convertContentBlock)
-    : msg.content;
+  const content = Array.isArray(msg.content) ? msg.content.map(convertContentBlock) : msg.content;
 
   if (msg.role === 'user') {
     return { role: 'user', content };

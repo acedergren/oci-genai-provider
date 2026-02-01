@@ -6,7 +6,6 @@
  * and routes them to OCI GenAI.
  */
 
-/* eslint-disable no-console */
 import { parseArgs } from 'util';
 import type { ProxyConfig } from './types.js';
 import { startServer } from './server.js';
@@ -93,12 +92,12 @@ if (!values.compartment) {
 }
 
 const config: ProxyConfig = {
-  port: parseInt(values.port!, 10),
-  host: values.host!,
-  region: values.region!,
-  compartmentId: values.compartment!,
-  profile: values.profile!,
-  verbose: values.verbose!,
+  port: parseInt(values.port, 10),
+  host: values.host,
+  region: values.region,
+  compartmentId: values.compartment,
+  profile: values.profile,
+  verbose: values.verbose,
 };
 
 // Start server

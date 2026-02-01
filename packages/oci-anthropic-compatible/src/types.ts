@@ -164,7 +164,11 @@ export function mapModel(anthropicModel: string): string {
     return MODEL_MAPPING[anthropicModel];
   }
   // If it looks like an OCI model ID, use it directly
-  if (anthropicModel.includes('.') || anthropicModel.startsWith('meta.') || anthropicModel.startsWith('xai.')) {
+  if (
+    anthropicModel.includes('.') ||
+    anthropicModel.startsWith('meta.') ||
+    anthropicModel.startsWith('xai.')
+  ) {
     return anthropicModel;
   }
   // Default to a capable model
