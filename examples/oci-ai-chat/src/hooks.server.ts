@@ -1,9 +1,12 @@
-import type { Handle } from '@sveltejs/kit';
+import type { Handle, RequestEvent } from '@sveltejs/kit';
 import { dev } from '$app/environment';
 
 /**
  * Simple in-memory rate limiter
- * For production, use Redis or a distributed store
+ *
+ * PRODUCTION NOTE: This in-memory store is suitable for single-instance deployments.
+ * For multi-instance production deployments, replace with Redis or another distributed store
+ * to ensure rate limits are enforced across all instances.
  */
 interface RateLimitEntry {
   count: number;
@@ -21,32 +24,39 @@ const RATE_LIMIT = {
   },
 };
 
+// Paths exempt from rate limiting (health checks, etc.)
+const RATE_LIMIT_EXEMPT_PATHS = ['/api/health', '/api/healthz'];
+
 /**
- * Get client identifier from request
- * Uses X-Forwarded-For header or falls back to a default for local dev
+ * Get client identifier from request event
+ *
+ * Uses SvelteKit's getClientAddress() which properly handles proxy headers
+ * based on the adapter configuration, avoiding X-Forwarded-For spoofing vulnerabilities.
  */
-function getClientId(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  if (forwarded) {
-    return forwarded.split(',')[0].trim();
+function getClientId(event: RequestEvent): string {
+  try {
+    // SvelteKit's getClientAddress() handles proxy trust properly based on adapter config
+    return event.getClientAddress();
+  } catch {
+    // Fallback for environments where getClientAddress() isn't available (e.g., some test setups)
+    return 'unknown-client';
   }
-  // In development without proxy, use a default
-  return 'local-dev';
 }
 
 /**
  * Check and update rate limit for a client
- * Returns remaining requests or -1 if limit exceeded
+ * Returns { remaining, resetAt } or null if limit exceeded
  */
-function checkRateLimit(clientId: string, endpoint: 'chat' | 'api'): number {
+function checkRateLimit(
+  clientId: string,
+  endpoint: 'chat' | 'api'
+): { remaining: number; resetAt: number } | null {
   const now = Date.now();
   const key = `${clientId}:${endpoint}`;
   const maxRequests = RATE_LIMIT.maxRequests[endpoint];
 
-  const entry = rateLimitStore.get(key);
-
-  // Clean up expired entries periodically
-  if (rateLimitStore.size > 10000) {
+  // Clean up expired entries periodically (lower threshold for better memory management)
+  if (rateLimitStore.size > 1000) {
     const keysToDelete: string[] = [];
     rateLimitStore.forEach((v, k) => {
       if (v.resetAt < now) {
@@ -56,26 +66,32 @@ function checkRateLimit(clientId: string, endpoint: 'chat' | 'api'): number {
     keysToDelete.forEach((k) => rateLimitStore.delete(k));
   }
 
+  const entry = rateLimitStore.get(key);
+
   if (!entry || entry.resetAt < now) {
     // New window
+    const resetAt = now + RATE_LIMIT.windowMs;
     rateLimitStore.set(key, {
       count: 1,
-      resetAt: now + RATE_LIMIT.windowMs,
+      resetAt,
     });
-    return maxRequests - 1;
+    return { remaining: maxRequests - 1, resetAt };
   }
 
   if (entry.count >= maxRequests) {
-    return -1; // Rate limited
+    return null; // Rate limited
   }
 
   entry.count++;
-  return maxRequests - entry.count;
+  return { remaining: maxRequests - entry.count, resetAt: entry.resetAt };
 }
 
 /**
  * Content Security Policy configuration
  * Restricts resource loading to prevent XSS and data injection attacks
+ *
+ * NOTE: 'unsafe-inline' is required for Svelte's runtime-generated styles and scripts.
+ * For stricter CSP, consider implementing nonce-based CSP with SvelteKit's handle hook.
  */
 function getCSPHeader(): string {
   const directives = [
@@ -131,11 +147,12 @@ function addSecurityHeaders(response: Response): Response {
   // Prevent MIME type sniffing
   headers.set('X-Content-Type-Options', 'nosniff');
 
-  // Clickjacking protection
+  // Clickjacking protection (legacy browsers; CSP frame-ancestors is the modern approach)
   headers.set('X-Frame-Options', 'DENY');
 
-  // XSS filter (legacy browsers)
-  headers.set('X-XSS-Protection', '1; mode=block');
+  // XSS Protection: Disabled as it's deprecated and can introduce vulnerabilities
+  // Modern browsers have removed XSS Auditor; CSP is the proper mitigation
+  headers.set('X-XSS-Protection', '0');
 
   // Referrer policy
   headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -146,6 +163,15 @@ function addSecurityHeaders(response: Response): Response {
     'accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()'
   );
 
+  // Cross-origin isolation headers for additional security
+  headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+  headers.set('Cross-Origin-Resource-Policy', 'same-origin');
+
+  // HSTS: Enforce HTTPS in production (1 year max-age with subdomains)
+  if (!dev) {
+    headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
@@ -153,26 +179,48 @@ function addSecurityHeaders(response: Response): Response {
   });
 }
 
+/**
+ * Add rate limit headers to response
+ */
+function addRateLimitHeaders(
+  headers: Headers,
+  endpoint: 'chat' | 'api',
+  remaining: number,
+  resetAt: number
+): void {
+  headers.set('X-RateLimit-Limit', String(RATE_LIMIT.maxRequests[endpoint]));
+  headers.set('X-RateLimit-Remaining', String(remaining));
+  headers.set('X-RateLimit-Reset', String(Math.ceil(resetAt / 1000))); // Unix timestamp in seconds
+}
+
 export const handle: Handle = async ({ event, resolve }) => {
-  const { url, request } = event;
+  const { url } = event;
 
-  // Apply rate limiting to API routes
-  if (url.pathname.startsWith('/api/')) {
-    const clientId = getClientId(request);
+  // Apply rate limiting to API routes (except exempt paths)
+  if (url.pathname.startsWith('/api/') && !RATE_LIMIT_EXEMPT_PATHS.includes(url.pathname)) {
+    const clientId = getClientId(event);
     const endpoint = url.pathname.startsWith('/api/chat') ? 'chat' : 'api';
-    const remaining = checkRateLimit(clientId, endpoint);
+    const rateLimitResult = checkRateLimit(clientId, endpoint);
 
-    if (remaining < 0) {
+    if (rateLimitResult === null) {
+      // Rate limited - return 429
+      const resetAt = rateLimitStore.get(`${clientId}:${endpoint}`)?.resetAt ?? Date.now() + 60000;
+      const retryAfter = Math.ceil((resetAt - Date.now()) / 1000);
+
       return new Response(
         JSON.stringify({
           error: 'Too many requests',
-          message: `Rate limit exceeded. Please try again later.`,
+          message: 'Rate limit exceeded. Please try again later.',
+          retryAfter,
         }),
         {
           status: 429,
           headers: {
             'Content-Type': 'application/json',
-            'Retry-After': '60',
+            'Retry-After': String(retryAfter),
+            'X-RateLimit-Limit': String(RATE_LIMIT.maxRequests[endpoint]),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': String(Math.ceil(resetAt / 1000)),
           },
         }
       );
@@ -181,8 +229,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     // Process request and add rate limit headers
     const response = await resolve(event);
     const headers = new Headers(response.headers);
-    headers.set('X-RateLimit-Remaining', String(remaining));
-    headers.set('X-RateLimit-Limit', String(RATE_LIMIT.maxRequests[endpoint]));
+    addRateLimitHeaders(headers, endpoint, rateLimitResult.remaining, rateLimitResult.resetAt);
 
     return addSecurityHeaders(
       new Response(response.body, {
