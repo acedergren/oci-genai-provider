@@ -41,7 +41,7 @@ Detailed guides for project setup and configuration:
 │   ├── oci-genai-provider/    # Core AI SDK V3 provider
 │   ├── oci-openai-compatible/ # OpenAI-compatible API wrapper
 │   ├── opencode-integration/  # OpenCode CLI integration
-│   ├── opencode-oci-setup/    # Setup wizard for OpenCode
+│   ├── oci-genai-setup/       # Setup wizard (AI SDK, OpenCode, Claude Code)
 │   ├── agent-state/           # Agent state management
 │   └── test-utils/            # Shared test utilities
 ├── examples/
