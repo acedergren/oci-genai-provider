@@ -7,7 +7,7 @@ import ora from 'ora';
 
 import type { GeneratedConfig, Logger, OutputFormat } from '../types.js';
 import { writeOpencodeConfig } from './opencode.js';
-import { writeClaudeCodeConfig } from './claude-code.js';
+import { writeOpenAICompatConfig } from './openai-compat.js';
 import { writeEnvConfig, generateShellExports } from './env.js';
 import { generateJsonConfig } from './json.js';
 
@@ -52,12 +52,13 @@ export async function writeConfig(
         return { success: result.success, path: result.path };
       }
 
-      case 'claude-code': {
-        const result = await writeClaudeCodeConfig(config, log);
+      case 'openai-compat': {
+        const result = await writeOpenAICompatConfig(config, log);
         if (result.success) {
-          spinner.succeed(`Claude Code MCP config saved to ${chalk.cyan(result.path)}`);
+          spinner.succeed(`OpenAI-compatible config saved to ${chalk.cyan(result.path)}`);
+          log.log(chalk.gray('  Also created: oci-openai-example.mjs'));
         } else {
-          spinner.fail('Failed to write Claude Code config');
+          spinner.fail('Failed to write OpenAI-compatible config');
         }
         return { success: result.success, path: result.path };
       }
@@ -127,11 +128,11 @@ export function showSuccessMessage(
       log.log(`  3. Select model: ${chalk.cyan('/model <model-name>')}`);
       break;
 
-    case 'claude-code':
+    case 'openai-compat':
       log.log('Next steps:');
-      log.log(`  1. Restart Claude Code desktop app`);
-      log.log(`  2. The OCI GenAI MCP server will be available`);
-      log.log(`  3. Use tools to interact with OCI GenAI models`);
+      log.log(`  1. Install: ${chalk.cyan('pnpm add @acedergren/oci-openai-compatible')}`);
+      log.log(`  2. Source env: ${chalk.cyan('source .env.oci-openai')}`);
+      log.log(`  3. Run example: ${chalk.cyan('node oci-openai-example.mjs')}`);
       break;
 
     case 'env':

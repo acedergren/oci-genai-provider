@@ -57,9 +57,9 @@ export async function selectOutputFormat(options: CLIOptions, _log: Logger): Pro
         description: OUTPUT_FORMAT_INFO.opencode.description,
       },
       {
-        title: OUTPUT_FORMAT_INFO['claude-code'].name,
-        value: 'claude-code',
-        description: OUTPUT_FORMAT_INFO['claude-code'].description,
+        title: OUTPUT_FORMAT_INFO['openai-compat'].name,
+        value: 'openai-compat',
+        description: OUTPUT_FORMAT_INFO['openai-compat'].description,
       },
       {
         title: OUTPUT_FORMAT_INFO.env.name,

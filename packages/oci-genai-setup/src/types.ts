@@ -7,7 +7,7 @@ import type { OCIProfile } from '@acedergren/oci-genai-provider/config';
 /**
  * Output format for generated configuration
  */
-export type OutputFormat = 'opencode' | 'claude-code' | 'env' | 'json';
+export type OutputFormat = 'opencode' | 'openai-compat' | 'env' | 'json';
 
 /**
  * CLI command-line options
@@ -91,9 +91,9 @@ export const OUTPUT_FORMAT_INFO: Record<OutputFormat, { name: string; descriptio
     name: 'OpenCode',
     description: 'Generate ~/.config/opencode/opencode.json',
   },
-  'claude-code': {
-    name: 'Claude Code MCP',
-    description: 'Generate MCP server config for Claude Code',
+  'openai-compat': {
+    name: 'OpenAI Compatible',
+    description: 'Generate .env and example for OpenAI SDK usage',
   },
   env: {
     name: 'Environment Variables',
