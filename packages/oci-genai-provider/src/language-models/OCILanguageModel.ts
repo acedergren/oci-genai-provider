@@ -101,6 +101,10 @@ export class OCILanguageModel implements LanguageModelV3 {
   private getApiFormat(): OCIApiFormat {
     const metadata = getModelMetadata(this.modelId);
     if (metadata?.family === 'cohere') {
+      // COHEREV2 format is required for vision-capable Cohere models
+      if (metadata.capabilities?.vision) {
+        return 'COHEREV2';
+      }
       return 'COHERE';
     }
     return 'GENERIC';
@@ -422,7 +426,7 @@ export class OCILanguageModel implements LanguageModelV3 {
                     }
                     controller.enqueue({
                       type: 'finish',
-                      finishReason: part.finishReason.unified as any,
+                      finishReason: part.finishReason,
                       usage: {
                         inputTokens: {
                           total: part.usage.promptTokens,

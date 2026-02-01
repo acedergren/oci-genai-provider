@@ -344,6 +344,7 @@ export const MODEL_CATALOG: ExtendedModelMetadata[] = [
     contextWindow: 128000,
     speed: 'medium',
     regions: COHERE_REGIONS,
+    dedicatedOnly: true,
   },
   {
     id: 'cohere.command-a-reasoning',
