@@ -1,0 +1,8 @@
+{
+  "/": ["src/routes/+page.server.ts"],
+  "/api/chat": ["src/routes/api/chat/+server.ts"],
+  "/api/models": ["src/routes/api/models/+server.ts"],
+  "/api/sessions": ["src/routes/api/sessions/+server.ts"],
+  "/api/sessions/[id]": ["src/routes/api/sessions/[id]/+server.ts"],
+  "/api/sessions/[id]/continue": ["src/routes/api/sessions/[id]/continue/+server.ts"]
+}
