@@ -1,15 +1,29 @@
-// packages/agent-state/src/types.ts
+/**
+ * Zod schemas and types for agent session state.
+ *
+ * Naming convention:
+ * - FooSchema: Zod schema object (for runtime validation)
+ * - Foo: Inferred TypeScript type (for compile-time type checking)
+ */
 import { z } from 'zod';
 
-// Session status enum - using Schema suffix to avoid redeclaration
+// ============================================================================
+// Enum Schemas
+// ============================================================================
+
+/** Session lifecycle status */
 export const SessionStatusSchema = z.enum(['active', 'completed', 'error']);
 export type SessionStatus = z.infer<typeof SessionStatusSchema>;
 
-// Tool call status enum - using Schema suffix to avoid redeclaration
+/** Tool call execution status */
 export const ToolCallStatusSchema = z.enum(['pending', 'running', 'completed', 'error']);
 export type ToolCallStatus = z.infer<typeof ToolCallStatusSchema>;
 
-// Session configuration
+// ============================================================================
+// Configuration Schemas
+// ============================================================================
+
+/** Session configuration options */
 export const SessionConfigSchema = z
   .object({
     temperature: z.number().min(0).max(2).optional(),
@@ -21,7 +35,11 @@ export const SessionConfigSchema = z
 
 export type SessionConfig = z.infer<typeof SessionConfigSchema>;
 
-// Message schema (user or assistant)
+// ============================================================================
+// Message Schemas
+// ============================================================================
+
+/** Chat message (user, assistant, or system) */
 export const MessageSchema = z.object({
   role: z.enum(['user', 'assistant', 'system']),
   content: z.string(),
@@ -30,7 +48,7 @@ export const MessageSchema = z.object({
 
 export type Message = z.infer<typeof MessageSchema>;
 
-// Tool call schema
+/** Tool/function call with execution state */
 export const ToolCallSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -44,7 +62,11 @@ export const ToolCallSchema = z.object({
 
 export type ToolCall = z.infer<typeof ToolCallSchema>;
 
-// Session schema
+// ============================================================================
+// Entity Schemas
+// ============================================================================
+
+/** Agent conversation session */
 export const SessionSchema = z.object({
   id: z.string().uuid(),
   createdAt: z.number(),
@@ -58,7 +80,7 @@ export const SessionSchema = z.object({
 
 export type Session = z.infer<typeof SessionSchema>;
 
-// Turn schema
+/** Single conversation turn (user message + assistant response + tool calls) */
 export const TurnSchema = z.object({
   id: z.string(),
   sessionId: z.string().uuid(),

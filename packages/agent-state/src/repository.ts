@@ -1,7 +1,73 @@
 // packages/agent-state/src/repository.ts
 import Database from 'better-sqlite3';
 import { v4 as uuidv4 } from 'uuid';
-import { Session, SessionSchema, Turn, TurnSchema, Message, ToolCall } from './types.js';
+import {
+  type Session,
+  SessionSchema,
+  SessionConfigSchema,
+  type Turn,
+  TurnSchema,
+  type Message,
+  MessageSchema,
+  type ToolCall,
+  ToolCallSchema,
+} from './types.js';
+import { z } from 'zod';
+
+// ============================================================================
+// SQLite Row Types (database representation)
+// ============================================================================
+
+/** Raw session row from SQLite */
+interface SessionRow {
+  id: string;
+  created_at: number;
+  updated_at: number;
+  title: string | null;
+  model: string;
+  region: string;
+  status: string;
+  config: string | null;
+}
+
+/** Raw turn row from SQLite */
+interface TurnRow {
+  id: string;
+  session_id: string;
+  turn_number: number;
+  created_at: number;
+  user_message: string;
+  assistant_response: string | null;
+  tool_calls: string | null;
+  tokens_used: number | null;
+  cost_usd: number | null;
+  error: string | null;
+}
+
+// ============================================================================
+// JSON Parse Helpers (with Zod validation)
+// ============================================================================
+
+/**
+ * Parse JSON string with Zod schema validation.
+ * Provides runtime type safety instead of unsafe type assertions.
+ */
+function parseJson<T>(json: string, schema: z.ZodSchema<T>): T {
+  return schema.parse(JSON.parse(json));
+}
+
+/**
+ * Parse optional JSON string with Zod schema validation.
+ * Returns undefined if json is null/undefined.
+ */
+function parseJsonOrUndefined<T>(json: string | null, schema: z.ZodSchema<T>): T | undefined {
+  if (!json) return undefined;
+  return schema.parse(JSON.parse(json));
+}
+
+// ============================================================================
+// Input Types
+// ============================================================================
 
 export interface CreateSessionInput {
   id?: string;
@@ -39,7 +105,50 @@ export interface ListSessionsOptions {
 export class StateRepository {
   constructor(private db: Database.Database) {}
 
-  // Session methods
+  // ============================================================================
+  // Private Row Mapping Helpers
+  // ============================================================================
+
+  /**
+   * Map a database row to a validated Session domain object.
+   * Uses Zod schema for runtime validation of parsed JSON.
+   */
+  private mapRowToSession(row: SessionRow): Session {
+    return SessionSchema.parse({
+      id: row.id,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      title: row.title ?? undefined,
+      model: row.model,
+      region: row.region,
+      status: row.status,
+      config: parseJsonOrUndefined(row.config, SessionConfigSchema),
+    });
+  }
+
+  /**
+   * Map a database row to a validated Turn domain object.
+   * Uses Zod schema for runtime validation of parsed JSON.
+   */
+  private mapRowToTurn(row: TurnRow): Turn {
+    return TurnSchema.parse({
+      id: row.id,
+      sessionId: row.session_id,
+      turnNumber: row.turn_number,
+      createdAt: row.created_at,
+      userMessage: parseJson(row.user_message, MessageSchema),
+      assistantResponse: parseJsonOrUndefined(row.assistant_response, MessageSchema),
+      toolCalls: row.tool_calls ? parseJson(row.tool_calls, z.array(ToolCallSchema)) : [],
+      tokensUsed: row.tokens_used ?? undefined,
+      costUsd: row.cost_usd ?? undefined,
+      error: row.error,
+    });
+  }
+
+  // ============================================================================
+  // Session Methods
+  // ============================================================================
+
   createSession(input: CreateSessionInput): Session {
     const now = Date.now();
     const id = input.id ?? uuidv4();
@@ -66,38 +175,11 @@ export class StateRepository {
   }
 
   getSession(id: string): Session | null {
-    const row = this.db
-      .prepare(
-        `
-      SELECT id, created_at, updated_at, title, model, region, status, config
-      FROM sessions WHERE id = ?
-    `
-      )
-      .get(id) as
-      | {
-          id: string;
-          created_at: number;
-          updated_at: number;
-          title: string | null;
-          model: string;
-          region: string;
-          status: string;
-          config: string | null;
-        }
+    const row = this.db.prepare('SELECT * FROM sessions WHERE id = ?').get(id) as
+      | SessionRow
       | undefined;
 
-    if (!row) return null;
-
-    return SessionSchema.parse({
-      id: row.id,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-      title: row.title ?? undefined,
-      model: row.model,
-      region: row.region,
-      status: row.status,
-      config: row.config ? (JSON.parse(row.config) as Record<string, unknown>) : undefined,
-    });
+    return row ? this.mapRowToSession(row) : null;
   }
 
   listSessions(options: ListSessionsOptions = {}): Session[] {
@@ -113,29 +195,8 @@ export class StateRepository {
     query += ' ORDER BY updated_at DESC LIMIT ?';
     params.push(limit);
 
-    const rows = this.db.prepare(query).all(...params) as Array<{
-      id: string;
-      created_at: number;
-      updated_at: number;
-      title: string | null;
-      model: string;
-      region: string;
-      status: string;
-      config: string | null;
-    }>;
-
-    return rows.map((row) =>
-      SessionSchema.parse({
-        id: row.id,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
-        title: row.title ?? undefined,
-        model: row.model,
-        region: row.region,
-        status: row.status,
-        config: row.config ? (JSON.parse(row.config) as Record<string, unknown>) : undefined,
-      })
-    );
+    const rows = this.db.prepare(query).all(...params) as SessionRow[];
+    return rows.map((row) => this.mapRowToSession(row));
   }
 
   updateSession(id: string, input: UpdateSessionInput): Session | null {
@@ -162,7 +223,10 @@ export class StateRepository {
     return this.getSession(id);
   }
 
-  // Turn methods
+  // ============================================================================
+  // Turn Methods
+  // ============================================================================
+
   addTurn(sessionId: string, input: AddTurnInput): Turn {
     const id = `turn_${uuidv4().slice(0, 8)}`;
     const now = Date.now();
@@ -183,43 +247,8 @@ export class StateRepository {
   }
 
   getTurn(id: string): Turn | null {
-    const row = this.db
-      .prepare(
-        `
-      SELECT * FROM turns WHERE id = ?
-    `
-      )
-      .get(id) as
-      | {
-          id: string;
-          session_id: string;
-          turn_number: number;
-          created_at: number;
-          user_message: string;
-          assistant_response: string | null;
-          tool_calls: string | null;
-          tokens_used: number | null;
-          cost_usd: number | null;
-          error: string | null;
-        }
-      | undefined;
-
-    if (!row) return null;
-
-    return TurnSchema.parse({
-      id: row.id,
-      sessionId: row.session_id,
-      turnNumber: row.turn_number,
-      createdAt: row.created_at,
-      userMessage: JSON.parse(row.user_message) as Message,
-      assistantResponse: row.assistant_response
-        ? (JSON.parse(row.assistant_response) as Message)
-        : undefined,
-      toolCalls: row.tool_calls ? (JSON.parse(row.tool_calls) as ToolCall[]) : [],
-      tokensUsed: row.tokens_used ?? undefined,
-      costUsd: row.cost_usd ?? undefined,
-      error: row.error,
-    });
+    const row = this.db.prepare('SELECT * FROM turns WHERE id = ?').get(id) as TurnRow | undefined;
+    return row ? this.mapRowToTurn(row) : null;
   }
 
   updateTurn(id: string, input: UpdateTurnInput): Turn | null {
@@ -258,43 +287,15 @@ export class StateRepository {
 
   getSessionTurns(sessionId: string): Turn[] {
     const rows = this.db
-      .prepare(
-        `
-      SELECT * FROM turns WHERE session_id = ? ORDER BY turn_number ASC
-    `
-      )
-      .all(sessionId) as Array<{
-      id: string;
-      session_id: string;
-      turn_number: number;
-      created_at: number;
-      user_message: string;
-      assistant_response: string | null;
-      tool_calls: string | null;
-      tokens_used: number | null;
-      cost_usd: number | null;
-      error: string | null;
-    }>;
+      .prepare('SELECT * FROM turns WHERE session_id = ? ORDER BY turn_number ASC')
+      .all(sessionId) as TurnRow[];
 
-    return rows.map((row) =>
-      TurnSchema.parse({
-        id: row.id,
-        sessionId: row.session_id,
-        turnNumber: row.turn_number,
-        createdAt: row.created_at,
-        userMessage: JSON.parse(row.user_message) as Message,
-        assistantResponse: row.assistant_response
-          ? (JSON.parse(row.assistant_response) as Message)
-          : undefined,
-        toolCalls: row.tool_calls ? (JSON.parse(row.tool_calls) as ToolCall[]) : [],
-        tokensUsed: row.tokens_used ?? undefined,
-        costUsd: row.cost_usd ?? undefined,
-        error: row.error,
-      })
-    );
+    return rows.map((row) => this.mapRowToTurn(row));
   }
 
-  // Session resume methods
+  // ============================================================================
+  // Session Resume Methods
+  // ============================================================================
 
   /**
    * Get the most recent active session.
@@ -302,39 +303,10 @@ export class StateRepository {
    */
   getMostRecentSession(): Session | null {
     const row = this.db
-      .prepare(
-        `
-      SELECT * FROM sessions
-      WHERE status = 'active'
-      ORDER BY updated_at DESC
-      LIMIT 1
-    `
-      )
-      .get() as
-      | {
-          id: string;
-          created_at: number;
-          updated_at: number;
-          title: string | null;
-          model: string;
-          region: string;
-          status: string;
-          config: string | null;
-        }
-      | undefined;
+      .prepare("SELECT * FROM sessions WHERE status = 'active' ORDER BY updated_at DESC LIMIT 1")
+      .get() as SessionRow | undefined;
 
-    if (!row) return null;
-
-    return SessionSchema.parse({
-      id: row.id,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-      title: row.title ?? undefined,
-      model: row.model,
-      region: row.region,
-      status: row.status,
-      config: row.config ? (JSON.parse(row.config) as Record<string, unknown>) : undefined,
-    });
+    return row ? this.mapRowToSession(row) : null;
   }
 
   /**

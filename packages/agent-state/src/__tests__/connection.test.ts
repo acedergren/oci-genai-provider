@@ -3,7 +3,13 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { getConnection, closeConnection, resetConnection, getDatabasePath } from '../connection.js';
+import {
+  getConnection,
+  closeConnection,
+  resetConnection,
+  getDatabasePath,
+  getConnectionPath,
+} from '../connection.js';
 
 describe('Connection Manager', () => {
   const testDbDir = path.join(os.tmpdir(), 'agent-state-test');
@@ -73,5 +79,42 @@ describe('Connection Manager', () => {
 
   it('getDatabasePath returns env var when set', () => {
     expect(getDatabasePath()).toBe(testDbPath);
+  });
+
+  it('getConnectionPath returns null before connection', () => {
+    expect(getConnectionPath()).toBeNull();
+  });
+
+  it('getConnectionPath returns path after connection', () => {
+    getConnection();
+    expect(getConnectionPath()).toBe(testDbPath);
+  });
+
+  it('throws error when requesting different path after connection exists', () => {
+    getConnection(); // Connect to testDbPath
+    const differentPath = path.join(testDbDir, 'different.db');
+
+    expect(() => getConnection(differentPath)).toThrow(
+      /Connection already exists.*Cannot connect.*Call resetConnection/
+    );
+  });
+
+  it('allows same path after connection exists', () => {
+    const conn1 = getConnection();
+    const conn2 = getConnection(testDbPath); // Same path, should work
+    expect(conn1).toBe(conn2);
+  });
+
+  it('resetConnection clears path, allowing new connection', () => {
+    getConnection();
+    expect(getConnectionPath()).toBe(testDbPath);
+
+    resetConnection();
+    expect(getConnectionPath()).toBeNull();
+
+    // Now can connect to a different path
+    const newPath = path.join(testDbDir, 'new.db');
+    getConnection(newPath);
+    expect(getConnectionPath()).toBe(newPath);
   });
 });
