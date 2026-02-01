@@ -10,7 +10,7 @@
  * {
  *   "provider": {
  *     "oci-genai": {
- *       "npm": "@acedergren/opencode-oci-genai",
+ *       "npm": "@acedergren/oci-genai-provider",
  *       "options": {
  *         "compartmentId": "{env:OCI_COMPARTMENT_ID}",
  *         "configProfile": "FRANKFURT"
@@ -116,18 +116,14 @@ Or via environment variable:
 
   const provider = createOCI(config);
 
-  console.log('DEBUG: Provider created:', typeof provider, !!provider.models);
-  if (provider.models) {
-    console.log('DEBUG: Registered OCI models:', Object.keys(provider.models).join(', '));
-  }
-
   // Return provider with explicit models property for OpenCode discovery
   const providerWithModels = {
     ...provider,
     models: provider.models,
   };
 
-  return providerWithModels as any;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  return providerWithModels as ProviderV3;
 }
 
 // ============================================================================
