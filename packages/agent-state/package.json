@@ -1,5 +1,5 @@
 {
-  "name": "@oci-provider-examples/agent-state",
+  "name": "@acedergren/agent-state",
   "version": "0.0.1",
   "private": true,
   "type": "module",

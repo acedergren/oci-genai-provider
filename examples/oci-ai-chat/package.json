@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@ai-sdk/svelte": "^4.0.64",
-    "@oci-provider-examples/agent-state": "workspace:*",
+    "@acedergren/agent-state": "workspace:*",
     "ai": "^6.0.64",
     "clsx": "^2.1.1",
     "@acedergren/oci-genai-provider": "workspace:*",

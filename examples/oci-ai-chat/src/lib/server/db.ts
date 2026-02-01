@@ -1,4 +1,4 @@
-import { getConnection, StateRepository } from '@oci-provider-examples/agent-state';
+import { getConnection, StateRepository } from '@acedergren/agent-state';
 
 // Singleton repository instance for server-side use
 let repository: StateRepository | null = null;

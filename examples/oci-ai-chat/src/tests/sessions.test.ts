@@ -1,9 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import {
-  getConnection,
-  StateRepository,
-  resetConnection,
-} from '@oci-provider-examples/agent-state';
+import { getConnection, StateRepository, resetConnection } from '@acedergren/agent-state';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
