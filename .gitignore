@@ -23,3 +23,6 @@ dist/
 # Project-specific
 .firecrawl/
 .worktrees/
+
+# Claude agent configs (may contain sensitive paths)
+.claude/
