@@ -294,10 +294,8 @@ export class OCILanguageModel implements LanguageModelV3 {
               }
               return { type: 'TEXT', text: c.text ?? '' } as OCIModel.CohereTextContentV2;
             });
-            let role = m.role;
-            if (role === 'ASSISTANT') role = 'ASSISTANT';
             return {
-              role,
+              role: m.role,
               content,
             } as OCIModel.CohereMessageV2;
           }),
@@ -337,8 +335,6 @@ export class OCILanguageModel implements LanguageModelV3 {
       }
 
       if (options.seed !== undefined) chatRequest.seed = options.seed;
-
-      console.log('DEBUG: OCI Chat Request:', JSON.stringify(chatRequest, null, 2));
 
       const response = (await this.executeWithResilience<unknown>(
         () =>

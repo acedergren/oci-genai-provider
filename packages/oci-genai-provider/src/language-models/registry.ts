@@ -436,17 +436,9 @@ export function getModelsByRegion(
   region: OCIGenAIRegion,
   includeDedicatedOnly = false
 ): ModelMetadata[] {
-  return MODEL_CATALOG.filter((m) => {
-    // Filter by region
-    if (!m.regions.includes(region)) {
-      return false;
-    }
-    // Filter dedicated-only models unless explicitly requested
-    if (m.dedicatedOnly && !includeDedicatedOnly) {
-      return false;
-    }
-    return true;
-  });
+  return MODEL_CATALOG.filter(
+    (m) => m.regions.includes(region) && (includeDedicatedOnly || !m.dedicatedOnly)
+  );
 }
 
 /**
@@ -455,18 +447,13 @@ export function getModelsByRegion(
  * @param region - OCI region identifier (e.g., 'eu-frankfurt-1')
  */
 export function getCodingRecommendedModels(region: OCIGenAIRegion): ModelMetadata[] {
-  return MODEL_CATALOG.filter((m) => {
-    // Must be available in region (on-demand, not dedicated-only)
-    if (!m.regions.includes(region) || m.dedicatedOnly) {
-      return false;
-    }
-    // Must have tool support (essential for coding agents)
-    if (!m.capabilities.tools) {
-      return false;
-    }
-    // Return explicitly recommended models
-    return m.codingRecommended === true;
-  });
+  return MODEL_CATALOG.filter(
+    (m) =>
+      m.regions.includes(region) &&
+      !m.dedicatedOnly &&
+      m.capabilities.tools &&
+      m.codingRecommended === true
+  );
 }
 
 /**
