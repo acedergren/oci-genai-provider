@@ -25,7 +25,7 @@ import { CODING_SETTINGS } from '../types.js';
  */
 export function installPackage(log: Logger): void {
   const opencodeDir = path.join(os.homedir(), '.config/opencode');
-  const installSpinner = ora('Installing @acedergren/opencode-oci-genai...').start();
+  const installSpinner = ora('Installing @acedergren/oci-genai-provider...').start();
 
   try {
     // Ensure OpenCode config directory exists
@@ -40,7 +40,7 @@ export function installPackage(log: Logger): void {
     }
 
     // Install using npm (execFileSync for security - no shell injection)
-    execFileSync('npm', ['install', '@acedergren/opencode-oci-genai'], {
+    execFileSync('npm', ['install', '@acedergren/oci-genai-provider'], {
       cwd: opencodeDir,
       stdio: 'pipe',
     });
@@ -58,7 +58,7 @@ export function installPackage(log: Logger): void {
     }
 
     log.log(chalk.yellow('\nYou can install manually:'));
-    log.log(chalk.cyan(`  cd ~/.config/opencode && npm install @acedergren/opencode-oci-genai\n`));
+    log.log(chalk.cyan(`  cd ~/.config/opencode && npm install @acedergren/oci-genai-provider\n`));
   }
 }
 
@@ -102,7 +102,7 @@ export function generateConfig(
 
   // Build the OCI GenAI provider config
   const ociProviderConfig = {
-    npm: '@acedergren/opencode-oci-genai',
+    npm: '@acedergren/oci-genai-provider',
     name: 'OCI GenAI',
     options: {
       compartmentId,
