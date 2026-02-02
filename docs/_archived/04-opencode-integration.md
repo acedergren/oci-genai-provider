@@ -14,19 +14,19 @@ Create `~/.opencode/config.json`:
 
 \`\`\`json
 {
-  "providers": {
-    "oci-genai": {
-      "type": "custom",
-      "package": "@acedergren/oci-genai-provider",
-      "region": "eu-frankfurt-1"
-    }
-  },
-  "models": {
-    "oci-llama": {
-      "provider": "oci-genai",
-      "model": "meta.llama-3.3-70b-instruct"
-    }
-  }
+"providers": {
+"oci-genai": {
+"type": "custom",
+"package": "@acedergren/oci-genai-provider",
+"region": "eu-frankfurt-1"
+}
+},
+"models": {
+"oci-llama": {
+"provider": "oci-genai",
+"model": "meta.llama-3.3-70b-instruct"
+}
+}
 }
 \`\`\`
 
@@ -34,8 +34,9 @@ Create `~/.opencode/config.json`:
 
 \`\`\`bash
 opencode --model oci-llama
+
 > Write a TypeScript function
-\`\`\`
+> \`\`\`
 
 ## Next Steps
 

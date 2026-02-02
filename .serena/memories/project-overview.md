@@ -4,8 +4,8 @@
 
 **Name**: OpenCode OCI GenAI
 **Purpose**: Enables OCI (Oracle Cloud Infrastructure) Generative AI capabilities within OpenCode
-**Repository**: opencode-oci-genai
-**Location**: `/Users/acedergr/Projects/opencode-oci-genai`
+**Repository**: oci-genai-provider
+**Location**: `/Users/acedergr/Projects/oci-genai-provider`
 
 ## Technology Stack
 
@@ -21,14 +21,16 @@
 ## OCI Configuration
 
 ### Active Configuration
+
 - **Primary Region**: `eu-frankfurt-1` (FRANKFURT profile)
-- **Alternative Regions**: 
+- **Alternative Regions**:
   - `eu-stockholm-1` (STOCKHOLM)
   - `us-ashburn-1` (ASHBURN)
 - **Service**: OCI Generative AI
 - **Authentication**: OCI API key from `~/.oci/config`
 
 ### Authentication Methods
+
 1. **Config File** (default): Reads from ~/.oci/config
 2. **Instance Principal**: For OCI Compute instances
 3. **Resource Principal**: For OCI Functions
@@ -36,10 +38,10 @@
 ## Project Structure
 
 ```
-opencode-oci-genai/
+oci-genai-provider/
 ├── packages/                      # Core packages
 │   ├── oci-genai-provider/       # Standalone Vercel AI SDK provider
-│   ├── opencode-integration/     # OpenCode-specific wrapper
+│   ├── oci-openai-compatible/     # OpenCode-specific wrapper
 │   └── test-utils/               # Shared test mocks and fixtures
 ├── examples/                      # Demo applications
 │   ├── chatbot-demo/             # SvelteKit chatbot
@@ -87,10 +89,12 @@ pnpm --filter <package> test       # Test specific package
 **Scope**: `@acedergren`
 
 **Published Packages**:
+
 1. `@acedergren/oci-genai-provider` - Core provider (public)
-2. `@acedergren/opencode-oci-genai` - OpenCode integration (public)
+2. `@acedergren/oci-genai-provider` - OpenCode integration (public)
 
 **Private Packages**:
+
 - `@acedergren/test-utils` - Internal test utilities
 
 ## Recent Git Activity
@@ -98,6 +102,7 @@ pnpm --filter <package> test       # Test specific package
 **Current Branch**: main
 
 **Recent Commits** (latest first):
+
 1. `7c60291` - test(coverage): add object-storage and transcription error path tests
 2. `dc84954` - docs: link code standards from CLAUDE.md
 3. `d0e7795` - docs: add code standards and naming conventions
@@ -105,6 +110,7 @@ pnpm --filter <package> test       # Test specific package
 5. `6520a45` - test(01-02): add converter branch coverage for non-text content
 
 **Untracked Files**:
+
 - `.claude/credentials.md` - Local credentials guide
 - `.claude/dependency-compatibility-matrix.md` - Dependency tracking
 - `.firecrawl/` - Web scraping integration
@@ -126,6 +132,7 @@ pnpm --filter <package> test       # Test specific package
 
 **Status**: Active development
 **Focus Areas**:
+
 1. Dependency upgrades and compatibility verification
 2. Test coverage completion and quality improvements
 3. Example application enhancements
@@ -143,22 +150,25 @@ pnpm --filter <package> test       # Test specific package
 ## External Dependencies
 
 **Core Runtime**:
+
 - `oci-sdk` - Official OCI SDK for Node.js
 - `ai` - Vercel AI SDK v3
 - `eventsource-parser` - SSE stream parsing
 
 **Build & Test**:
+
 - `tsup` - TypeScript bundler
 - `jest` - Test runner
 - `typescript` - Type checking
 
 **Examples**:
+
 - `@sveltejs/kit` - SvelteKit framework (chatbot-demo)
 - `next` - Next.js framework (nextjs-chatbot)
 
 ## Integration Points
 
-**OpenCode**: Via `@acedergren/opencode-oci-genai` wrapper package
+**OpenCode**: Via `@acedergren/oci-genai-provider` wrapper package
 **Vercel AI SDK**: Implements `LanguageModelV3` interface
 **OCI GenAI**: Authenticated API calls to OCI Generative AI service
 

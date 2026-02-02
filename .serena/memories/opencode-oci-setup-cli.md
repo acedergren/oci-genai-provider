@@ -1,9 +1,11 @@
 # OpenCode OCI Setup CLI
 
 ## Overview
+
 The `@acedergren/opencode-oci-setup` package provides an interactive setup wizard that **automates the complete installation** of the OCI GenAI provider for OpenCode users.
 
 ## Location
+
 - Package: `packages/opencode-oci-setup/`
 - Entry point: `src/cli.ts`
 - Binary: `opencode-oci-setup`
@@ -11,31 +13,37 @@ The `@acedergren/opencode-oci-setup` package provides an interactive setup wizar
 ## Key Features
 
 ### 1. Automated Package Installation
+
 The CLI automatically installs the provider package to `~/.config/opencode/`:
+
 - Creates `package.json` if needed
-- Runs `npm install @acedergren/opencode-oci-genai`
+- Runs `npm install @acedergren/oci-genai-provider`
 - Handles errors gracefully with fallback instructions
 
 **Code location**: `src/cli.ts:690-727` (installPackage function)
 
 ### 2. OCI Credentials Setup
+
 - Auto-discovers profiles from `~/.oci/config`
 - Validates credentials via OCI API
 - Offers manual configuration flow for new users
 - Supports multiple profiles
 
 ### 3. Compartment Discovery
+
 - Auto-discovers compartments via OCI API
 - Fallback to manual OCID entry
 - OCID validation
 
 ### 4. Model Selection
+
 - Filters models by region availability
 - Highlights coding-recommended models (⭐)
 - Groups by model family (Grok, Llama, Cohere, Gemini)
 - Shows capabilities (vision 👁, tools, context window)
 
 ### 5. Config Generation
+
 - Generates `~/.config/opencode/opencode.json`
 - Preserves existing providers (doesn't overwrite other configs)
 - Supports coding-optimized settings (temperature, maxTokens, frequencyPenalty)
@@ -43,11 +51,13 @@ The CLI automatically installs the provider package to `~/.config/opencode/`:
 ## Usage
 
 ### For End Users (Published Package)
+
 ```bash
 npx @acedergren/opencode-oci-setup
 ```
 
 ### For Local Development
+
 ```bash
 cd packages/opencode-oci-setup
 pnpm build
@@ -55,6 +65,7 @@ node dist/cli.js
 ```
 
 ### CLI Options
+
 ```bash
 opencode-oci-setup [options]
 
@@ -78,6 +89,7 @@ Options:
 ## Publishing
 
 The package is configured for GitHub Packages:
+
 ```json
 {
   "publishConfig": {
@@ -88,6 +100,7 @@ The package is configured for GitHub Packages:
 ```
 
 To publish:
+
 ```bash
 pnpm build
 cd packages/opencode-oci-setup
@@ -113,6 +126,7 @@ npm publish
 ## Coding-Optimized Settings
 
 When enabled, applies these settings to all models:
+
 ```javascript
 {
   temperature: 0.2,      // More deterministic code
@@ -124,17 +138,21 @@ When enabled, applies these settings to all models:
 ## Troubleshooting
 
 ### Provider Not Loading in OpenCode
+
 If the OCI GenAI provider appears grayed out:
+
 1. Check package is installed: `ls ~/.config/opencode/node_modules/@acedergren/`
 2. For local development, link the package:
    ```bash
    cd ~/.config/opencode
-   npm link /path/to/opencode-oci-genai/packages/opencode-integration
+   npm link /path/to/oci-genai-provider/packages/oci-openai-compatible
    ```
 3. Restart OpenCode
 
 ### Package Installation Failed
+
 If `npm install` fails during setup:
-- Manual installation: `cd ~/.config/opencode && npm install @acedergren/opencode-oci-genai`
+
+- Manual installation: `cd ~/.config/opencode && npm install @acedergren/oci-genai-provider`
 - Check npm is installed: `npm --version`
 - Check network connectivity to registry

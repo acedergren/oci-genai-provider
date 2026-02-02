@@ -9,7 +9,7 @@
 ### What Was Extracted
 
 - **examples/** directory - Completely removed from monorepo (11 demo applications)
-- **packages/opencode-integration/** - Removed from workspace (now in separate repo)
+- **packages/oci-openai-compatible/** - Removed from workspace (now in separate repo)
 
 ### What Remains
 
@@ -38,7 +38,7 @@ The provider monorepo now contains only core packages:
 ✅ **6.3 Workspace Verification**
 
 - pnpm workspace contains only `/packages/*`
-- Examples and opencode-integration confirmed removed
+- Examples and oci-openai-compatible confirmed removed
 - Workspace resolver validates all dependencies
 
 ✅ **6.4 Final Merge & Tag**
