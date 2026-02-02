@@ -145,6 +145,91 @@ describe('OCILanguageModel - Advanced V3 Features', () => {
         })
       );
     });
+
+    it('should emit warning when images are sent to non-vision model', async () => {
+      const model = new OCILanguageModel('meta.llama-3.3-70b-instruct', mockConfig);
+
+      mockChat.mockImplementation(async () => createMockResponse({ text: 'No image support' }));
+
+      const result = await model.doGenerate({
+        prompt: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'Describe this image' },
+              { type: 'file', data: new Uint8Array([1, 2, 3]), mediaType: 'image/png' },
+            ],
+          },
+        ],
+      });
+
+      expect(result.warnings).toContainEqual(
+        expect.objectContaining({
+          type: 'unsupported',
+          feature: 'vision',
+          details: expect.stringContaining('does not support image input'),
+        })
+      );
+    });
+
+    it('should emit Cohere V1 warning for non-vision Cohere model with images', async () => {
+      const model = new OCILanguageModel('cohere.command-r-plus', mockConfig);
+
+      mockChat.mockImplementation(async () => createMockResponse({ text: 'Images dropped' }));
+
+      const result = await model.doGenerate({
+        prompt: [
+          {
+            role: 'user',
+            content: [{ type: 'file', data: new Uint8Array([1, 2, 3]), mediaType: 'image/png' }],
+          },
+        ],
+      });
+
+      // Should have both warnings: non-vision model AND Cohere V1 drops images
+      expect(result.warnings).toContainEqual(
+        expect.objectContaining({
+          type: 'unsupported',
+          feature: 'vision',
+          details: expect.stringContaining('does not support image input'),
+        })
+      );
+      expect(result.warnings).toContainEqual(
+        expect.objectContaining({
+          type: 'unsupported',
+          feature: 'vision',
+          details: expect.stringContaining('Cohere V1 API format does not support images'),
+        })
+      );
+
+      // Should keep COHERE format (not upgraded to COHEREV2)
+      const chatRequest = (mockChat.mock.calls[0][0] as any).chatDetails.chatRequest;
+      expect(chatRequest.apiFormat).toBe('COHERE');
+    });
+
+    it('should NOT emit warnings for vision-capable Cohere model with images', async () => {
+      const model = new OCILanguageModel('cohere.command-a-vision', mockConfig);
+
+      mockChat.mockImplementation(async () => createMockResponse({ text: 'I see it' }));
+
+      const result = await model.doGenerate({
+        prompt: [
+          {
+            role: 'user',
+            content: [{ type: 'file', data: new Uint8Array([1, 2, 3]), mediaType: 'image/png' }],
+          },
+        ],
+      });
+
+      // Should NOT have vision warnings (model supports vision, format upgraded to V2)
+      const visionWarnings =
+        result.warnings?.filter((w) => w.type === 'unsupported' && w.feature === 'vision') ?? [];
+      expect(visionWarnings).toHaveLength(0);
+
+      // Should be upgraded to COHEREV2
+      const chatRequest = (mockChat.mock.calls[0][0] as any).chatDetails.chatRequest;
+      expect(chatRequest.apiFormat).toBe('COHEREV2');
+    });
   });
 
   describe('Reasoning', () => {

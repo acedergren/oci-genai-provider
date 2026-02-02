@@ -103,7 +103,7 @@ export class OCILanguageModel implements LanguageModelV3 {
     if (metadata?.family === 'cohere') {
       // Upgrade to COHEREV2 for vision-capable models when images are present
       // COHERE V1 format silently drops images, V2 supports them properly
-      if (hasImages && supportsVision(this.modelId)) {
+      if (hasImages && metadata.capabilities.vision) {
         return 'COHEREV2';
       }
       return 'COHERE';
@@ -162,6 +162,11 @@ export class OCILanguageModel implements LanguageModelV3 {
         if (done) break;
 
         switch (value.type) {
+          case 'stream-start':
+            if (value.warnings) {
+              warnings.push(...value.warnings);
+            }
+            break;
           case 'text-delta': {
             const last = content[content.length - 1];
             if (last?.type === 'text') {
