@@ -5,6 +5,8 @@ import {
   getAllModels,
   getModelsByFamily,
   supportsReasoning,
+  supportsVision,
+  getVisionModels,
 } from '../registry';
 
 describe('Model Registry', () => {
@@ -227,6 +229,82 @@ describe('Model Registry', () => {
 
     it('should return false for invalid model ID', () => {
       expect(supportsReasoning('invalid.model')).toBe(false);
+    });
+  });
+
+  describe('supportsVision', () => {
+    describe('vision-capable models', () => {
+      it('should return true for meta.llama-3.2-90b-vision-instruct', () => {
+        expect(supportsVision('meta.llama-3.2-90b-vision-instruct')).toBe(true);
+      });
+
+      it('should return true for meta.llama-3.2-11b-vision-instruct', () => {
+        expect(supportsVision('meta.llama-3.2-11b-vision-instruct')).toBe(true);
+      });
+
+      it('should return true for google.gemini-2.5-flash', () => {
+        expect(supportsVision('google.gemini-2.5-flash')).toBe(true);
+      });
+
+      it('should return true for google.gemini-2.5-pro', () => {
+        expect(supportsVision('google.gemini-2.5-pro')).toBe(true);
+      });
+
+      it('should return true for cohere.command-a-vision', () => {
+        expect(supportsVision('cohere.command-a-vision')).toBe(true);
+      });
+
+      it('should return true for cohere.command-a-vision-07-2025', () => {
+        expect(supportsVision('cohere.command-a-vision-07-2025')).toBe(true);
+      });
+    });
+
+    describe('non-vision models', () => {
+      it('should return false for meta.llama-3.3-70b-instruct', () => {
+        expect(supportsVision('meta.llama-3.3-70b-instruct')).toBe(false);
+      });
+
+      it('should return false for cohere.command-r-plus', () => {
+        expect(supportsVision('cohere.command-r-plus')).toBe(false);
+      });
+
+      it('should return false for xai.grok-4-1-fast-reasoning', () => {
+        expect(supportsVision('xai.grok-4-1-fast-reasoning')).toBe(false);
+      });
+    });
+
+    it('should return false for invalid model ID', () => {
+      expect(supportsVision('invalid.model')).toBe(false);
+    });
+  });
+
+  describe('getVisionModels', () => {
+    it('should return only vision-capable models', () => {
+      const visionModels = getVisionModels();
+      visionModels.forEach((m) => expect(m.capabilities.vision).toBe(true));
+    });
+
+    it('should include Llama vision models', () => {
+      const visionModels = getVisionModels();
+      const llamaVision = visionModels.filter((m) => m.family === 'llama');
+      expect(llamaVision.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('should include Gemini models', () => {
+      const visionModels = getVisionModels();
+      const geminiVision = visionModels.filter((m) => m.family === 'gemini');
+      expect(geminiVision.length).toBeGreaterThanOrEqual(3);
+    });
+
+    it('should include Cohere vision models', () => {
+      const visionModels = getVisionModels();
+      const cohereVision = visionModels.filter((m) => m.family === 'cohere');
+      expect(cohereVision.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('should return at least 7 vision models', () => {
+      const visionModels = getVisionModels();
+      expect(visionModels.length).toBeGreaterThanOrEqual(7);
     });
   });
 });

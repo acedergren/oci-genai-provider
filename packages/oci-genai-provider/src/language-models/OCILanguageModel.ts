@@ -13,7 +13,7 @@ import { NoSuchModelError } from '@ai-sdk/provider';
 import { GenerativeAiInferenceClient, models as OCIModel } from 'oci-generativeaiinference';
 import { Region } from 'oci-common';
 import type { OCIConfig, RequestOptions } from '../types';
-import { isValidModelId, getModelMetadata, supportsReasoning } from './registry';
+import { isValidModelId, getModelMetadata, supportsReasoning, supportsVision } from './registry';
 import { convertToOCIMessages } from './converters/messages';
 import type { OCIMessage } from './converters/messages';
 import { convertToCohereFormat } from './converters/cohere-messages';
@@ -254,6 +254,27 @@ export class OCILanguageModel implements LanguageModelV3 {
         type: 'unsupported',
         feature: 'thinking',
         details: `Model ${this.modelId} does not support thinking/reasoning. Use a reasoning model like cohere.command-a-reasoning-08-2025.`,
+      });
+    }
+
+    // Vision support validation
+    const modelSupportsVision = supportsVision(this.modelId);
+    const hasImages = messages.some((m) => m.content.some((c) => c.type === 'IMAGE'));
+
+    if (hasImages && !modelSupportsVision) {
+      warnings.push({
+        type: 'unsupported',
+        feature: 'vision',
+        details: `Model ${this.modelId} does not support image input. Use a vision model like meta.llama-3.2-90b-vision-instruct, google.gemini-2.5-flash, or cohere.command-a-vision.`,
+      });
+    }
+
+    // Cohere V1 format silently drops images - warn the user
+    if (hasImages && apiFormat === 'COHERE') {
+      warnings.push({
+        type: 'unsupported',
+        feature: 'vision',
+        details: `Cohere V1 API format does not support images. Images in your prompt will be ignored. Use a vision-capable model like cohere.command-a-vision which uses the Cohere V2 format.`,
       });
     }
 

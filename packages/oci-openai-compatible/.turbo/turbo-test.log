@@ -1,5 +1,69 @@
 
-> @acedergren/oci-openai-compatible@0.1.0 test /Users/acedergr/Projects/opencode-oci-genai/packages/oci-openai-compatible
+> @acedergren/oci-openai-compatible@0.1.0 test /Users/acedergr/Projects/oci-genai-provider/packages/oci-openai-compatible
 > jest --passWithNoTests
 
- ELIFECYCLE  Test failed. See above for more details.
+PASS src/__tests__/endpoint.test.ts
+  getBaseURL
+    ✓ should use custom endpoint if provided (5 ms)
+    ✓ should construct endpoint from region (1 ms)
+    ✓ should handle all supported regions (1 ms)
+    ✓ should use default region if none provided
+    ✓ should prefer custom endpoint over region (1 ms)
+    endpoint validation
+      ✓ should reject malformed URLs (10 ms)
+      ✓ should reject HTTP endpoints (non-localhost)
+      ✓ should allow HTTP for localhost (1 ms)
+      ✓ should allow HTTP for 127.0.0.1
+      ✓ should allow HTTPS endpoints
+
+(node:63447) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+PASS src/__tests__/integration.test.ts
+  Integration: OCI OpenAI Client
+    ✓ should have chat.completions interface (5 ms)
+    ✓ should construct proper base URL
+    ✓ should handle custom endpoint (1 ms)
+    ✓ should support all OCI regions (71 ms)
+
+PASS src/__tests__/types.test.ts
+  OCIOpenAIConfig
+    ✓ should accept minimal config with region only (5 ms)
+    ✓ should accept full config with all optional fields (1 ms)
+    ✓ should allow empty config object (1 ms)
+  OCIRegion type
+    ✓ should accept supported OpenAI-compatible regions
+
+PASS src/__tests__/auth.test.ts
+  createOCIAuthHeaders
+    ✓ should create headers with API key (6 ms)
+    ✓ should omit Authorization header when no API key provided
+    ✓ should use environment variable for compartment ID if not in config (1 ms)
+    ✓ should prefer config compartmentId over environment variable
+  getCompartmentId
+    ✓ should return config compartmentId if provided
+    ✓ should return environment variable if config not provided
+    ✓ should throw error if no compartment ID available (12 ms)
+
+(node:63445) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+PASS src/__tests__/index.test.ts
+  Package exports
+    ✓ should export createOCIOpenAI factory function (5 ms)
+    ✓ should export default ociOpenAI instance (2 ms)
+    ✓ should export type definitions (1 ms)
+    ✓ should create new client instance via factory (1 ms)
+
+(node:63446) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+PASS src/__tests__/client.test.ts
+  createOCIOpenAI
+    ✓ should create OpenAI client with OCI configuration (15 ms)
+    ✓ should create client with default config (1 ms)
+    ✓ should create client with custom endpoint (4 ms)
+    ✓ should throw error if compartment ID missing (23 ms)
+
+Test Suites: 6 passed, 6 total
+Tests:       33 passed, 33 total
+Snapshots:   0 total
+Time:        2.955 s
+Ran all test suites.

@@ -95,6 +95,8 @@ export {
   getCodingRecommendedModels,
   isCodingSuitable,
   supportsReasoning,
+  supportsVision,
+  getVisionModels,
 } from './language-models/registry';
 
 // ============================================================================
