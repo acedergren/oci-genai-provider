@@ -141,10 +141,28 @@ function convertFilePartToOCIContent(
         ? part.data
         : `data:${part.mediaType};base64,${part.data}`;
     } else if (part.data instanceof URL) {
-      url = part.data.toString(); // instanceof narrows type, cast unnecessary
+      url = part.data.toString();
     }
+
+    // Validate URL was constructed
+    if (!url) {
+      console.warn(
+        '[OCI Messages] Failed to convert image data - unsupported data type:',
+        typeof part.data
+      );
+      return null;
+    }
+
     return { type: 'IMAGE', imageUrl: { url } };
   }
+
+  // Log warning for unsupported file types (PDF, audio, etc.)
+  if (part.mediaType) {
+    console.warn(
+      `[OCI Messages] Unsupported file type "${part.mediaType}" - only images are supported. File will be ignored.`
+    );
+  }
+
   return null;
 }
 

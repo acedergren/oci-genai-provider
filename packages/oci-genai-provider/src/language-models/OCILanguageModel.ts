@@ -454,7 +454,7 @@ export class OCILanguageModel implements LanguageModelV3 {
                     }
                     controller.enqueue({
                       type: 'finish',
-                      finishReason: part.finishReason.unified as any,
+                      finishReason: part.finishReason,
                       usage: {
                         inputTokens: {
                           total: part.usage.promptTokens,
@@ -482,6 +482,8 @@ export class OCILanguageModel implements LanguageModelV3 {
                 }
               }
             } catch (error) {
+              // Log stream errors for debugging and monitoring
+              console.error('[OCI Stream] Error during stream processing:', error);
               controller.enqueue({ type: 'error', error });
             } finally {
               controller.close();

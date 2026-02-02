@@ -199,8 +199,9 @@ data: {}
         parts.push(part);
       }
 
-      // Empty data should not yield any parts (no text or finish)
-      expect(parts).toHaveLength(0);
+      // Empty data yields only the finish event (always emitted)
+      expect(parts).toHaveLength(1);
+      expect(parts[0].type).toBe('finish');
     });
 
     it('should handle error event parsing', async () => {
@@ -224,8 +225,9 @@ data: {"error":"Rate limit exceeded"}
       }
 
       // Parser should handle error events without crashing
-      // Error events with no chatResponse should yield no parts
-      expect(parts).toHaveLength(0);
+      // Error events yield only the finish event (always emitted)
+      expect(parts).toHaveLength(1);
+      expect(parts[0].type).toBe('finish');
     });
 
     it('should handle malformed JSON in events gracefully', async () => {
@@ -248,8 +250,9 @@ data: {invalid json}
         parts.push(part);
       }
 
-      // Malformed JSON should be caught and ignored
-      expect(parts).toHaveLength(0);
+      // Malformed JSON should be caught and ignored, yielding only finish event
+      expect(parts).toHaveLength(1);
+      expect(parts[0].type).toBe('finish');
     });
 
     it('should handle multiple consecutive newlines', async () => {
@@ -273,9 +276,11 @@ data: {"message":{"content":[{"text":"test"}]}}
         parts.push(part);
       }
 
-      // Should parse single event regardless of extra newlines
-      expect(parts).toHaveLength(1);
-      expect(parts[0].type).toBe('text-delta');
+      // Should parse single event regardless of extra newlines (plus finish)
+      const textParts = parts.filter((p) => p.type === 'text-delta');
+      expect(textParts).toHaveLength(1);
+      expect(textParts[0].type).toBe('text-delta');
+      expect(parts.find((p) => p.type === 'finish')).toBeDefined();
     });
 
     it('should handle mixed line endings (CRLF vs LF)', async () => {
@@ -295,12 +300,14 @@ data: {"message":{"content":[{"text":"test"}]}}
         parts.push(part);
       }
 
-      // Should handle CRLF line endings correctly
-      expect(parts).toHaveLength(1);
-      expect(parts[0].type).toBe('text-delta');
-      if (parts[0].type === 'text-delta') {
-        expect(parts[0].textDelta).toBe('test');
+      // Should handle CRLF line endings correctly (plus finish)
+      const textParts = parts.filter((p) => p.type === 'text-delta');
+      expect(textParts).toHaveLength(1);
+      expect(textParts[0].type).toBe('text-delta');
+      if (textParts[0].type === 'text-delta') {
+        expect(textParts[0].textDelta).toBe('test');
       }
+      expect(parts.find((p) => p.type === 'finish')).toBeDefined();
     });
 
     it('should throw when response body is not readable', async () => {
@@ -337,14 +344,16 @@ data: {"message":{"content":[{"text":"second"}]}}
         parts.push(part);
       }
 
-      // Both parts should be yielded including final parts after stream ends
-      expect(parts).toHaveLength(2);
-      expect(parts[0].type).toBe('text-delta');
-      expect(parts[1].type).toBe('text-delta');
-      if (parts[0].type === 'text-delta' && parts[1].type === 'text-delta') {
-        expect(parts[0].textDelta).toBe('first');
-        expect(parts[1].textDelta).toBe('second');
+      // Both text parts should be yielded plus finish event
+      const textParts = parts.filter((p) => p.type === 'text-delta');
+      expect(textParts).toHaveLength(2);
+      expect(textParts[0].type).toBe('text-delta');
+      expect(textParts[1].type).toBe('text-delta');
+      if (textParts[0].type === 'text-delta' && textParts[1].type === 'text-delta') {
+        expect(textParts[0].textDelta).toBe('first');
+        expect(textParts[1].textDelta).toBe('second');
       }
+      expect(parts.find((p) => p.type === 'finish')).toBeDefined();
     });
 
     it('should handle large chunked streams with buffered parts', async () => {
@@ -370,10 +379,12 @@ data: {"message":{"content":[{"text":"second"}]}}
         parts.push(part);
       }
 
-      // All 100 parts should be yielded, testing cleanup loop
-      expect(parts).toHaveLength(100);
-      expect(parts[0].type).toBe('text-delta');
-      expect(parts[99].type).toBe('text-delta');
+      // All 100 text parts should be yielded plus finish event
+      const textParts = parts.filter((p) => p.type === 'text-delta');
+      expect(textParts).toHaveLength(100);
+      expect(textParts[0].type).toBe('text-delta');
+      expect(textParts[99].type).toBe('text-delta');
+      expect(parts.find((p) => p.type === 'finish')).toBeDefined();
     });
 
     it('should handle events with whitespace in data fields', async () => {
@@ -396,11 +407,14 @@ data:   {"message":{"content":[{"text":"  spaced  "}]}}
         parts.push(part);
       }
 
-      expect(parts).toHaveLength(1);
-      expect(parts[0].type).toBe('text-delta');
-      if (parts[0].type === 'text-delta') {
-        expect(parts[0].textDelta).toBe('  spaced  ');
+      // Text part plus finish event
+      const textParts = parts.filter((p) => p.type === 'text-delta');
+      expect(textParts).toHaveLength(1);
+      expect(textParts[0].type).toBe('text-delta');
+      if (textParts[0].type === 'text-delta') {
+        expect(textParts[0].textDelta).toBe('  spaced  ');
       }
+      expect(parts.find((p) => p.type === 'finish')).toBeDefined();
     });
 
     it('should handle [DONE] marker correctly', async () => {
@@ -426,9 +440,13 @@ data: [DONE]
         parts.push(part);
       }
 
-      // Only the first text part should be yielded, [DONE] is ignored
-      expect(parts).toHaveLength(1);
-      expect(parts[0].type).toBe('text-delta');
+      // Text delta + finish (always emitted)
+      const textParts = parts.filter((p) => p.type === 'text-delta');
+      expect(textParts).toHaveLength(1);
+      expect(textParts[0].type).toBe('text-delta');
+      // Verify finish event is also present
+      const finishPart = parts.find((p) => p.type === 'finish');
+      expect(finishPart).toBeDefined();
     });
 
     it('should parse GENERIC format tool calls from stream', async () => {
@@ -451,13 +469,21 @@ data: {"message":{"toolCalls":[{"id":"call_123","type":"FUNCTION","function":{"n
         parts.push(part);
       }
 
-      expect(parts).toHaveLength(1);
-      expect(parts[0].type).toBe('tool-call');
-      if (parts[0].type === 'tool-call') {
-        expect(parts[0].toolCallId).toBe('call_123');
-        expect(parts[0].toolName).toBe('get_weather');
-        expect(parts[0].input).toBe('{"city":"London"}');
+      // Tool call + finish (always emitted)
+      const toolParts = parts.filter((p) => p.type === 'tool-call');
+      expect(toolParts).toHaveLength(1);
+      expect(toolParts[0].type).toBe('tool-call');
+      if (toolParts[0].type === 'tool-call') {
+        expect(toolParts[0].toolCallId).toBe('call_123');
+        expect(toolParts[0].toolName).toBe('get_weather');
+        expect(toolParts[0].input).toBe('{"city":"London"}');
       }
+      // Verify finish event with INCOMPLETE since no finishReason was sent
+      const finishPart = parts.find((p) => p.type === 'finish');
+      expect(finishPart).toMatchObject({
+        type: 'finish',
+        finishReason: { unified: 'other', raw: 'INCOMPLETE' },
+      });
     });
 
     it('should parse COHERE format tool calls from stream', async () => {
@@ -480,12 +506,16 @@ data: {"toolCalls":[{"name":"search","parameters":{"query":"test"}}]}
         parts.push(part);
       }
 
-      expect(parts).toHaveLength(1);
-      expect(parts[0].type).toBe('tool-call');
-      if (parts[0].type === 'tool-call') {
-        expect(parts[0].toolName).toBe('search');
-        expect(parts[0].input).toBe('{"query":"test"}');
+      // Tool call + finish (always emitted)
+      const toolParts = parts.filter((p) => p.type === 'tool-call');
+      expect(toolParts).toHaveLength(1);
+      expect(toolParts[0].type).toBe('tool-call');
+      if (toolParts[0].type === 'tool-call') {
+        expect(toolParts[0].toolName).toBe('search');
+        expect(toolParts[0].input).toBe('{"query":"test"}');
       }
+      // Verify finish event
+      expect(parts.find((p) => p.type === 'finish')).toBeDefined();
     });
 
     it('should parse multiple tool calls from stream', async () => {
@@ -508,13 +538,17 @@ data: {"message":{"toolCalls":[{"id":"call_1","type":"FUNCTION","function":{"nam
         parts.push(part);
       }
 
-      expect(parts).toHaveLength(2);
-      expect(parts[0].type).toBe('tool-call');
-      expect(parts[1].type).toBe('tool-call');
-      if (parts[0].type === 'tool-call' && parts[1].type === 'tool-call') {
-        expect(parts[0].toolName).toBe('tool_a');
-        expect(parts[1].toolName).toBe('tool_b');
+      // Two tool calls + finish (always emitted)
+      const toolParts = parts.filter((p) => p.type === 'tool-call');
+      expect(toolParts).toHaveLength(2);
+      expect(toolParts[0].type).toBe('tool-call');
+      expect(toolParts[1].type).toBe('tool-call');
+      if (toolParts[0].type === 'tool-call' && toolParts[1].type === 'tool-call') {
+        expect(toolParts[0].toolName).toBe('tool_a');
+        expect(toolParts[1].toolName).toBe('tool_b');
       }
+      // Verify finish event
+      expect(parts.find((p) => p.type === 'finish')).toBeDefined();
     });
 
     it('should parse text followed by tool calls', async () => {
@@ -540,9 +574,13 @@ data: {"message":{"toolCalls":[{"id":"call_1","type":"FUNCTION","function":{"nam
         parts.push(part);
       }
 
-      expect(parts).toHaveLength(2);
-      expect(parts[0].type).toBe('text-delta');
-      expect(parts[1].type).toBe('tool-call');
+      // Text + tool call + finish (always emitted)
+      const contentParts = parts.filter((p) => p.type !== 'finish');
+      expect(contentParts).toHaveLength(2);
+      expect(contentParts[0].type).toBe('text-delta');
+      expect(contentParts[1].type).toBe('tool-call');
+      // Verify finish event
+      expect(parts.find((p) => p.type === 'finish')).toBeDefined();
     });
 
     it('should parse finish event with prediction token details', async () => {
