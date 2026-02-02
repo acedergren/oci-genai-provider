@@ -57,7 +57,7 @@ export function generateOpencodeConfig(
 
   // Build the OCI GenAI provider config
   const ociProviderConfig: OpencodeProviderConfig = {
-    npm: '@acedergren/opencode-oci-genai',
+    npm: '@acedergren/oci-genai-provider',
     name: 'OCI GenAI',
     options: {
       compartmentId: config.compartmentId,

@@ -91,7 +91,7 @@ pnpm --filter <package> test       # Test specific package
 **Published Packages**:
 
 1. `@acedergren/oci-genai-provider` - Core provider (public)
-2. `@acedergren/oci-genai-provider` - OpenCode integration (public)
+2. `@acedergren/oci-openai-compatible` - OpenAI-compatible wrapper (public)
 
 **Private Packages**:
 

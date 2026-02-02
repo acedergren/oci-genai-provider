@@ -59,7 +59,11 @@ async function main(options: CLIOptions): Promise<void> {
 
   if (mode === 'modify') {
     log.log(chalk.cyan('\n📝 Modifying existing configuration...\n'));
-    // TODO: Implement modify flow - for now falls through to fresh setup
+    // TODO(#42): Implement selective modify flow - currently performs full reconfiguration
+    log.log(
+      chalk.yellow('Note: Modify flow is not yet implemented. Proceeding with full setup.\n')
+    );
+    log.log(chalk.gray('Your existing configuration will be updated with new values.\n'));
   }
 
   // Step 3: Get OCI profile
