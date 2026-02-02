@@ -1,6 +1,6 @@
-# OpenCode OCI GenAI Project
+# OCI GenAI Provider
 
-Enables OCI Generative AI capabilities within OpenCode.
+Oracle Cloud Infrastructure Generative AI provider for the Vercel AI SDK, with compatibility wrappers and development tools.
 
 ## Quick Start
 
@@ -35,20 +35,22 @@ Detailed guides for project setup and configuration:
 
 ## Project Structure
 
-Provider-focused monorepo containing core OCI GenAI integration packages and utilities.
+Monorepo containing the OCI GenAI provider ecosystem for AI development.
 
 ```
 .
 ├── packages/
-│   ├── oci-genai-provider/    # Core OCI GenAI provider for AI SDK
-│   ├── oci-openai-compatible/ # OpenAI-compatible API wrapper
-│   ├── oci-genai-setup/       # CLI setup tool for local development
-│   ├── agent-state/           # Agent state management utilities
-│   └── test-utils/            # Shared test utilities
-└── .claude/                    # Agent instructions
+│   ├── oci-genai-provider/        # Core OCI GenAI provider for Vercel AI SDK
+│   ├── oci-anthropic-compatible/  # Anthropic API compatibility wrapper
+│   ├── oci-openai-compatible/     # OpenAI API compatibility wrapper
+│   ├── oci-genai-setup/           # Interactive CLI setup tool
+│   └── test-utils/                # Shared test utilities
+└── .claude/                        # Agent instructions
 ```
 
-**Note:** Example applications are maintained in a separate repository ([oci-genai-examples](https://github.com/acedergren/oci-genai-examples)) and can be cloned independently for local development and testing.
+**Note:** Example applications have been extracted to a separate repository:
+
+- [oci-genai-examples](https://github.com/acedergren/oci-genai-examples) - Demo apps and integration examples
 
 ---
 

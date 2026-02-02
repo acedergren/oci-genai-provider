@@ -41,10 +41,14 @@ DEBUG_REPORT.md
 oci-genai-dashboard.html
 opentui-playground.html
 tui-design-playground.html
+repo-explorer.html
 .oci-chat-history.json
 .gemini-clipboard/
 .codex/
 .agents/
+
+# Test and debug logs
+*.log
 
 # Security scan artifacts
 codeql-db/
