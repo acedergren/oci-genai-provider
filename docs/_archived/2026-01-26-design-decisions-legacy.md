@@ -5,11 +5,13 @@
 ## Pattern Overview
 
 **Overall:** Monorepo with a provider-plugin architecture. Three packages implement a unified OCI GenAI integration:
+
 - Core provider package implementing AI SDK's LanguageModelV3 interface
 - Auth plugin for OpenCode integration with IDCS OAuth
 - RAG (Retrieval-Augmented Generation) MCP server for knowledge retrieval
 
 **Key Characteristics:**
+
 - LanguageModelV3 interface compliance for seamless AI SDK 6.x integration
 - Flexible multi-method authentication (config file → instance principal → resource principal → OAuth)
 - Pluggable RAG backends (HTTP, direct database, MCP-based)
@@ -19,6 +21,7 @@
 ## Layers
 
 **Provider Layer (`opencode-oci-genai`):**
+
 - Purpose: Implements AI SDK interface and orchestrates chat model creation
 - Location: `packages/opencode-oci-genai/src/oci-genai-provider.ts`, `packages/opencode-oci-genai/src/oci-genai-chat-model.ts`
 - Contains: Factory functions, model instantiation, RAG context injection orchestration
@@ -26,6 +29,7 @@
 - Used by: OpenCode, AI SDK consumers
 
 **Chat Model Layer:**
+
 - Purpose: Implements LanguageModelV3 interface with streaming, tool calling, and vision support
 - Location: `packages/opencode-oci-genai/src/oci-genai-chat-model.ts`
 - Contains: Request/response handling, tool conversion, SSE parsing, streaming logic
@@ -33,6 +37,7 @@
 - Used by: Provider layer
 
 **Authentication Layer:**
+
 - Purpose: Cascading authentication strategy for various OCI deployment contexts
 - Location: `packages/opencode-oci-genai/src/auth/`
 - Contains: Config file reader, instance principal, resource principal, IDCS OAuth, session store
@@ -40,6 +45,7 @@
 - Used by: Provider layer
 
 **RAG Layer:**
+
 - Purpose: Knowledge retrieval via multiple backends for context injection
 - Location: `packages/opencode-oci-genai/src/rag/`
 - Contains: DB RAG client (Oracle ADB), HTTP RAG client, MCP RAG client
@@ -47,6 +53,7 @@
 - Used by: Provider layer during context injection
 
 **Utilities Layer:**
+
 - Purpose: Reusable logic for conversion, parsing, resilience, and context management
 - Location: `packages/opencode-oci-genai/src/utils/`
 - Contains: Tool converter, stream parser, context cleaner, resilience (circuit breaker/retry), coding tailor
@@ -54,6 +61,7 @@
 - Used by: Chat model layer, RAG layer
 
 **Plugin Layer (`opencode-oci-genai-auth`):**
+
 - Purpose: OpenCode integration for OAuth-based authentication
 - Location: `packages/opencode-oci-genai-auth/src/`
 - Contains: Plugin hooks, auth config loading
@@ -61,6 +69,7 @@
 - Used by: OpenCode
 
 **RAG MCP Server (`opencode-oci-genai-rag`):**
+
 - Purpose: Exposes RAG capabilities as MCP tools for Claude Code and other MCP clients
 - Location: `packages/opencode-oci-genai-rag/src/index.ts`, `packages/opencode-oci-genai-rag/src/tools.ts`
 - Contains: MCP server setup, tool handlers, backend factories
@@ -106,31 +115,37 @@
 ## Key Abstractions
 
 **LanguageModelV3 Interface:**
+
 - Purpose: AI SDK standard for language models
 - Examples: `OCIGenAIChatModel` implements this interface
 - Pattern: Standard interface with `doGenerate()` and `doStream()` methods
 
 **OCIGenAIProvider Interface:**
+
 - Purpose: Factory interface for creating chat models
 - Examples: `createOCIGenAI()` returns this interface
 - Pattern: Callable object with `.chat()` method and `.provider` property
 
 **RAG Context Injector:**
+
 - Purpose: Pluggable function for retrieving and formatting context
 - Examples: `createHTTPRAGInjector()`, `createDBRAGInjector()`
 - Pattern: `(messages: ProviderMessage[]) => Promise<string | null>`
 
 **Authentication Cascade:**
+
 - Purpose: Automatic auth method selection based on environment
 - Examples: `getAuthProvider()` tries methods in order
 - Pattern: Each method has `isXxxEnvironment()` check before attempting auth
 
 **Stream Parser:**
+
 - Purpose: Converts OCI's EventSource format to async iterable
 - Examples: `parseSSEStream()` handles Server-Sent Events
 - Pattern: Stateful parser yielding parsed events
 
 **Tool Converter:**
+
 - Purpose: Bidirectional format conversion between AI SDK and OCI
 - Examples: `convertToolsToOCI()`, `parseToolCalls()`
 - Pattern: Mirror functions for seamless integration
@@ -138,26 +153,31 @@
 ## Entry Points
 
 **Provider Creation:**
+
 - Location: `packages/opencode-oci-genai/src/index.ts`
 - Triggers: Explicit import of `createOCIGenAI()` or use of `ociGenAI` singleton
 - Responsibilities: Initialize provider with auth caching, RAG config resolution, model factory setup
 
 **Pre-initialized Singleton:**
+
 - Location: `packages/opencode-oci-genai/src/index.ts` - `ociGenAI` export
 - Triggers: Direct import without calling factory
 - Responsibilities: Read OCI_COMPARTMENT_ID and related env vars, provide immediate provider instance
 
 **Chat Model Generation:**
+
 - Location: `OCIGenAIChatModel.doGenerate()` and `doStream()`
 - Triggers: AI SDK calls after consumer invokes `model.generateText()` or similar
 - Responsibilities: Request formatting, auth resolution, RAG context injection, OCI API call, response parsing
 
 **MCP Server Entry:**
+
 - Location: `packages/opencode-oci-genai-rag/src/index.ts`
 - Triggers: Process execution with MCP stdio transport
 - Responsibilities: Tool registration, request routing, backend initialization
 
 **Auth Plugin Entry:**
+
 - Location: `packages/opencode-oci-genai-auth/src/index.ts`
 - Triggers: OpenCode plugin system load
 - Responsibilities: Register auth provider, handle OAuth flow
@@ -185,22 +205,26 @@
 **Logging:** Structured logging with prefixes ([OCI Auth], [RAG HTTP], [OCI RAG MCP], etc.) sent to console.error. Silent initialization for normal operation, errors logged on failure.
 
 **Validation:**
+
 - Runtime schema validation with zod in test files (`packages/opencode-oci-genai/test/schemas/`)
 - Type guards for API response discriminated unions
 - Environment variable validation in settings loading
 
 **Authentication:**
+
 - Cascade strategy with multiple fallback methods
 - Lazy initialization with caching to avoid repeated auth attempts
 - Session token management with TTL and refresh for OAuth
 - File permission enforcement (0o600) for sensitive credential files
 
 **Configuration:**
+
 - Environment variable priority over explicit settings
 - Settings merge in provider factory (explicit settings override env vars)
 - RAG mode auto-detection based on available configuration
 
 **Resilience:**
+
 - Circuit breaker for high-failure operations
 - Exponential backoff retry strategy for transient failures
 - Timeout wrappers for network operations
@@ -208,4 +232,4 @@
 
 ---
 
-*Architecture analysis: 2026-01-26*
+_Architecture analysis: 2026-01-26_

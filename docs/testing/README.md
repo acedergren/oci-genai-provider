@@ -137,10 +137,6 @@ OCI_COMPARTMENT_ID=ocid1... pnpm test:manual
    - Status code handling
    - Contextual error messages
 
-#### Integration Package (`@acedergren/opencode-oci-genai`)
-
-- **No tests yet** - Package under development
-
 ## Test Configuration
 
 ### Jest Configuration
