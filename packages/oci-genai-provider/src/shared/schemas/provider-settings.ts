@@ -6,18 +6,14 @@
  * - type-use-z-infer: Using z.infer for type derivation
  * - error-custom-messages: Providing custom error messages
  * - parse-use-safeparse: Exposing safeParse for user input
+ * - compose-shared-schemas: Hardcoded OCID patterns for each resource type
  *
  * OCI OCID Format Reference:
  * - Format: ocid1.<resource-type>.<realm>.[region.]<unique-id>
  * - Example: ocid1.compartment.oc1..aaaaaaaxxxxxxx
  */
 import { z } from 'zod';
-
-/**
- * OCI resource identifier pattern (OCID)
- * Format: ocid1.<resource-type>.<realm>.[region.]<unique-id>
- */
-const ocidPattern = /^ocid1\.[a-z0-9]+\.[a-z0-9]+\.[a-z0-9-]*\.[a-z0-9]+$/i;
+import { OCIValidationError } from '../errors';
 
 /**
  * OCI region identifier pattern
@@ -27,11 +23,35 @@ const ocidPattern = /^ocid1\.[a-z0-9]+\.[a-z0-9]+\.[a-z0-9-]*\.[a-z0-9]+$/i;
 const regionPattern = /^[a-z]{2,3}-[a-z]+-\d+$/;
 
 /**
+ * Hardcoded OCID patterns for specific resource types
+ * Using literal regexes to avoid ReDoS vulnerabilities (CWE-1333)
+ */
+const OCID_PATTERNS = {
+  /** Pattern for compartment OCIDs */
+  compartment: /^ocid1\.compartment\.[a-z0-9]+\.[a-z0-9-]*\.[a-z0-9]+$/i,
+  /** Pattern for generative AI endpoint OCIDs */
+  generativeaiendpoint: /^ocid1\.generativeaiendpoint\.[a-z0-9]+\.[a-z0-9-]*\.[a-z0-9]+$/i,
+  /** Pattern for any OCI resource OCID */
+  generic: /^ocid1\.[a-z0-9]+\.[a-z0-9]+\.[a-z0-9-]*\.[a-z0-9]+$/i,
+} as const;
+
+/**
+ * Generic OCID schema for any OCI resource
+ * Use specific schemas (CompartmentIdSchema, EndpointIdSchema) when the resource type is known
+ */
+export const OcidSchema = z
+  .string()
+  .regex(OCID_PATTERNS.generic, {
+    message: 'Invalid OCID format. Expected format: ocid1.<resource-type>.<realm>.[region.]<id>',
+  })
+  .describe('An OCI resource identifier (OCID)');
+
+/**
  * Schema for OCI compartment ID
  */
 export const CompartmentIdSchema = z
   .string()
-  .regex(ocidPattern, {
+  .regex(OCID_PATTERNS.compartment, {
     message: 'Invalid compartment ID format. Expected OCID format: ocid1.compartment.oc1..xxxxx',
   })
   .describe('The compartment OCID for OCI GenAI requests');
@@ -71,7 +91,7 @@ export const ServingModeSchema = z
  */
 export const EndpointIdSchema = z
   .string()
-  .regex(ocidPattern, {
+  .regex(OCID_PATTERNS.generativeaiendpoint, {
     message:
       'Invalid endpoint ID format. Expected OCID format: ocid1.generativeaiendpoint.oc1..xxxxx',
   })
@@ -121,10 +141,23 @@ export function validateProviderSettings(settings: unknown) {
 }
 
 /**
- * Parse provider settings (throws on validation failure)
+ * Parse provider settings (throws OCIValidationError on failure)
+ * Consistent error wrapping with parseProviderOptions
  */
 export function parseProviderSettings(settings: unknown): OCIProviderSettingsValidated {
-  return OCIProviderSettingsSchema.parse(settings);
+  const result = OCIProviderSettingsSchema.safeParse(settings);
+
+  if (!result.success) {
+    const issues = result.error.issues
+      .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+      .join('; ');
+
+    throw new OCIValidationError(`Invalid OCI provider settings: ${issues}`, {
+      issues: result.error.issues,
+    });
+  }
+
+  return result.data;
 }
 
 /**

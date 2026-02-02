@@ -11,11 +11,13 @@ import {
   ServingModeSchema,
   EndpointIdSchema,
   OCIProviderSettingsSchema,
+  OcidSchema,
   validateProviderSettings,
   parseProviderSettings,
   ModelIdSchema,
   OCIChatModelIdSchema,
 } from '../provider-settings';
+import { OCIValidationError } from '../../errors';
 
 describe('CompartmentIdSchema', () => {
   it('ZOD-001: accepts valid compartment OCID', () => {
@@ -158,8 +160,8 @@ describe('validateProviderSettings', () => {
 });
 
 describe('parseProviderSettings', () => {
-  it('ZOD-020: throws for invalid settings', () => {
-    expect(() => parseProviderSettings({ region: 'invalid' })).toThrow();
+  it('ZOD-020: throws OCIValidationError for invalid settings', () => {
+    expect(() => parseProviderSettings({ region: 'invalid' })).toThrow(OCIValidationError);
   });
 
   it('ZOD-021: returns parsed settings for valid input', () => {
@@ -170,6 +172,48 @@ describe('parseProviderSettings', () => {
     expect(result.compartmentId).toBe(settings.compartmentId);
     // servingMode is optional and stays undefined when not provided
     expect(result.servingMode).toBeUndefined();
+  });
+
+  it('ZOD-026: includes validation issues in OCIValidationError', () => {
+    try {
+      parseProviderSettings({ region: 'invalid', compartmentId: 'bad' });
+      fail('Expected OCIValidationError to be thrown');
+    } catch (error) {
+      expect(error).toBeInstanceOf(OCIValidationError);
+      const validationError = error as OCIValidationError;
+      expect(validationError.details).toBeDefined();
+      const issues = validationError.details?.issues as unknown[];
+      expect(Array.isArray(issues)).toBe(true);
+      expect(issues.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('ZOD-027: error message includes field path', () => {
+    try {
+      parseProviderSettings({ region: 'invalid' });
+      fail('Expected OCIValidationError to be thrown');
+    } catch (error) {
+      expect(error).toBeInstanceOf(OCIValidationError);
+      expect((error as OCIValidationError).message).toContain('region');
+    }
+  });
+});
+
+describe('OcidSchema', () => {
+  it('ZOD-028: accepts valid generic OCID', () => {
+    const validOcids = [
+      'ocid1.compartment.oc1..aaaaaaaaa',
+      'ocid1.generativeaiendpoint.oc1.us-chicago-1.aaaaaa',
+      'ocid1.instance.oc1.eu-frankfurt-1.aaaaaa',
+    ];
+    for (const ocid of validOcids) {
+      expect(() => OcidSchema.parse(ocid)).not.toThrow();
+    }
+  });
+
+  it('ZOD-029: rejects invalid OCID format', () => {
+    const result = OcidSchema.safeParse('not-an-ocid');
+    expect(result.success).toBe(false);
   });
 });
 

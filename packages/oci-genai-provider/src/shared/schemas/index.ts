@@ -11,6 +11,7 @@ export {
   ConfigProfileSchema,
   ServingModeSchema,
   EndpointIdSchema,
+  OcidSchema,
   OCIProviderSettingsSchema,
   ModelIdSchema,
   OCIChatModelIdSchema,

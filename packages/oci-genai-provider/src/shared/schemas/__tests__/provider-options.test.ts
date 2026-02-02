@@ -82,17 +82,20 @@ describe('OCIProviderOptionsSchema', () => {
     });
 
     it('should reject negative tokenBudget', () => {
-      const result = OCIProviderOptionsSchema.safeParse({ tokenBudget: -100 });
+      const result = OCIProviderOptionsSchema.safeParse({
+        thinking: true,
+        tokenBudget: -100,
+      });
       expect(result.success).toBe(false);
     });
 
     it('should reject zero tokenBudget', () => {
-      const result = OCIProviderOptionsSchema.safeParse({ tokenBudget: 0 });
+      const result = OCIProviderOptionsSchema.safeParse({ thinking: true, tokenBudget: 0 });
       expect(result.success).toBe(false);
     });
 
     it('should reject non-integer tokenBudget', () => {
-      const result = OCIProviderOptionsSchema.safeParse({ tokenBudget: 1024.5 });
+      const result = OCIProviderOptionsSchema.safeParse({ thinking: true, tokenBudget: 1024.5 });
       expect(result.success).toBe(false);
     });
 
@@ -118,6 +121,113 @@ describe('OCIProviderOptionsSchema', () => {
         requestOptions: { timeoutMs: -1000 },
       });
       expect(result.success).toBe(false);
+    });
+  });
+
+  describe('discriminated union for servingMode', () => {
+    it('should require modelId for ON_DEMAND serving mode', () => {
+      const result = OCIProviderOptionsSchema.safeParse({
+        servingMode: { type: 'ON_DEMAND' },
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        // Error should reference the modelId path
+        const paths = result.error.issues.map((i) => i.path.join('.'));
+        expect(paths.some((p) => p.includes('modelId'))).toBe(true);
+      }
+    });
+
+    it('should require endpointId for DEDICATED serving mode', () => {
+      const result = OCIProviderOptionsSchema.safeParse({
+        servingMode: { type: 'DEDICATED' },
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        // Error should reference the endpointId path
+        const paths = result.error.issues.map((i) => i.path.join('.'));
+        expect(paths.some((p) => p.includes('endpointId'))).toBe(true);
+      }
+    });
+
+    it('should accept ON_DEMAND with modelId', () => {
+      const result = OCIProviderOptionsSchema.safeParse({
+        servingMode: { type: 'ON_DEMAND', modelId: 'cohere.command-r-plus' },
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept DEDICATED with endpointId', () => {
+      const result = OCIProviderOptionsSchema.safeParse({
+        servingMode: { type: 'DEDICATED', endpointId: 'ocid1.endpoint.oc1..aaaa' },
+      });
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('strict mode - unknown keys rejected', () => {
+    it('should reject unknown top-level keys', () => {
+      const result = OCIProviderOptionsSchema.safeParse({
+        reasoningEffort: 'high',
+        unknownKey: 'value',
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('should reject unknown keys in requestOptions', () => {
+      const result = OCIProviderOptionsSchema.safeParse({
+        requestOptions: {
+          timeoutMs: 30000,
+          unknownOption: true,
+        },
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('should reject unknown keys in retry config', () => {
+      const result = OCIProviderOptionsSchema.safeParse({
+        requestOptions: {
+          retry: {
+            enabled: true,
+            unknownRetryOption: 5,
+          },
+        },
+      });
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('cross-field validation', () => {
+    it('should reject tokenBudget without thinking enabled', () => {
+      const result = OCIProviderOptionsSchema.safeParse({
+        tokenBudget: 1024,
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toContain('thinking');
+      }
+    });
+
+    it('should reject tokenBudget when thinking is false', () => {
+      const result = OCIProviderOptionsSchema.safeParse({
+        thinking: false,
+        tokenBudget: 1024,
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('should accept tokenBudget when thinking is true', () => {
+      const result = OCIProviderOptionsSchema.safeParse({
+        thinking: true,
+        tokenBudget: 1024,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept thinking without tokenBudget', () => {
+      const result = OCIProviderOptionsSchema.safeParse({
+        thinking: true,
+      });
+      expect(result.success).toBe(true);
     });
   });
 
@@ -172,9 +282,22 @@ describe('OCIProviderOptionsSchema', () => {
         reasoningEffort: 'high',
         thinking: true,
         tokenBudget: 2048,
-        servingMode: { type: 'ON_DEMAND' },
+        servingMode: { type: 'ON_DEMAND', modelId: 'cohere.command-r-plus' },
       };
       expect(options.reasoningEffort).toBe('high');
+    });
+
+    it('should narrow servingMode type based on discriminator', () => {
+      const result = OCIProviderOptionsSchema.safeParse({
+        servingMode: { type: 'DEDICATED', endpointId: 'ocid1.endpoint.oc1..aaaa' },
+      });
+      expect(result.success).toBe(true);
+      if (result.success && result.data.servingMode) {
+        // TypeScript should narrow the type here
+        if (result.data.servingMode.type === 'DEDICATED') {
+          expect(result.data.servingMode.endpointId).toBe('ocid1.endpoint.oc1..aaaa');
+        }
+      }
     });
   });
 });
