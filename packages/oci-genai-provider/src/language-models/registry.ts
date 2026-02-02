@@ -84,7 +84,10 @@ export const MODEL_CATALOG: ExtendedModelMetadata[] = [
     id: 'xai.grok-4-1-fast-reasoning',
     name: 'Grok 4.1 Fast Reasoning',
     family: 'grok',
-    capabilities: { streaming: true, tools: true, vision: false, reasoning: true },
+    // Note: Grok models don't support reasoningEffort parameter despite the "-reasoning" name
+    // They throw: "This model does not support `reasoning_effort`"
+    // Reasoning is built-in but not controllable via API parameter
+    capabilities: { streaming: true, tools: true, vision: false },
     contextWindow: 2000000,
     speed: 'very-fast',
     regions: GROK_REGIONS,
@@ -104,7 +107,8 @@ export const MODEL_CATALOG: ExtendedModelMetadata[] = [
     id: 'xai.grok-4-fast-reasoning',
     name: 'Grok 4 Fast Reasoning',
     family: 'grok',
-    capabilities: { streaming: true, tools: true, vision: false, reasoning: true },
+    // Note: Grok models don't support reasoningEffort parameter (see xai.grok-4-1-fast-reasoning)
+    capabilities: { streaming: true, tools: true, vision: false },
     contextWindow: 131072,
     speed: 'very-fast',
     regions: GROK_REGIONS,
