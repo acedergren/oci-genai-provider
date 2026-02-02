@@ -54,10 +54,15 @@ export async function getCompartmentId(
     }
 
     return compartment;
-  } catch {
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
     compartmentSpinner.fail('Could not auto-discover compartments');
-    log.log(chalk.yellow(`\nThis usually means the credentials couldn't connect to OCI API.`));
-    log.log(chalk.yellow(`You can still enter a compartment OCID manually.\n`));
+    log.log(chalk.red(`\nError: ${errorMsg}`));
+    log.log(chalk.yellow(`\nThis could mean:`));
+    log.log(chalk.yellow(`  • Invalid OCI credentials or profile`));
+    log.log(chalk.yellow(`  • Missing IAM permissions for compartment list`));
+    log.log(chalk.yellow(`  • Network connectivity issues`));
+    log.log(chalk.yellow(`\nYou can still enter a compartment OCID manually.\n`));
 
     return getManualCompartmentId(log);
   }

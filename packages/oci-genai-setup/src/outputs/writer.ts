@@ -108,9 +108,13 @@ export async function writeConfig(
       }
     }
   } catch (error) {
-    spinner.fail(
-      `Failed to write configuration: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+
+    // Log detailed error for debugging
+    log.error(`Failed to write ${format} configuration${outputPath ? ` to ${outputPath}` : ''}`);
+    log.error(`Error: ${errorMsg}`);
+
+    spinner.fail(`Failed to write configuration: ${errorMsg}`);
     return { success: false };
   }
 }

@@ -158,6 +158,11 @@ export const MODEL_MAPPING: Record<string, string> = {
 };
 
 /**
+ * Default fallback model when unknown model is requested
+ */
+const DEFAULT_FALLBACK_MODEL = 'meta.llama-3.3-70b-instruct';
+
+/**
  * Get OCI model ID from Anthropic model name
  */
 export function mapModel(anthropicModel: string): string {
@@ -173,8 +178,12 @@ export function mapModel(anthropicModel: string): string {
   ) {
     return anthropicModel;
   }
-  // Default to a capable model
-  return 'meta.llama-3.3-70b-instruct';
+  // Warn about unknown model before falling back
+  console.warn(
+    `[proxy] Unknown model "${anthropicModel}", falling back to ${DEFAULT_FALLBACK_MODEL}`
+  );
+  console.warn(`[proxy] Supported models: ${Object.keys(MODEL_MAPPING).join(', ')}`);
+  return DEFAULT_FALLBACK_MODEL;
 }
 
 /**

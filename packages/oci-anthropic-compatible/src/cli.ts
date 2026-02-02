@@ -10,44 +10,63 @@ import { parseArgs } from 'util';
 import type { ProxyConfig } from './types.js';
 import { startServer } from './server.js';
 
-const { values } = parseArgs({
-  args: process.argv.slice(2),
-  options: {
-    port: {
-      type: 'string',
-      short: 'p',
-      default: '8080',
+// Parse command-line arguments with error handling
+let values: {
+  port: string;
+  host: string;
+  region: string;
+  compartment: string;
+  profile: string;
+  verbose: boolean;
+  help: boolean;
+};
+
+try {
+  const result = parseArgs({
+    args: process.argv.slice(2),
+    options: {
+      port: {
+        type: 'string',
+        short: 'p',
+        default: '8080',
+      },
+      host: {
+        type: 'string',
+        short: 'h',
+        default: 'localhost',
+      },
+      region: {
+        type: 'string',
+        short: 'r',
+        default: process.env.OCI_REGION || 'eu-frankfurt-1',
+      },
+      compartment: {
+        type: 'string',
+        short: 'c',
+        default: process.env.OCI_COMPARTMENT_ID || '',
+      },
+      profile: {
+        type: 'string',
+        default: process.env.OCI_CONFIG_PROFILE || 'DEFAULT',
+      },
+      verbose: {
+        type: 'boolean',
+        short: 'v',
+        default: false,
+      },
+      help: {
+        type: 'boolean',
+        default: false,
+      },
     },
-    host: {
-      type: 'string',
-      short: 'h',
-      default: 'localhost',
-    },
-    region: {
-      type: 'string',
-      short: 'r',
-      default: process.env.OCI_REGION || 'eu-frankfurt-1',
-    },
-    compartment: {
-      type: 'string',
-      short: 'c',
-      default: process.env.OCI_COMPARTMENT_ID || '',
-    },
-    profile: {
-      type: 'string',
-      default: process.env.OCI_CONFIG_PROFILE || 'DEFAULT',
-    },
-    verbose: {
-      type: 'boolean',
-      short: 'v',
-      default: false,
-    },
-    help: {
-      type: 'boolean',
-      default: false,
-    },
-  },
-});
+  });
+  values = result.values as typeof values;
+} catch (error) {
+  console.error('Error: Invalid command-line arguments');
+  console.error(error instanceof Error ? error.message : 'Unknown error');
+  console.error('\nRun with --help for usage information.');
+  process.exit(1);
+}
 
 if (values.help) {
   console.warn(`

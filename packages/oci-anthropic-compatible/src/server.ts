@@ -10,7 +10,6 @@ import { generateText, streamText } from 'ai';
 import type { ProxyConfig, AnthropicMessagesRequest, StreamEvent } from './types.js';
 import { anthropicMessagesRequestSchema } from './types.js';
 import { convertRequest, convertResponse, createErrorResponse } from './converter.js';
-import { ZodError } from 'zod';
 
 /**
  * Create the OCI provider instance
@@ -24,19 +23,29 @@ function createProvider(config: ProxyConfig): ReturnType<typeof createOCI> {
 
 /**
  * Check if origin is allowed based on config
+ * Uses URL parsing to prevent prefix confusion attacks (e.g., localhost.evil.com)
  */
 function isOriginAllowed(origin: string | null, config: ProxyConfig): boolean {
   if (!origin) return false;
 
   const allowed = config.allowedOrigins ?? ['http://localhost'];
 
-  // Check if any allowed pattern matches
   return allowed.some((pattern) => {
-    // Support wildcard suffix like http://localhost:*
-    if (pattern.endsWith('*')) {
-      const prefix = pattern.slice(0, -1);
-      return origin.startsWith(prefix);
+    // Support wildcard suffix for ports like http://localhost:*
+    if (pattern.endsWith(':*')) {
+      const basePattern = pattern.slice(0, -2); // Remove :*
+      try {
+        const originUrl = new URL(origin);
+        const patternUrl = new URL(basePattern);
+        // Match protocol and hostname exactly, allow any port
+        return (
+          originUrl.protocol === patternUrl.protocol && originUrl.hostname === patternUrl.hostname
+        );
+      } catch {
+        return false;
+      }
     }
+    // Exact match for non-wildcard patterns
     return origin === pattern;
   });
 }
@@ -55,28 +64,40 @@ async function handleNonStreaming(
     console.warn(`[proxy] Non-streaming request for model: ${converted.model}`);
   }
 
-  const result = await generateText({
-    model: provider.languageModel(converted.model),
-    messages: converted.messages,
-    maxOutputTokens: converted.maxOutputTokens,
-    temperature: converted.temperature,
-    topP: converted.topP,
-    stopSequences: converted.stopSequences,
-    system: converted.system,
-  });
+  try {
+    const result = await generateText({
+      model: provider.languageModel(converted.model),
+      messages: converted.messages,
+      maxOutputTokens: converted.maxOutputTokens,
+      temperature: converted.temperature,
+      topP: converted.topP,
+      stopSequences: converted.stopSequences,
+      system: converted.system,
+    });
 
-  const response = convertResponse(result.text, request.model, result.finishReason, {
-    inputTokens: result.usage.inputTokens ?? 0,
-    outputTokens: result.usage.outputTokens ?? 0,
-  });
+    const response = convertResponse(result.text, request.model, result.finishReason, {
+      inputTokens: result.usage.inputTokens ?? 0,
+      outputTokens: result.usage.outputTokens ?? 0,
+    });
 
-  return new Response(JSON.stringify(response), {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Request-Id': response.id,
-    },
-  });
+    return new Response(JSON.stringify(response), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Request-Id': response.id,
+      },
+    });
+  } catch (error) {
+    // Log error with context for debugging
+    console.error('[proxy] generateText failed:', {
+      error: error instanceof Error ? error.message : String(error),
+      model: converted.model,
+      messageCount: converted.messages.length,
+      maxTokens: converted.maxOutputTokens,
+      timestamp: new Date().toISOString(),
+    });
+    throw error; // Re-throw for caller to handle
+  }
 }
 
 /**
@@ -137,8 +158,9 @@ function handleStreaming(request: AnthropicMessagesRequest, config: ProxyConfig)
 
       try {
         // Stream text deltas
+        // Note: outputTokens is a rough chunk-based estimate; actual token count unavailable in streaming
         for await (const chunk of result.textStream) {
-          outputTokens += 1; // Rough estimate
+          outputTokens += 1;
           const deltaEvent: StreamEvent = {
             type: 'content_block_delta',
             index: 0,
@@ -177,6 +199,17 @@ function handleStreaming(request: AnthropicMessagesRequest, config: ProxyConfig)
         );
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        const errorStack = error instanceof Error ? error.stack : undefined;
+
+        // Log to server console for debugging (critical for production visibility)
+        console.error('[proxy] Stream error:', {
+          error: errorMsg,
+          stack: errorStack,
+          model: request.model,
+          messageId,
+          timestamp: new Date().toISOString(),
+        });
+
         const errorEvent = createErrorResponse('api_error', errorMsg);
         controller.enqueue(encoder.encode(`event: error\ndata: ${JSON.stringify(errorEvent)}\n\n`));
       }
@@ -240,51 +273,61 @@ async function handleRequest(req: Request, config: ProxyConfig): Promise<Respons
     );
   }
 
+  // Parse JSON body first - separate from validation for better error messages
+  let rawBody: unknown;
   try {
-    // Parse and validate request body with Zod
-    const rawBody = await req.json();
-    const validationResult = anthropicMessagesRequestSchema.safeParse(rawBody);
+    rawBody = await req.json();
+  } catch (error) {
+    console.error('[proxy] Invalid JSON body:', error instanceof Error ? error.message : 'Unknown');
+    return new Response(
+      JSON.stringify(
+        createErrorResponse('invalid_request_error', 'Request body is not valid JSON')
+      ),
+      { status: 400, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
 
-    if (!validationResult.success) {
-      return new Response(
-        JSON.stringify(
-          createErrorResponse(
-            'invalid_request_error',
-            `Invalid request: ${validationResult.error.issues.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')}`
-          )
-        ),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
+  // Validate request schema
+  const validationResult = anthropicMessagesRequestSchema.safeParse(rawBody);
+  if (!validationResult.success) {
+    return new Response(
+      JSON.stringify(
+        createErrorResponse(
+          'invalid_request_error',
+          `Invalid request: ${validationResult.error.issues.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')}`
+        )
+      ),
+      { status: 400, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
 
-    const body = validationResult.data as AnthropicMessagesRequest;
+  const body = validationResult.data as AnthropicMessagesRequest;
 
-    if (config.verbose) {
-      console.warn(
-        `[proxy] Request: model=${body.model}, messages=${body.messages.length}, stream=${body.stream}`
-      );
-    }
+  if (config.verbose) {
+    console.warn(
+      `[proxy] Request: model=${body.model}, messages=${body.messages.length}, stream=${body.stream}`
+    );
+  }
 
+  // Handle the request - errors here are unexpected and should be logged with context
+  try {
     if (body.stream) {
       return handleStreaming(body, config);
     } else {
       return handleNonStreaming(body, config);
     }
   } catch (error) {
-    if (error instanceof ZodError) {
-      return new Response(
-        JSON.stringify(
-          createErrorResponse(
-            'invalid_request_error',
-            `Validation error: ${error.issues.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')}`
-          )
-        ),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`[proxy] Error: ${message}`);
+    const stack = error instanceof Error ? error.stack : undefined;
+
+    console.error('[proxy] Request handler error:', {
+      error: message,
+      stack,
+      model: body.model,
+      messageCount: body.messages.length,
+      stream: body.stream,
+      timestamp: new Date().toISOString(),
+    });
 
     return new Response(JSON.stringify(createErrorResponse('api_error', message)), {
       status: 500,

@@ -100,8 +100,11 @@ export async function checkExistingSetup(
   let existingConfig: Record<string, unknown> | undefined;
   try {
     existingConfig = await readJsonFile<Record<string, unknown>>(configPath);
-  } catch {
-    // Invalid JSON, treat as fresh
+  } catch (error) {
+    // File exists but couldn't be parsed - warn user about corrupted config
+    log.log(chalk.yellow(`⚠️  Could not parse existing config at ${configPath}`));
+    log.log(chalk.yellow(`   Error: ${error instanceof Error ? error.message : 'Unknown error'}`));
+    log.log(chalk.yellow('   Treating as fresh setup (existing config will be backed up)\n'));
     return { mode: 'fresh', outputFormat };
   }
 
