@@ -368,8 +368,6 @@ export class OCILanguageModel implements LanguageModelV3 {
 
       if (options.seed !== undefined) chatRequest.seed = options.seed;
 
-      console.log('DEBUG: OCI Chat Request:', JSON.stringify(chatRequest, null, 2));
-
       const response = (await this.executeWithResilience<unknown>(
         () =>
           client.chat({
