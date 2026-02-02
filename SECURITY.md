@@ -11,6 +11,7 @@ To report a security issue:
 2. **Email**: Contact the maintainers directly (see repository for contact information)
 
 Include in your report:
+
 - Description of the vulnerability
 - Steps to reproduce
 - Potential impact
@@ -18,11 +19,11 @@ Include in your report:
 
 ### Response Timeline
 
-| Stage | Timeframe |
-|-------|-----------|
-| Initial acknowledgment | Within 48 hours |
-| Status update | Within 7 days |
-| Fix and disclosure | Typically within 30 days (varies by severity) |
+| Stage                  | Timeframe                                     |
+| ---------------------- | --------------------------------------------- |
+| Initial acknowledgment | Within 48 hours                               |
+| Status update          | Within 7 days                                 |
+| Fix and disclosure     | Typically within 30 days (varies by severity) |
 
 ## Security Practices
 
@@ -41,12 +42,14 @@ chmod 700 ~/.oci
 ```
 
 **Never commit secrets:**
+
 - API keys
 - Private key files (`.pem`)
 - Compartment IDs with sensitive data
 - Access tokens
 
 **Rotate credentials regularly:**
+
 - OCI API keys should be rotated every 90 days
 - Revoke unused keys immediately
 - Use separate keys for development and production
@@ -54,18 +57,21 @@ chmod 700 ~/.oci
 ### For Deployments
 
 **Development:**
+
 ```typescript
 // Use config file authentication
 const oci = createOCI({ profile: 'DEFAULT' });
 ```
 
 **Production (OCI Compute):**
+
 ```typescript
 // Use instance principal - no credentials in code
 const oci = createOCI({ auth: 'instance_principal' });
 ```
 
 **Production (OCI Functions):**
+
 ```typescript
 // Use resource principal - automatic credential management
 const oci = createOCI({ auth: 'resource_principal' });
@@ -103,17 +109,19 @@ npm audit
 ## Scope
 
 This security policy covers:
+
 - `@acedergren/oci-genai-provider`
 - `@acedergren/oci-openai-compatible`
-- `@acedergren/opencode-oci-genai`
+- `@acedergren/oci-genai-provider`
 
 For OCI service vulnerabilities, contact [Oracle Security](https://www.oracle.com/corporate/security-practices/assurance/vulnerability/reporting.html).
 
 ## Questions
 
 For security-related questions that aren't vulnerabilities:
+
 - Check [DEVELOPMENT.md](./DEVELOPMENT.md) for secure setup
-- Open a [discussion](https://github.com/acedergren/opencode-oci-genai/discussions) (do not disclose potential vulnerabilities)
+- Open a [discussion](https://github.com/acedergren/oci-genai-provider/discussions) (do not disclose potential vulnerabilities)
 
 ---
 

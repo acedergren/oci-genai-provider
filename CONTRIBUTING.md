@@ -4,7 +4,7 @@ Thank you for considering a contribution. This guide will help you get started.
 
 ## Before You Start
 
-1. **Check existing issues** — Someone may already be working on what you have in mind. Look at [open issues](https://github.com/acedergren/opencode-oci-genai/issues) and [discussions](https://github.com/acedergren/opencode-oci-genai/discussions).
+1. **Check existing issues** — Someone may already be working on what you have in mind. Look at [open issues](https://github.com/acedergren/oci-genai-provider/issues) and [discussions](https://github.com/acedergren/oci-genai-provider/discussions).
 
 2. **Read the code of conduct** — We maintain a welcoming environment. Please review our [Code of Conduct](./CODE_OF_CONDUCT.md).
 
@@ -15,8 +15,8 @@ Thank you for considering a contribution. This guide will help you get started.
 ### 1. Fork and Clone
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/opencode-oci-genai.git
-cd opencode-oci-genai
+git clone https://github.com/YOUR_USERNAME/oci-genai-provider.git
+cd oci-genai-provider
 pnpm install
 ```
 
@@ -31,6 +31,7 @@ git checkout -b docs/improve-auth-guide
 ```
 
 **Branch prefixes:**
+
 - `feature/` — New functionality
 - `fix/` — Bug fixes
 - `docs/` — Documentation changes
@@ -43,18 +44,21 @@ git checkout -b docs/improve-auth-guide
 Follow these standards:
 
 **TypeScript**
+
 - Use strict mode (no `any` types)
 - Add explicit return types to functions
 - Include JSDoc comments for public APIs
 - Run `pnpm lint` before committing
 
 **Testing**
+
 - Write tests for new functionality
 - Update tests when modifying existing code
 - Target 80%+ code coverage
 - Run `pnpm test` before committing
 
 **Documentation**
+
 - Update README files when adding features
 - Add JSDoc comments with examples
 - Update CHANGELOG.md for notable changes
@@ -110,6 +114,7 @@ Before requesting review, verify:
 ## What We're Looking For
 
 **Good contributions:**
+
 - Fix bugs that affect users
 - Add features that align with project goals
 - Improve documentation clarity
@@ -117,6 +122,7 @@ Before requesting review, verify:
 - Enhance error messages
 
 **We'll likely decline:**
+
 - Breaking changes without prior discussion
 - Features that significantly increase complexity
 - Code that doesn't pass tests or type checking
@@ -127,6 +133,7 @@ Before requesting review, verify:
 ### Bug Reports
 
 Open an issue with:
+
 - Clear description of the bug
 - Steps to reproduce
 - Expected vs actual behavior
@@ -136,6 +143,7 @@ Open an issue with:
 ### Feature Requests
 
 Open an issue or discussion with:
+
 - Description of the feature
 - Use case explaining why it's needed
 - Proposed implementation approach
@@ -144,6 +152,7 @@ Open an issue or discussion with:
 ### Documentation
 
 Documentation improvements are always welcome:
+
 - Fix typos or unclear explanations
 - Add missing examples
 - Improve troubleshooting guides
@@ -158,6 +167,7 @@ For significant changes, open an issue first to discuss the approach. This preve
 ### oci-genai-provider
 
 The core provider should:
+
 - Maintain Vercel AI SDK compatibility
 - Support all OCI regions
 - Handle errors gracefully with actionable messages
@@ -166,6 +176,7 @@ The core provider should:
 ### oci-openai-compatible
 
 The OpenAI wrapper should:
+
 - Match OpenAI SDK behavior closely
 - Document any behavioral differences
 - Remain lightweight with minimal dependencies
@@ -173,19 +184,21 @@ The OpenAI wrapper should:
 ### opencode-integration
 
 The OpenCode integration should:
+
 - Stay thin (delegate to core provider)
 - Focus on OpenCode-specific configuration
 - Document OpenCode setup clearly
 
 ## Getting Help
 
-- **Questions**: Open a [discussion](https://github.com/acedergren/opencode-oci-genai/discussions)
-- **Bugs**: Open an [issue](https://github.com/acedergren/opencode-oci-genai/issues)
+- **Questions**: Open a [discussion](https://github.com/acedergren/oci-genai-provider/discussions)
+- **Bugs**: Open an [issue](https://github.com/acedergren/oci-genai-provider/issues)
 - **Security**: See [SECURITY.md](./SECURITY.md) for responsible disclosure
 
 ## Recognition
 
 Contributors are acknowledged in:
+
 - GitHub's contributors page
 - Release notes for significant contributions
 

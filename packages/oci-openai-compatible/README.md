@@ -10,6 +10,7 @@ OpenAI-compatible wrapper for Oracle Cloud Infrastructure (OCI) Generative AI Se
 This package provides a lightweight OpenAI-compatible interface for OCI Generative AI models, enabling teams familiar with OpenAI's API to seamlessly migrate to OCI with minimal code changes.
 
 **Key Features:**
+
 - ✅ Drop-in OpenAI SDK compatibility
 - ✅ Minimal dependencies (no OCI SDK overhead)
 - ✅ Simple API key authentication
@@ -20,12 +21,14 @@ This package provides a lightweight OpenAI-compatible interface for OCI Generati
 ## When to Use This Package
 
 **Use `oci-openai-compatible` if:**
+
 - You're migrating from OpenAI to OCI
 - You want minimal bundle size (no OCI SDK)
 - You prefer simple API key authentication
 - You're familiar with OpenAI SDK patterns
 
 **Use `@acedergren/oci-genai-provider` (native provider) if:**
+
 - You need instance principal or resource principal auth
 - You want access to all OCI regions (not just 6)
 - You need advanced OCI-specific features
@@ -122,14 +125,14 @@ interface OCIOpenAIConfig {
 
 ## Supported Regions
 
-| Region | Location | Endpoint |
-|--------|----------|----------|
-| `us-ashburn-1` | US East (Ashburn) | `inference.generativeai.us-ashburn-1.oci.oraclecloud.com` |
-| `us-chicago-1` | US East (Chicago) | `inference.generativeai.us-chicago-1.oci.oraclecloud.com` |
-| `us-phoenix-1` | US West (Phoenix) | `inference.generativeai.us-phoenix-1.oci.oraclecloud.com` |
-| `eu-frankfurt-1` | Europe (Frankfurt) | `inference.generativeai.eu-frankfurt-1.oci.oraclecloud.com` |
+| Region           | Location                 | Endpoint                                                    |
+| ---------------- | ------------------------ | ----------------------------------------------------------- |
+| `us-ashburn-1`   | US East (Ashburn)        | `inference.generativeai.us-ashburn-1.oci.oraclecloud.com`   |
+| `us-chicago-1`   | US East (Chicago)        | `inference.generativeai.us-chicago-1.oci.oraclecloud.com`   |
+| `us-phoenix-1`   | US West (Phoenix)        | `inference.generativeai.us-phoenix-1.oci.oraclecloud.com`   |
+| `eu-frankfurt-1` | Europe (Frankfurt)       | `inference.generativeai.eu-frankfurt-1.oci.oraclecloud.com` |
 | `ap-hyderabad-1` | Asia Pacific (Hyderabad) | `inference.generativeai.ap-hyderabad-1.oci.oraclecloud.com` |
-| `ap-osaka-1` | Asia Pacific (Osaka) | `inference.generativeai.ap-osaka-1.oci.oraclecloud.com` |
+| `ap-osaka-1`     | Asia Pacific (Osaka)     | `inference.generativeai.ap-osaka-1.oci.oraclecloud.com`     |
 
 ## Supported Models
 
@@ -185,6 +188,7 @@ export OCI_API_KEY="your-api-key"
 ## API Documentation
 
 Full OpenAI SDK documentation applies. See:
+
 - [OpenAI Node.js SDK](https://github.com/openai/openai-node)
 - [OCI OpenAI Compatibility Docs](https://docs.oracle.com/en-us/iaas/Content/generative-ai/oci-openai.htm)
 
@@ -197,6 +201,7 @@ Full OpenAI SDK documentation applies. See:
 ## Examples
 
 See [examples/](./examples/) directory for:
+
 - Basic chat completion
 - Streaming responses
 - Multiple regions
@@ -205,7 +210,7 @@ See [examples/](./examples/) directory for:
 ## Related Packages
 
 - [`@acedergren/oci-genai-provider`](../oci-genai-provider) - Native OCI provider with full ProviderV3 support
-- [`@acedergren/opencode-oci-genai`](../opencode-integration) - OpenCode CLI integration
+- [`@acedergren/oci-anthropic-compatible`](../oci-anthropic-compatible) - Anthropic-compatible API proxy for Claude Code
 
 ## License
 
