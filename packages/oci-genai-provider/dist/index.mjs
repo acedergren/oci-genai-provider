@@ -3724,12 +3724,15 @@ var MODEL_CATALOG = [
     id: "xai.grok-4-1-fast-reasoning",
     name: "Grok 4.1 Fast Reasoning",
     family: "grok",
-    capabilities: { streaming: true, tools: true, vision: false, reasoning: true },
+    // Note: Grok models don't support reasoningEffort parameter despite the "-reasoning" name
+    // They throw: "This model does not support `reasoning_effort`"
+    // Reasoning is built-in but not controllable via API parameter
+    capabilities: { streaming: true, tools: true, vision: false },
     contextWindow: 2e6,
     speed: "very-fast",
     regions: GROK_REGIONS,
     codingRecommended: true,
-    codingNote: "2M context window - ideal for large codebases"
+    codingNote: "Built-in reasoning always active - 2M context window ideal for large codebases"
   },
   {
     id: "xai.grok-4-1-fast-non-reasoning",
@@ -3744,10 +3747,13 @@ var MODEL_CATALOG = [
     id: "xai.grok-4-fast-reasoning",
     name: "Grok 4 Fast Reasoning",
     family: "grok",
-    capabilities: { streaming: true, tools: true, vision: false, reasoning: true },
+    // Note: Grok models don't support reasoningEffort parameter (see xai.grok-4-1-fast-reasoning)
+    capabilities: { streaming: true, tools: true, vision: false },
     contextWindow: 131072,
     speed: "very-fast",
-    regions: GROK_REGIONS
+    regions: GROK_REGIONS,
+    codingRecommended: true,
+    codingNote: "Built-in reasoning always active"
   },
   {
     id: "xai.grok-4-fast-non-reasoning",
@@ -4190,22 +4196,75 @@ function convertToCohereFormat(messages) {
   const systemMessages = messages.filter((m) => m.role === "SYSTEM").map((m) => m.content.filter((c) => c.type === "TEXT").map((c) => c.text)).flat().join("\n");
   const currentMessage = messages[lastUserIndex];
   const messageText = currentMessage.content.filter((c) => c.type === "TEXT").map((c) => c.text).join("\n");
+  const toolCallsById = /* @__PURE__ */ new Map();
   const chatHistory = [];
+  const toolResults = [];
   for (let i = 0; i < lastUserIndex; i++) {
     const msg = messages[i];
     if (msg.role === "SYSTEM") {
       continue;
     }
+    if (msg.role === "TOOL") {
+      const resultText = msg.content.filter((c) => c.type === "TEXT").map((c) => c.text).join("\n");
+      const toolCallId = msg.toolCallId;
+      if (toolCallId) {
+        const toolCall = toolCallsById.get(toolCallId);
+        if (toolCall) {
+          toolResults.push({
+            call: {
+              name: toolCall.name,
+              parameters: toolCall.parameters
+            },
+            outputs: [{ result: resultText }]
+          });
+        }
+      }
+      continue;
+    }
     const text = msg.content.filter((c) => c.type === "TEXT").map((c) => c.text).join("\n");
-    chatHistory.push({
-      role: msg.role === "USER" ? "USER" : "CHATBOT",
-      message: text
-    });
+    if (msg.role === "ASSISTANT") {
+      const cohereMessage = {
+        role: "CHATBOT",
+        message: text
+      };
+      if (msg.toolCalls && msg.toolCalls.length > 0) {
+        const cohereToolCalls = msg.toolCalls.map((tc) => {
+          let parameters = {};
+          try {
+            if (tc.function.arguments) {
+              parameters = JSON.parse(tc.function.arguments);
+            }
+          } catch {
+            parameters = {};
+          }
+          toolCallsById.set(tc.id, {
+            name: tc.function.name,
+            parameters
+          });
+          return {
+            name: tc.function.name,
+            parameters
+          };
+        });
+        cohereMessage.toolCalls = cohereToolCalls;
+      }
+      chatHistory.push(cohereMessage);
+      continue;
+    }
+    if (msg.role === "USER") {
+      chatHistory.push({
+        role: "USER",
+        message: text
+      });
+    }
   }
+  const hasToolResults = toolResults.length > 0;
   return {
     message: messageText,
     ...chatHistory.length > 0 ? { chatHistory } : {},
-    ...systemMessages ? { preambleOverride: systemMessages } : {}
+    ...systemMessages ? { preambleOverride: systemMessages } : {},
+    ...hasToolResults ? { toolResults } : {},
+    hasToolResults
   };
 }
 
@@ -4225,7 +4284,7 @@ function sanitizeSchema(schema) {
   }
   const sanitized = { ...schema };
   delete sanitized.$schema;
-  delete sanitized.ref;
+  delete sanitized["$ref"];
   for (const [key, value] of Object.entries(sanitized)) {
     sanitized[key] = sanitizeSchema(value);
   }
@@ -4240,6 +4299,7 @@ function convertToGenericToolFormat(tool) {
     type: "FUNCTION",
     name: tool.name,
     description: tool.description ?? "",
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     parameters
   };
 }
@@ -4250,9 +4310,11 @@ function convertToCohereToolFormat(tool) {
     const required = schema.required ?? [];
     for (const [key, value] of Object.entries(schema.properties)) {
       parameterDefinitions[key] = {
-        type: value.type,
+        type: value.type || "string",
+        // Default to string if type is missing
         description: value.description,
-        required: required.includes(key)
+        isRequired: required.includes(key)
+        // Cohere uses isRequired, not required
       };
     }
   }
@@ -4665,6 +4727,17 @@ function withTimeout(promise, timeoutMs, operation) {
     clearTimeout(timeoutId);
   });
 }
+var OnDemandServingModeSchema = z.object({
+  type: z.literal("ON_DEMAND"),
+  modelId: z.string().min(1, { message: "modelId is required for ON_DEMAND serving" }),
+  endpointId: z.string().optional()
+});
+var DedicatedServingModeSchema = z.object({
+  type: z.literal("DEDICATED"),
+  modelId: z.string().optional(),
+  endpointId: z.string().min(1, { message: "endpointId is required for DEDICATED serving" })
+});
+var ServingModeSchema = z.discriminatedUnion("type", [OnDemandServingModeSchema, DedicatedServingModeSchema]).describe("Model serving mode configuration");
 var OCIProviderOptionsSchema = z.object({
   /**
    * Reasoning effort level for models that support extended thinking.
@@ -4678,20 +4751,14 @@ var OCIProviderOptionsSchema = z.object({
   /**
    * Token budget for thinking/reasoning.
    * Limits the number of tokens used for extended reasoning.
+   * Requires thinking: true to be set.
    */
   tokenBudget: z.number().int().positive().optional().describe("Maximum tokens for reasoning (must be positive integer)"),
   /**
-   * Serving mode for the model.
-   * Object with type (ON_DEMAND/DEDICATED) and related IDs.
+   * Serving mode for the model using discriminated union.
+   * ON_DEMAND requires modelId, DEDICATED requires endpointId.
    */
-  servingMode: z.object({
-    /** Serving type: ON_DEMAND or DEDICATED */
-    type: z.enum(["ON_DEMAND", "DEDICATED"]),
-    /** Model OCID for on-demand serving */
-    modelId: z.string().optional(),
-    /** Endpoint OCID for dedicated serving */
-    endpointId: z.string().optional()
-  }).optional().describe("Model serving mode configuration"),
+  servingMode: ServingModeSchema.optional(),
   /**
    * Custom compartment ID to use for this request.
    * Overrides the default compartment from config.
@@ -4712,8 +4779,11 @@ var OCIProviderOptionsSchema = z.object({
       maxRetries: z.number().int().nonnegative().optional(),
       baseDelayMs: z.number().int().positive().optional(),
       maxDelayMs: z.number().int().positive().optional()
-    }).optional()
-  }).optional().describe("Per-request timeout and retry configuration")
+    }).strict().optional()
+  }).strict().optional().describe("Per-request timeout and retry configuration")
+}).strict().refine((data) => !data.tokenBudget || data.thinking === true, {
+  message: "tokenBudget requires thinking to be enabled",
+  path: ["tokenBudget"]
 });
 function parseProviderOptions(options) {
   if (options === void 0 || options === null) {
@@ -4728,26 +4798,36 @@ function parseProviderOptions(options) {
   }
   return result.data;
 }
-var ocidPattern = /^ocid1\.[a-z0-9]+\.[a-z0-9]+\.[a-z0-9-]*\.[a-z0-9]+$/i;
 var regionPattern = /^[a-z]{2,3}-[a-z]+-\d+$/;
-var CompartmentIdSchema = z.string().regex(ocidPattern, {
+var OCID_PATTERNS = {
+  /** Pattern for compartment OCIDs */
+  compartment: /^ocid1\.compartment\.[a-z0-9]+\.[a-z0-9-]*\.[a-z0-9]+$/i,
+  /** Pattern for generative AI endpoint OCIDs */
+  generativeaiendpoint: /^ocid1\.generativeaiendpoint\.[a-z0-9]+\.[a-z0-9-]*\.[a-z0-9]+$/i,
+  /** Pattern for any OCI resource OCID */
+  generic: /^ocid1\.[a-z0-9]+\.[a-z0-9]+\.[a-z0-9-]*\.[a-z0-9]+$/i
+};
+z.string().regex(OCID_PATTERNS.generic, {
+  message: "Invalid OCID format. Expected format: ocid1.<resource-type>.<realm>.[region.]<id>"
+}).describe("An OCI resource identifier (OCID)");
+var CompartmentIdSchema = z.string().regex(OCID_PATTERNS.compartment, {
   message: "Invalid compartment ID format. Expected OCID format: ocid1.compartment.oc1..xxxxx"
 }).describe("The compartment OCID for OCI GenAI requests");
 var RegionSchema = z.string().regex(regionPattern, {
   message: "Invalid region format. Expected format: <geo>-<city>-<number> (e.g., us-chicago-1)"
 }).describe("The OCI region identifier");
 var ConfigProfileSchema = z.string().min(1, { message: "Config profile cannot be empty" }).default("DEFAULT").describe("The OCI config profile name from ~/.oci/config");
-var ServingModeSchema = z.enum(["on-demand", "dedicated"], {
+var ServingModeSchema2 = z.enum(["on-demand", "dedicated"], {
   errorMap: () => ({ message: "Serving mode must be either 'on-demand' or 'dedicated'" })
 }).default("on-demand").describe("The serving mode for model inference");
-var EndpointIdSchema = z.string().regex(ocidPattern, {
+var EndpointIdSchema = z.string().regex(OCID_PATTERNS.generativeaiendpoint, {
   message: "Invalid endpoint ID format. Expected OCID format: ocid1.generativeaiendpoint.oc1..xxxxx"
 }).describe("The endpoint OCID for dedicated serving mode");
 var OCIProviderSettingsSchema = z.object({
   compartmentId: CompartmentIdSchema.optional(),
   region: RegionSchema.optional(),
   configProfile: ConfigProfileSchema.optional(),
-  servingMode: ServingModeSchema.optional(),
+  servingMode: ServingModeSchema2.optional(),
   endpointId: EndpointIdSchema.optional()
 }).refine(
   (data) => {
@@ -4765,7 +4845,14 @@ function validateProviderSettings(settings) {
   return OCIProviderSettingsSchema.safeParse(settings);
 }
 function parseProviderSettings(settings) {
-  return OCIProviderSettingsSchema.parse(settings);
+  const result = OCIProviderSettingsSchema.safeParse(settings);
+  if (!result.success) {
+    const issues = result.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; ");
+    throw new OCIValidationError(`Invalid OCI provider settings: ${issues}`, {
+      issues: result.error.issues
+    });
+  }
+  return result.data;
 }
 var ModelIdSchema = z.string().min(1, { message: "Model ID cannot be empty" }).describe("The model ID or endpoint OCID");
 var OCIChatModelIdSchema = z.object({
@@ -5077,11 +5164,15 @@ var OCILanguageModel = class {
           ...toolParams
         };
       } else if (apiFormat === "COHERE") {
+        const cohereFormat = convertToCohereFormat(messages);
         chatRequest = {
           apiFormat,
-          ...convertToCohereFormat(messages),
+          ...cohereFormat,
           ...commonParams,
-          ...toolParams
+          ...toolParams,
+          // Cohere requires isForceSingleStep=true when tool results are present
+          // This ensures multi-step tool use works correctly
+          ...cohereFormat.hasToolResults ? { isForceSingleStep: true } : {}
         };
       } else {
         chatRequest = {
@@ -7371,6 +7462,6 @@ function createOCI(config = {}) {
 }
 var oci = createOCI();
 
-export { AuthenticationError, CompartmentIdSchema, ConfigProfileSchema, EndpointIdSchema, ModelIdSchema, ModelNotFoundError, NetworkError, OCIChatModelIdSchema, OCIEmbeddingModel, OCIGenAIError, OCIGenAIProvider, OCILanguageModel, OCIProviderOptionsSchema, OCIProviderSettingsSchema, OCIRealtimeClient, OCIRealtimeTranscription, OCIRerankingModel, OCISpeechModel, OCITranscriptionModel, RateLimitError, RegionSchema, ServingModeSchema, TimeoutError, WebSocketAdapter, WebSocketReadyState, createOCI, getAllEmbeddingModels, getAllModels, getAllRerankingModels, getAllSpeechModels, getAllTranscriptionModels, getAllVoices, getCodingRecommendedModels, getEmbeddingModelMetadata, getModelMetadata, getModelsByFamily, getModelsByRegion, getRerankingModelMetadata, getSpeechModelMetadata, getSupportedLanguages, getTranscriptionModelMetadata, handleOCIError, isCodingSuitable, isRetryableError, isRetryableStatusCode, isValidEmbeddingModelId, isValidModelId, isValidRerankingModelId, isValidSpeechModelId, isValidTranscriptionModelId, oci, parseProviderOptions, parseProviderSettings, supportsReasoning, validateProviderSettings, withRetry, withTimeout };
+export { AuthenticationError, CompartmentIdSchema, ConfigProfileSchema, EndpointIdSchema, ModelIdSchema, ModelNotFoundError, NetworkError, OCIChatModelIdSchema, OCIEmbeddingModel, OCIGenAIError, OCIGenAIProvider, OCILanguageModel, OCIProviderOptionsSchema, OCIProviderSettingsSchema, OCIRealtimeClient, OCIRealtimeTranscription, OCIRerankingModel, OCISpeechModel, OCITranscriptionModel, RateLimitError, RegionSchema, ServingModeSchema2 as ServingModeSchema, TimeoutError, WebSocketAdapter, WebSocketReadyState, createOCI, getAllEmbeddingModels, getAllModels, getAllRerankingModels, getAllSpeechModels, getAllTranscriptionModels, getAllVoices, getCodingRecommendedModels, getEmbeddingModelMetadata, getModelMetadata, getModelsByFamily, getModelsByRegion, getRerankingModelMetadata, getSpeechModelMetadata, getSupportedLanguages, getTranscriptionModelMetadata, handleOCIError, isCodingSuitable, isRetryableError, isRetryableStatusCode, isValidEmbeddingModelId, isValidModelId, isValidRerankingModelId, isValidSpeechModelId, isValidTranscriptionModelId, oci, parseProviderOptions, parseProviderSettings, supportsReasoning, validateProviderSettings, withRetry, withTimeout };
 //# sourceMappingURL=index.mjs.map
 //# sourceMappingURL=index.mjs.map

@@ -72,6 +72,7 @@ Environment Variables:
   OCI_REGION           Default region
   OCI_COMPARTMENT_ID   Default compartment OCID
   OCI_CONFIG_PROFILE   Default config profile
+  ALLOWED_ORIGINS      Comma-separated CORS origins (default: http://localhost:*)
 
 Example:
   # Start proxy with environment variables
@@ -91,13 +92,22 @@ if (!values.compartment) {
   process.exit(1);
 }
 
+const port = parseInt(values.port, 10);
+if (isNaN(port) || port < 1 || port > 65535) {
+  console.error(`Error: Invalid port number: ${values.port}`);
+  console.error('Port must be between 1 and 65535.');
+  process.exit(1);
+}
+
 const config: ProxyConfig = {
-  port: parseInt(values.port, 10),
+  port,
   host: values.host,
   region: values.region,
   compartmentId: values.compartment,
   profile: values.profile,
   verbose: values.verbose,
+  // Default to localhost with any port for development
+  allowedOrigins: process.env.ALLOWED_ORIGINS?.split(',') ?? ['http://localhost:*'],
 };
 
 // Start server

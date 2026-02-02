@@ -486,23 +486,35 @@ declare class TimeoutError extends Error {
 }
 declare function withTimeout<T>(promise: Promise<T>, timeoutMs: number, operation?: string): Promise<T>;
 
-declare const OCIProviderOptionsSchema: z.ZodObject<{
+declare const OCIProviderOptionsSchema: z.ZodEffects<z.ZodObject<{
     reasoningEffort: z.ZodOptional<z.ZodEnum<["none", "minimal", "low", "medium", "high"]>>;
     thinking: z.ZodOptional<z.ZodBoolean>;
     tokenBudget: z.ZodOptional<z.ZodNumber>;
-    servingMode: z.ZodOptional<z.ZodObject<{
-        type: z.ZodEnum<["ON_DEMAND", "DEDICATED"]>;
-        modelId: z.ZodOptional<z.ZodString>;
+    servingMode: z.ZodOptional<z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
+        type: z.ZodLiteral<"ON_DEMAND">;
+        modelId: z.ZodString;
         endpointId: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
-        type: "ON_DEMAND" | "DEDICATED";
-        modelId?: string | undefined;
+        type: "ON_DEMAND";
+        modelId: string;
         endpointId?: string | undefined;
     }, {
-        type: "ON_DEMAND" | "DEDICATED";
-        modelId?: string | undefined;
+        type: "ON_DEMAND";
+        modelId: string;
         endpointId?: string | undefined;
-    }>>;
+    }>, z.ZodObject<{
+        type: z.ZodLiteral<"DEDICATED">;
+        modelId: z.ZodOptional<z.ZodString>;
+        endpointId: z.ZodString;
+    }, "strip", z.ZodTypeAny, {
+        type: "DEDICATED";
+        endpointId: string;
+        modelId?: string | undefined;
+    }, {
+        type: "DEDICATED";
+        endpointId: string;
+        modelId?: string | undefined;
+    }>]>>;
     compartmentId: z.ZodOptional<z.ZodString>;
     endpoint: z.ZodOptional<z.ZodString>;
     requestOptions: z.ZodOptional<z.ZodObject<{
@@ -512,7 +524,7 @@ declare const OCIProviderOptionsSchema: z.ZodObject<{
             maxRetries: z.ZodOptional<z.ZodNumber>;
             baseDelayMs: z.ZodOptional<z.ZodNumber>;
             maxDelayMs: z.ZodOptional<z.ZodNumber>;
-        }, "strip", z.ZodTypeAny, {
+        }, "strict", z.ZodTypeAny, {
             maxRetries?: number | undefined;
             baseDelayMs?: number | undefined;
             maxDelayMs?: number | undefined;
@@ -523,7 +535,7 @@ declare const OCIProviderOptionsSchema: z.ZodObject<{
             maxDelayMs?: number | undefined;
             enabled?: boolean | undefined;
         }>>;
-    }, "strip", z.ZodTypeAny, {
+    }, "strict", z.ZodTypeAny, {
         timeoutMs?: number | undefined;
         retry?: {
             maxRetries?: number | undefined;
@@ -540,14 +552,18 @@ declare const OCIProviderOptionsSchema: z.ZodObject<{
             enabled?: boolean | undefined;
         } | undefined;
     }>>;
-}, "strip", z.ZodTypeAny, {
+}, "strict", z.ZodTypeAny, {
     reasoningEffort?: "none" | "minimal" | "low" | "medium" | "high" | undefined;
     thinking?: boolean | undefined;
     tokenBudget?: number | undefined;
     servingMode?: {
-        type: "ON_DEMAND" | "DEDICATED";
-        modelId?: string | undefined;
+        type: "ON_DEMAND";
+        modelId: string;
         endpointId?: string | undefined;
+    } | {
+        type: "DEDICATED";
+        endpointId: string;
+        modelId?: string | undefined;
     } | undefined;
     compartmentId?: string | undefined;
     endpoint?: string | undefined;
@@ -565,9 +581,61 @@ declare const OCIProviderOptionsSchema: z.ZodObject<{
     thinking?: boolean | undefined;
     tokenBudget?: number | undefined;
     servingMode?: {
-        type: "ON_DEMAND" | "DEDICATED";
-        modelId?: string | undefined;
+        type: "ON_DEMAND";
+        modelId: string;
         endpointId?: string | undefined;
+    } | {
+        type: "DEDICATED";
+        endpointId: string;
+        modelId?: string | undefined;
+    } | undefined;
+    compartmentId?: string | undefined;
+    endpoint?: string | undefined;
+    requestOptions?: {
+        timeoutMs?: number | undefined;
+        retry?: {
+            maxRetries?: number | undefined;
+            baseDelayMs?: number | undefined;
+            maxDelayMs?: number | undefined;
+            enabled?: boolean | undefined;
+        } | undefined;
+    } | undefined;
+}>, {
+    reasoningEffort?: "none" | "minimal" | "low" | "medium" | "high" | undefined;
+    thinking?: boolean | undefined;
+    tokenBudget?: number | undefined;
+    servingMode?: {
+        type: "ON_DEMAND";
+        modelId: string;
+        endpointId?: string | undefined;
+    } | {
+        type: "DEDICATED";
+        endpointId: string;
+        modelId?: string | undefined;
+    } | undefined;
+    compartmentId?: string | undefined;
+    endpoint?: string | undefined;
+    requestOptions?: {
+        timeoutMs?: number | undefined;
+        retry?: {
+            maxRetries?: number | undefined;
+            baseDelayMs?: number | undefined;
+            maxDelayMs?: number | undefined;
+            enabled?: boolean | undefined;
+        } | undefined;
+    } | undefined;
+}, {
+    reasoningEffort?: "none" | "minimal" | "low" | "medium" | "high" | undefined;
+    thinking?: boolean | undefined;
+    tokenBudget?: number | undefined;
+    servingMode?: {
+        type: "ON_DEMAND";
+        modelId: string;
+        endpointId?: string | undefined;
+    } | {
+        type: "DEDICATED";
+        endpointId: string;
+        modelId?: string | undefined;
     } | undefined;
     compartmentId?: string | undefined;
     endpoint?: string | undefined;

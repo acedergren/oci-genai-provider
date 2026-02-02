@@ -6,9 +6,11 @@
  */
 
 import { createOCI } from '@acedergren/oci-genai-provider';
-import { generateText, streamText, type LanguageModelV1 } from 'ai';
+import { generateText, streamText } from 'ai';
 import type { ProxyConfig, AnthropicMessagesRequest, StreamEvent } from './types.js';
+import { anthropicMessagesRequestSchema } from './types.js';
 import { convertRequest, convertResponse, createErrorResponse } from './converter.js';
+import { ZodError } from 'zod';
 
 /**
  * Create the OCI provider instance
@@ -21,6 +23,25 @@ function createProvider(config: ProxyConfig): ReturnType<typeof createOCI> {
 }
 
 /**
+ * Check if origin is allowed based on config
+ */
+function isOriginAllowed(origin: string | null, config: ProxyConfig): boolean {
+  if (!origin) return false;
+
+  const allowed = config.allowedOrigins ?? ['http://localhost'];
+
+  // Check if any allowed pattern matches
+  return allowed.some((pattern) => {
+    // Support wildcard suffix like http://localhost:*
+    if (pattern.endsWith('*')) {
+      const prefix = pattern.slice(0, -1);
+      return origin.startsWith(prefix);
+    }
+    return origin === pattern;
+  });
+}
+
+/**
  * Handle non-streaming request
  */
 async function handleNonStreaming(
@@ -28,22 +49,26 @@ async function handleNonStreaming(
   config: ProxyConfig
 ): Promise<Response> {
   const provider = createProvider(config);
-  const { model, messages, maxTokens, temperature, topP, stopSequences } = convertRequest(request);
+  const converted = convertRequest(request);
 
   if (config.verbose) {
-    console.warn(`[proxy] Non-streaming request for model: ${model}`);
+    console.warn(`[proxy] Non-streaming request for model: ${converted.model}`);
   }
 
   const result = await generateText({
-    model: provider.languageModel(model) as unknown as LanguageModelV1,
-    messages,
-    maxTokens,
-    temperature,
-    topP,
-    stopSequences,
+    model: provider.languageModel(converted.model),
+    messages: converted.messages,
+    maxOutputTokens: converted.maxOutputTokens,
+    temperature: converted.temperature,
+    topP: converted.topP,
+    stopSequences: converted.stopSequences,
+    system: converted.system,
   });
 
-  const response = convertResponse(result.text, request.model, result.finishReason, result.usage);
+  const response = convertResponse(result.text, request.model, result.finishReason, {
+    inputTokens: result.usage.inputTokens ?? 0,
+    outputTokens: result.usage.outputTokens ?? 0,
+  });
 
   return new Response(JSON.stringify(response), {
     status: 200,
@@ -59,19 +84,20 @@ async function handleNonStreaming(
  */
 function handleStreaming(request: AnthropicMessagesRequest, config: ProxyConfig): Response {
   const provider = createProvider(config);
-  const { model, messages, maxTokens, temperature, topP, stopSequences } = convertRequest(request);
+  const converted = convertRequest(request);
 
   if (config.verbose) {
-    console.warn(`[proxy] Streaming request for model: ${model}`);
+    console.warn(`[proxy] Streaming request for model: ${converted.model}`);
   }
 
   const result = streamText({
-    model: provider.languageModel(model) as unknown as LanguageModelV1,
-    messages,
-    maxTokens,
-    temperature,
-    topP,
-    stopSequences,
+    model: provider.languageModel(converted.model),
+    messages: converted.messages,
+    maxOutputTokens: converted.maxOutputTokens,
+    temperature: converted.temperature,
+    topP: converted.topP,
+    stopSequences: converted.stopSequences,
+    system: converted.system,
   });
 
   const messageId = `msg_${Date.now().toString(36)}`;
@@ -178,13 +204,21 @@ async function handleRequest(req: Request, config: ProxyConfig): Promise<Respons
 
   // CORS preflight
   if (req.method === 'OPTIONS') {
+    const origin = req.headers.get('origin');
+    const headers: Record<string, string> = {
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Api-Key, Anthropic-Version',
+    };
+
+    // Only set CORS header if origin is allowed
+    if (isOriginAllowed(origin, config)) {
+      headers['Access-Control-Allow-Origin'] = origin!;
+      headers['Vary'] = 'Origin';
+    }
+
     return new Response(null, {
       status: 204,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Api-Key, Anthropic-Version',
-      },
+      headers,
     });
   }
 
@@ -207,24 +241,27 @@ async function handleRequest(req: Request, config: ProxyConfig): Promise<Respons
   }
 
   try {
-    const body = (await req.json()) as AnthropicMessagesRequest;
+    // Parse and validate request body with Zod
+    const rawBody = await req.json();
+    const validationResult = anthropicMessagesRequestSchema.safeParse(rawBody);
 
-    if (config.verbose) {
-      console.warn(
-        `[proxy] Request: model=${body.model}, messages=${body.messages.length}, stream=${body.stream}`
-      );
-    }
-
-    // Validate required fields
-    if (!body.model || !body.messages || !body.max_tokens) {
+    if (!validationResult.success) {
       return new Response(
         JSON.stringify(
           createErrorResponse(
             'invalid_request_error',
-            'Missing required fields: model, messages, max_tokens'
+            `Invalid request: ${validationResult.error.issues.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')}`
           )
         ),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const body = validationResult.data as AnthropicMessagesRequest;
+
+    if (config.verbose) {
+      console.warn(
+        `[proxy] Request: model=${body.model}, messages=${body.messages.length}, stream=${body.stream}`
       );
     }
 
@@ -234,6 +271,18 @@ async function handleRequest(req: Request, config: ProxyConfig): Promise<Respons
       return handleNonStreaming(body, config);
     }
   } catch (error) {
+    if (error instanceof ZodError) {
+      return new Response(
+        JSON.stringify(
+          createErrorResponse(
+            'invalid_request_error',
+            `Validation error: ${error.issues.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')}`
+          )
+        ),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error(`[proxy] Error: ${message}`);
 

@@ -4,7 +4,7 @@
  * Converts between Anthropic Messages API format and OCI GenAI format
  */
 
-import type { CoreMessage, ImagePart, TextPart } from 'ai';
+import type { UserModelMessage, AssistantModelMessage, TextPart, ImagePart, UserContent } from 'ai';
 import type {
   AnthropicMessagesRequest,
   AnthropicMessagesResponse,
@@ -13,6 +13,8 @@ import type {
   AnthropicResponseContent,
 } from './types.js';
 import { mapModel } from './types.js';
+
+type ModelMessage = UserModelMessage | AssistantModelMessage;
 
 /**
  * Convert Anthropic content block to AI SDK format
@@ -38,21 +40,24 @@ function convertContentBlock(block: ContentBlock): TextPart | ImagePart {
 }
 
 /**
- * Convert Anthropic message to AI SDK CoreMessage format
+ * Convert Anthropic message to AI SDK Message format
  */
-function convertMessage(msg: AnthropicMessage): CoreMessage {
-  const content = Array.isArray(msg.content) ? msg.content.map(convertContentBlock) : msg.content;
-
+function convertMessage(msg: AnthropicMessage): ModelMessage {
   if (msg.role === 'user') {
+    const content: UserContent = Array.isArray(msg.content)
+      ? msg.content.map(convertContentBlock)
+      : msg.content;
     return { role: 'user', content };
   }
 
-  // Assistant messages
+  // Assistant messages - AI SDK expects string content for assistant
+  const content = Array.isArray(msg.content) ? msg.content.map(convertContentBlock) : msg.content;
+
   if (typeof content === 'string') {
     return { role: 'assistant', content };
   }
 
-  // Convert parts to string for assistant (AI SDK expects string for assistant)
+  // Convert parts to string for assistant
   const textContent = content
     .filter((p): p is TextPart => p.type === 'text')
     .map((p) => p.text)
@@ -66,19 +71,14 @@ function convertMessage(msg: AnthropicMessage): CoreMessage {
  */
 export function convertRequest(request: AnthropicMessagesRequest): {
   model: string;
-  messages: CoreMessage[];
-  maxTokens: number;
+  messages: ModelMessage[];
+  maxOutputTokens: number;
   temperature?: number;
   topP?: number;
-  topK?: number;
   stopSequences?: string[];
+  system?: string;
 } {
-  const messages: CoreMessage[] = [];
-
-  // Add system message if present
-  if (request.system) {
-    messages.push({ role: 'system', content: request.system });
-  }
+  const messages: ModelMessage[] = [];
 
   // Convert messages
   for (const msg of request.messages) {
@@ -88,11 +88,11 @@ export function convertRequest(request: AnthropicMessagesRequest): {
   return {
     model: mapModel(request.model),
     messages,
-    maxTokens: request.max_tokens,
+    maxOutputTokens: request.max_tokens,
     temperature: request.temperature,
     topP: request.top_p,
-    topK: request.top_k,
     stopSequences: request.stop_sequences,
+    system: request.system,
   };
 }
 
@@ -112,7 +112,7 @@ export function convertResponse(
   text: string,
   model: string,
   finishReason: string,
-  usage: { promptTokens: number; completionTokens: number }
+  usage: { inputTokens: number; outputTokens: number }
 ): AnthropicMessagesResponse {
   const content: AnthropicResponseContent[] = [
     {
@@ -138,8 +138,8 @@ export function convertResponse(
     stop_reason: stopReason,
     stop_sequence: null,
     usage: {
-      input_tokens: usage.promptTokens,
-      output_tokens: usage.completionTokens,
+      input_tokens: usage.inputTokens,
+      output_tokens: usage.outputTokens,
     },
   };
 }

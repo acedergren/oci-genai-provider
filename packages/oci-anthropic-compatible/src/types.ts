@@ -4,6 +4,8 @@
  * Types for Anthropic Messages API compatibility
  */
 
+import { z } from 'zod';
+
 /**
  * Anthropic message role
  */
@@ -176,6 +178,47 @@ export function mapModel(anthropicModel: string): string {
 }
 
 /**
+ * Zod schemas for runtime validation
+ */
+const textContentSchema = z.object({
+  type: z.literal('text'),
+  text: z.string(),
+});
+
+const imageContentSchema = z.object({
+  type: z.literal('image'),
+  source: z.object({
+    type: z.literal('base64'),
+    media_type: z.string(),
+    data: z.string(),
+  }),
+});
+
+const contentBlockSchema = z.union([textContentSchema, imageContentSchema, z.string()]);
+
+const anthropicMessageSchema = z.object({
+  role: z.enum(['user', 'assistant']),
+  content: z.union([z.array(contentBlockSchema), z.string()]),
+});
+
+export const anthropicMessagesRequestSchema = z.object({
+  model: z.string().min(1),
+  messages: z.array(anthropicMessageSchema).min(1),
+  max_tokens: z.number().int().positive(),
+  system: z.string().optional(),
+  temperature: z.number().min(0).max(1).optional(),
+  top_p: z.number().min(0).max(1).optional(),
+  top_k: z.number().int().positive().optional(),
+  stop_sequences: z.array(z.string()).optional(),
+  stream: z.boolean().optional(),
+  metadata: z
+    .object({
+      user_id: z.string().optional(),
+    })
+    .optional(),
+});
+
+/**
  * Proxy server configuration
  */
 export interface ProxyConfig {
@@ -191,4 +234,6 @@ export interface ProxyConfig {
   profile: string;
   /** Enable verbose logging */
   verbose: boolean;
+  /** Allowed CORS origins (default: http://localhost:*) */
+  allowedOrigins?: string[];
 }

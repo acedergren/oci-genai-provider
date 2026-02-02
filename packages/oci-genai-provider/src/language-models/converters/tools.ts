@@ -109,7 +109,7 @@ function sanitizeSchema(schema: any): any {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   delete sanitized.$schema;
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  delete sanitized.ref;
+  delete sanitized['$ref'];
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   for (const [key, value] of Object.entries(sanitized)) {

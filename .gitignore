@@ -20,6 +20,16 @@ dist/
 .env.local
 .env.*.local
 
+# Credentials and certificates
+*.pem
+*.p12
+*.pfx
+*.key
+*secret*
+*wallet*
+*.sso
+oci_api_key*.pem
+
 # Project-specific
 .firecrawl/
 .worktrees/
