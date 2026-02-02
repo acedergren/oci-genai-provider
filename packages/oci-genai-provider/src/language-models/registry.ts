@@ -92,7 +92,7 @@ export const MODEL_CATALOG: ExtendedModelMetadata[] = [
     speed: 'very-fast',
     regions: GROK_REGIONS,
     codingRecommended: true,
-    codingNote: '2M context window - ideal for large codebases',
+    codingNote: 'Built-in reasoning always active - 2M context window ideal for large codebases',
   },
   {
     id: 'xai.grok-4-1-fast-non-reasoning',
@@ -112,6 +112,8 @@ export const MODEL_CATALOG: ExtendedModelMetadata[] = [
     contextWindow: 131072,
     speed: 'very-fast',
     regions: GROK_REGIONS,
+    codingRecommended: true,
+    codingNote: 'Built-in reasoning always active',
   },
   {
     id: 'xai.grok-4-fast-non-reasoning',
