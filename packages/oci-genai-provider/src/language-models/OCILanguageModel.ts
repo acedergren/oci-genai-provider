@@ -98,9 +98,14 @@ export class OCILanguageModel implements LanguageModelV3 {
     return resolveRequestOptions(this.config.requestOptions, perRequestOptions);
   }
 
-  private getApiFormat(): OCIApiFormat {
+  private getApiFormat(hasImages: boolean = false): OCIApiFormat {
     const metadata = getModelMetadata(this.modelId);
     if (metadata?.family === 'cohere') {
+      // Upgrade to COHEREV2 for vision-capable models when images are present
+      // COHERE V1 format silently drops images, V2 supports them properly
+      if (hasImages && supportsVision(this.modelId)) {
+        return 'COHEREV2';
+      }
       return 'COHERE';
     }
     return 'GENERIC';
@@ -215,7 +220,10 @@ export class OCILanguageModel implements LanguageModelV3 {
       getCompartmentId(this.config),
       ociOptions?.compartmentId
     );
-    const apiFormat = this.getApiFormat();
+
+    // Check for images early - needed for API format selection
+    const hasImages = messages.some((m) => m.content.some((c) => c.type === 'IMAGE'));
+    const apiFormat = this.getApiFormat(hasImages);
     const warnings: SharedV3Warning[] = [];
 
     if (options.responseFormat?.type === 'json') {
@@ -259,7 +267,6 @@ export class OCILanguageModel implements LanguageModelV3 {
 
     // Vision support validation
     const modelSupportsVision = supportsVision(this.modelId);
-    const hasImages = messages.some((m) => m.content.some((c) => c.type === 'IMAGE'));
 
     if (hasImages && !modelSupportsVision) {
       warnings.push({
@@ -270,6 +277,7 @@ export class OCILanguageModel implements LanguageModelV3 {
     }
 
     // Cohere V1 format silently drops images - warn the user
+    // Note: vision-capable Cohere models are automatically upgraded to COHEREV2 format
     if (hasImages && apiFormat === 'COHERE') {
       warnings.push({
         type: 'unsupported',
