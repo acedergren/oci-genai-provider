@@ -27,7 +27,8 @@ export interface OCICohereTool {
 interface OCICohereParameterDefinition {
   type: string;
   description?: string;
-  required?: boolean;
+  /** Cohere uses isRequired, not required (learned from opencode-oci-provider V2) */
+  isRequired?: boolean;
 }
 
 /**
@@ -93,6 +94,7 @@ export function convertToOCITools(
   return tools.map((tool) => convertToGenericToolFormat(tool));
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function sanitizeSchema(schema: any): any {
   if (!schema || typeof schema !== 'object') {
     return schema;
@@ -102,11 +104,16 @@ function sanitizeSchema(schema: any): any {
     return schema.map(sanitizeSchema);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const sanitized = { ...schema };
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   delete sanitized.$schema;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   delete sanitized.ref;
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   for (const [key, value] of Object.entries(sanitized)) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     sanitized[key] = sanitizeSchema(value);
   }
 
@@ -114,10 +121,13 @@ function sanitizeSchema(schema: any): any {
 }
 
 function convertToGenericToolFormat(tool: LanguageModelV3FunctionTool): OCIFunctionDefinition {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const parameters = sanitizeSchema(tool.inputSchema as Record<string, unknown>) || {};
 
   // Ensure the schema has a type 'object'
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   if (!parameters.type) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     parameters.type = 'object';
   }
 
@@ -125,6 +135,7 @@ function convertToGenericToolFormat(tool: LanguageModelV3FunctionTool): OCIFunct
     type: 'FUNCTION',
     name: tool.name,
     description: tool.description ?? '',
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     parameters,
   };
 }
@@ -142,9 +153,9 @@ function convertToCohereToolFormat(tool: LanguageModelV3FunctionTool): OCICohere
     const required = schema.required ?? [];
     for (const [key, value] of Object.entries(schema.properties)) {
       parameterDefinitions[key] = {
-        type: value.type,
+        type: value.type || 'string', // Default to string if type is missing
         description: value.description,
-        required: required.includes(key),
+        isRequired: required.includes(key), // Cohere uses isRequired, not required
       };
     }
   }
