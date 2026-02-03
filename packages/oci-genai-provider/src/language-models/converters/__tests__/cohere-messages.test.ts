@@ -92,10 +92,8 @@ describe('convertToCohereFormat', () => {
             {
               id: 'call_123',
               type: 'FUNCTION',
-              function: {
-                name: 'get_weather',
-                arguments: '{"city": "London"}',
-              },
+              name: 'get_weather',
+              arguments: '{"city": "London"}',
             },
           ],
         },
@@ -138,10 +136,8 @@ describe('convertToCohereFormat', () => {
             {
               id: 'call_weather',
               type: 'FUNCTION',
-              function: {
-                name: 'get_weather',
-                arguments: '{"city": "Paris"}',
-              },
+              name: 'get_weather',
+              arguments: '{"city": "Paris"}',
             },
           ],
         },
@@ -182,18 +178,14 @@ describe('convertToCohereFormat', () => {
             {
               id: 'call_1',
               type: 'FUNCTION',
-              function: {
-                name: 'get_weather',
-                arguments: '{"city": "London"}',
-              },
+              name: 'get_weather',
+              arguments: '{"city": "London"}',
             },
             {
               id: 'call_2',
               type: 'FUNCTION',
-              function: {
-                name: 'get_weather',
-                arguments: '{"city": "Paris"}',
-              },
+              name: 'get_weather',
+              arguments: '{"city": "Paris"}',
             },
           ],
         },
@@ -233,10 +225,8 @@ describe('convertToCohereFormat', () => {
             {
               id: 'call_bash',
               type: 'FUNCTION',
-              function: {
-                name: 'bash',
-                arguments: '{"command": "pwd"}',
-              },
+              name: 'bash',
+              arguments: '{"command": "pwd"}',
             },
           ],
         },
@@ -288,10 +278,8 @@ describe('convertToCohereFormat', () => {
             {
               id: 'call_1',
               type: 'FUNCTION',
-              function: {
-                name: 'get_weather',
-                arguments: '{}',
-              },
+              name: 'get_weather',
+              arguments: '{}',
             },
           ],
         },
@@ -328,10 +316,8 @@ describe('convertToCohereFormat', () => {
             {
               id: 'call_ls',
               type: 'FUNCTION',
-              function: {
-                name: 'ls',
-                arguments: '', // Empty arguments string
-              },
+              name: 'ls',
+              arguments: '', // Empty arguments string
             },
           ],
         },

@@ -12,13 +12,13 @@ export interface OCIMessage {
     | { type: 'TEXT'; text: string; imageUrl?: never }
     | { type: 'IMAGE'; imageUrl: { url: string }; text?: never }
   >;
+  // OCI uses flat structure: { id, type, name, arguments } - NOT nested { function: { name, arguments } }
+  // See: oci-generativeaiinference/lib/model/function-call.d.ts
   toolCalls?: Array<{
     id: string;
     type: 'FUNCTION';
-    function: {
-      name: string;
-      arguments: string;
-    };
+    name: string;
+    arguments: string;
   }>;
   toolCallId?: string;
 }
@@ -83,11 +83,9 @@ export function convertToOCIMessages(prompt: LanguageModelV3Prompt): OCIMessage[
           toolCalls = toolCallParts.map((part) => ({
             id: part.toolCallId,
             type: 'FUNCTION' as const,
-            function: {
-              name: part.toolName,
-              arguments:
-                typeof part.input === 'string' ? part.input : JSON.stringify(part.input ?? {}),
-            },
+            name: part.toolName,
+            arguments:
+              typeof part.input === 'string' ? part.input : JSON.stringify(part.input ?? {}),
           }));
         }
       }

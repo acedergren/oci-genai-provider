@@ -139,7 +139,7 @@ describe('Tool Calling Integration', () => {
       // Assistant message with tool call
       expect(ociMessages[1].role).toBe('ASSISTANT');
       expect(ociMessages[1].toolCalls).toHaveLength(1);
-      expect(ociMessages[1].toolCalls?.[0].function.name).toBe('get_weather');
+      expect(ociMessages[1].toolCalls?.[0].name).toBe('get_weather');
 
       // Tool result message
       expect(ociMessages[2].role).toBe('TOOL');

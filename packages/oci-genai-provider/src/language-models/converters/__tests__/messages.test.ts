@@ -342,10 +342,8 @@ describe('Message Conversion', () => {
           {
             id: 'call_123',
             type: 'FUNCTION',
-            function: {
-              name: 'get_weather',
-              arguments: '{"location":"London"}',
-            },
+            name: 'get_weather',
+            arguments: '{"location":"London"}',
           },
         ],
       });
@@ -368,7 +366,7 @@ describe('Message Conversion', () => {
 
       const result = convertToOCIMessages(aiPrompt);
 
-      expect(result[0].toolCalls?.[0].function.arguments).toBe('{"query":"test"}');
+      expect(result[0].toolCalls?.[0].arguments).toBe('{"query":"test"}');
     });
 
     it('should convert assistant message with text and tool-call parts', () => {
@@ -392,7 +390,7 @@ describe('Message Conversion', () => {
       expect(result[0].content).toHaveLength(1);
       expect(result[0].content?.[0].text).toBe('Let me check the weather.');
       expect(result[0].toolCalls).toHaveLength(1);
-      expect(result[0].toolCalls?.[0].function.name).toBe('get_weather');
+      expect(result[0].toolCalls?.[0].name).toBe('get_weather');
     });
 
     it('should convert tool message with tool-result part', () => {
@@ -464,7 +462,7 @@ describe('Message Conversion', () => {
 
       const result = convertToOCIMessages(aiPrompt);
 
-      expect(result[0].toolCalls?.[0].function.arguments).toBe('{}');
+      expect(result[0].toolCalls?.[0].arguments).toBe('{}');
     });
   });
 

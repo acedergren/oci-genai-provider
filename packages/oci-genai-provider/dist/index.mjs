@@ -4083,6 +4083,13 @@ function supportsReasoning(modelId) {
   const model = MODEL_CATALOG.find((m) => m.id === modelId);
   return model?.capabilities.reasoning ?? false;
 }
+function supportsVision(modelId) {
+  const model = MODEL_CATALOG.find((m) => m.id === modelId);
+  return model?.capabilities.vision ?? false;
+}
+function getVisionModels() {
+  return MODEL_CATALOG.filter((m) => m.capabilities.vision);
+}
 
 // src/language-models/converters/messages.ts
 var ROLE_MAP = {
@@ -4127,10 +4134,8 @@ function convertToOCIMessages(prompt) {
           toolCalls = toolCallParts.map((part) => ({
             id: part.toolCallId,
             type: "FUNCTION",
-            function: {
-              name: part.toolName,
-              arguments: typeof part.input === "string" ? part.input : JSON.stringify(part.input ?? {})
-            }
+            name: part.toolName,
+            arguments: typeof part.input === "string" ? part.input : JSON.stringify(part.input ?? {})
           }));
         }
       }
@@ -4172,7 +4177,19 @@ function convertFilePartToOCIContent(part) {
     } else if (part.data instanceof URL) {
       url = part.data.toString();
     }
+    if (!url) {
+      console.warn(
+        "[OCI Messages] Failed to convert image data - unsupported data type:",
+        typeof part.data
+      );
+      return null;
+    }
     return { type: "IMAGE", imageUrl: { url } };
+  }
+  if (part.mediaType) {
+    console.warn(
+      `[OCI Messages] Unsupported file type "${part.mediaType}" - only images are supported. File will be ignored.`
+    );
   }
   return null;
 }
@@ -4231,18 +4248,18 @@ function convertToCohereFormat(messages) {
         const cohereToolCalls = msg.toolCalls.map((tc) => {
           let parameters = {};
           try {
-            if (tc.function.arguments) {
-              parameters = JSON.parse(tc.function.arguments);
+            if (tc.arguments) {
+              parameters = JSON.parse(tc.arguments);
             }
           } catch {
             parameters = {};
           }
           toolCallsById.set(tc.id, {
-            name: tc.function.name,
+            name: tc.name,
             parameters
           });
           return {
-            name: tc.function.name,
+            name: tc.name,
             parameters
           };
         });
@@ -4459,7 +4476,11 @@ async function* parseSSEStream(input, options) {
             };
           }
         }
-      } catch {
+      } catch (error) {
+        console.error("[OCI SSE Parser] Failed to parse chunk:", {
+          data: data.length > 200 ? data.substring(0, 200) + "..." : data,
+          error: error instanceof Error ? error.message : String(error)
+        });
         if (includeRawChunks) {
           parts.push({
             type: "raw",
@@ -4477,16 +4498,11 @@ async function* parseSSEStream(input, options) {
       yield parts[yieldedIndex++];
     }
   }
-  if (hasFinishOrUsage) {
-    yield {
-      type: "finish",
-      finishReason: {
-        unified: lastFinishReason,
-        raw: lastRawFinishReason
-      },
-      usage: lastUsage
-    };
-  }
+  yield {
+    type: "finish",
+    finishReason: hasFinishOrUsage ? { unified: lastFinishReason, raw: lastRawFinishReason } : { unified: "other", raw: "INCOMPLETE" },
+    usage: lastUsage
+  };
   while (yieldedIndex < parts.length) {
     yield parts[yieldedIndex++];
   }
@@ -4988,10 +5004,10 @@ var OCILanguageModel = class {
   getRequestOptions(perRequestOptions) {
     return resolveRequestOptions(this.config.requestOptions, perRequestOptions);
   }
-  getApiFormat() {
+  getApiFormat(hasImages = false) {
     const metadata = getModelMetadata(this.modelId);
     if (metadata?.family === "cohere") {
-      if (metadata.capabilities?.vision) {
+      if (hasImages && metadata.capabilities.vision) {
         return "COHEREV2";
       }
       return "COHERE";
@@ -5039,6 +5055,11 @@ var OCILanguageModel = class {
         const { done, value } = await reader.read();
         if (done) break;
         switch (value.type) {
+          case "stream-start":
+            if (value.warnings) {
+              warnings.push(...value.warnings);
+            }
+            break;
           case "text-delta": {
             const last = content[content.length - 1];
             if (last?.type === "text") {
@@ -5095,7 +5116,8 @@ var OCILanguageModel = class {
       getCompartmentId(this.config),
       ociOptions?.compartmentId
     );
-    const apiFormat = this.getApiFormat();
+    const hasImages = messages.some((m) => m.content.some((c) => c.type === "IMAGE"));
+    const apiFormat = this.getApiFormat(hasImages);
     const warnings = [];
     if (options.responseFormat?.type === "json") {
       warnings.push({
@@ -5127,6 +5149,21 @@ var OCILanguageModel = class {
         type: "unsupported",
         feature: "thinking",
         details: `Model ${this.modelId} does not support thinking/reasoning. Use a reasoning model like cohere.command-a-reasoning-08-2025.`
+      });
+    }
+    const modelSupportsVision = supportsVision(this.modelId);
+    if (hasImages && !modelSupportsVision) {
+      warnings.push({
+        type: "unsupported",
+        feature: "vision",
+        details: `Model ${this.modelId} does not support image input. Use a vision model like meta.llama-3.2-90b-vision-instruct, google.gemini-2.5-flash, or cohere.command-a-vision.`
+      });
+    }
+    if (hasImages && apiFormat === "COHERE") {
+      warnings.push({
+        type: "unsupported",
+        feature: "vision",
+        details: `Cohere V1 API format does not support images. Images in your prompt will be ignored. Use a vision-capable model like cohere.command-a-vision which uses the Cohere V2 format.`
       });
     }
     try {
@@ -5295,6 +5332,7 @@ var OCILanguageModel = class {
                 }
               }
             } catch (error) {
+              console.error("[OCI Stream] Error during stream processing:", error);
               controller.enqueue({ type: "error", error });
             } finally {
               controller.close();
@@ -7462,6 +7500,6 @@ function createOCI(config = {}) {
 }
 var oci = createOCI();
 
-export { AuthenticationError, CompartmentIdSchema, ConfigProfileSchema, EndpointIdSchema, ModelIdSchema, ModelNotFoundError, NetworkError, OCIChatModelIdSchema, OCIEmbeddingModel, OCIGenAIError, OCIGenAIProvider, OCILanguageModel, OCIProviderOptionsSchema, OCIProviderSettingsSchema, OCIRealtimeClient, OCIRealtimeTranscription, OCIRerankingModel, OCISpeechModel, OCITranscriptionModel, RateLimitError, RegionSchema, ServingModeSchema2 as ServingModeSchema, TimeoutError, WebSocketAdapter, WebSocketReadyState, createOCI, getAllEmbeddingModels, getAllModels, getAllRerankingModels, getAllSpeechModels, getAllTranscriptionModels, getAllVoices, getCodingRecommendedModels, getEmbeddingModelMetadata, getModelMetadata, getModelsByFamily, getModelsByRegion, getRerankingModelMetadata, getSpeechModelMetadata, getSupportedLanguages, getTranscriptionModelMetadata, handleOCIError, isCodingSuitable, isRetryableError, isRetryableStatusCode, isValidEmbeddingModelId, isValidModelId, isValidRerankingModelId, isValidSpeechModelId, isValidTranscriptionModelId, oci, parseProviderOptions, parseProviderSettings, supportsReasoning, validateProviderSettings, withRetry, withTimeout };
+export { AuthenticationError, CompartmentIdSchema, ConfigProfileSchema, EndpointIdSchema, ModelIdSchema, ModelNotFoundError, NetworkError, OCIChatModelIdSchema, OCIEmbeddingModel, OCIGenAIError, OCIGenAIProvider, OCILanguageModel, OCIProviderOptionsSchema, OCIProviderSettingsSchema, OCIRealtimeClient, OCIRealtimeTranscription, OCIRerankingModel, OCISpeechModel, OCITranscriptionModel, RateLimitError, RegionSchema, ServingModeSchema2 as ServingModeSchema, TimeoutError, WebSocketAdapter, WebSocketReadyState, createOCI, getAllEmbeddingModels, getAllModels, getAllRerankingModels, getAllSpeechModels, getAllTranscriptionModels, getAllVoices, getCodingRecommendedModels, getEmbeddingModelMetadata, getModelMetadata, getModelsByFamily, getModelsByRegion, getRerankingModelMetadata, getSpeechModelMetadata, getSupportedLanguages, getTranscriptionModelMetadata, getVisionModels, handleOCIError, isCodingSuitable, isRetryableError, isRetryableStatusCode, isValidEmbeddingModelId, isValidModelId, isValidRerankingModelId, isValidSpeechModelId, isValidTranscriptionModelId, oci, parseProviderOptions, parseProviderSettings, supportsReasoning, supportsVision, validateProviderSettings, withRetry, withTimeout };
 //# sourceMappingURL=index.mjs.map
 //# sourceMappingURL=index.mjs.map

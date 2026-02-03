@@ -141,8 +141,8 @@ export function convertToCohereFormat(messages: OCIMessage[]): CohereChatRequest
           // Parse arguments from JSON string to object
           let parameters: Record<string, unknown> = {};
           try {
-            if (tc.function.arguments) {
-              parameters = JSON.parse(tc.function.arguments) as Record<string, unknown>;
+            if (tc.arguments) {
+              parameters = JSON.parse(tc.arguments) as Record<string, unknown>;
             }
           } catch {
             parameters = {};
@@ -150,12 +150,12 @@ export function convertToCohereFormat(messages: OCIMessage[]): CohereChatRequest
 
           // Store for matching with tool results
           toolCallsById.set(tc.id, {
-            name: tc.function.name,
+            name: tc.name,
             parameters,
           });
 
           return {
-            name: tc.function.name,
+            name: tc.name,
             parameters,
           };
         });
