@@ -15,6 +15,8 @@
 
 # OCI Generative AI Provider for Vercel AI SDK
 
+> **Community Project** — This is an independent, community-maintained project with no official affiliation with Oracle Corporation. Use of Oracle trademarks is for identification purposes only.
+
 **Bring Oracle Cloud's AI models to your applications.** This community-built provider connects the Vercel AI SDK to OCI Generative AI, giving you access to xAI Grok, Meta Llama, Cohere, and Google Gemini models through a familiar interface.
 
 [![CI](https://github.com/acedergren/oci-genai-provider/actions/workflows/ci.yml/badge.svg)](https://github.com/acedergren/oci-genai-provider/actions/workflows/ci.yml)
@@ -230,11 +232,11 @@ pnpm test
 
 ## Legal
 
-**Independent Project** — This is a community project with no affiliation to Oracle Corporation. "OCI" and "Oracle Cloud Infrastructure" refer to compatibility with Oracle's services, not endorsement by Oracle.
+**Community Project** — This is an independent, community-maintained project. It is **not affiliated with, endorsed by, or sponsored by Oracle Corporation**. "OCI" and "Oracle Cloud Infrastructure" are trademarks of Oracle Corporation, used here solely for identification purposes to describe compatibility with Oracle's services.
 
 **License** — MIT
 
-**Disclaimer** — This software is provided "as is" without warranty. The authors and Oracle Corporation bear no liability for damages arising from its use. You are responsible for compliance with all applicable laws and Oracle's terms of service.
+**Disclaimer** — This software is provided "as is" without warranty of any kind. Neither the authors nor Oracle Corporation bear any liability for damages arising from its use. Users are responsible for compliance with all applicable laws and Oracle's terms of service when using this software with Oracle Cloud Infrastructure.
 
 ---
 

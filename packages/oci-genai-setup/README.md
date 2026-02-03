@@ -1,5 +1,7 @@
 # OCI GenAI Setup
 
+> **Community Project** — This is an independent, community-maintained project with no official affiliation with Oracle Corporation.
+
 Interactive setup wizard for configuring OCI GenAI provider with support for AI SDK, OpenCode, and Claude Code.
 
 ## Features
@@ -213,6 +215,10 @@ Make sure your private key file has correct permissions:
 ```bash
 chmod 600 ~/.oci/oci_api_key.pem
 ```
+
+## Legal
+
+**Community Project** — This package is not affiliated with, endorsed by, or sponsored by Oracle Corporation. "OCI" and "Oracle Cloud Infrastructure" are trademarks of Oracle Corporation.
 
 ## License
 

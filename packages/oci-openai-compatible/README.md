@@ -1,5 +1,7 @@
 # @acedergren/oci-openai-compatible
 
+> **Community Project** — This is an independent, community-maintained project with no official affiliation with Oracle Corporation.
+
 OpenAI-compatible wrapper for Oracle Cloud Infrastructure (OCI) Generative AI Service.
 
 [![npm version](https://img.shields.io/npm/v/@acedergren/oci-openai-compatible.svg)](https://www.npmjs.com/package/@acedergren/oci-openai-compatible)
@@ -211,6 +213,10 @@ See [examples/](./examples/) directory for:
 
 - [`@acedergren/oci-genai-provider`](../oci-genai-provider) - Native OCI provider with full ProviderV3 support
 - [`@acedergren/oci-anthropic-compatible`](../oci-anthropic-compatible) - Anthropic-compatible API proxy for Claude Code
+
+## Legal
+
+**Community Project** — This package is not affiliated with, endorsed by, or sponsored by Oracle Corporation or OpenAI. "OCI" and "Oracle Cloud Infrastructure" are trademarks of Oracle Corporation. "OpenAI" is a trademark of OpenAI, Inc.
 
 ## License
 

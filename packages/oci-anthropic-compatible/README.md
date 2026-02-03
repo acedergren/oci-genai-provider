@@ -1,5 +1,7 @@
 # @acedergren/oci-anthropic-compatible
 
+> **Community Project** — This is an independent, community-maintained project with no official affiliation with Oracle Corporation or Anthropic.
+
 Anthropic-compatible proxy server for OCI Generative AI Service. Enables Claude Code and other Anthropic API clients to use OCI GenAI models.
 
 ## Features
@@ -102,6 +104,10 @@ You can also use OCI model IDs directly (e.g., `meta.llama-3.3-70b-instruct`).
 | `/v1/messages` | POST   | Anthropic Messages API |
 | `/health`      | GET    | Health check           |
 | `/`            | GET    | Health check           |
+
+## Legal
+
+**Community Project** — This package is not affiliated with, endorsed by, or sponsored by Oracle Corporation or Anthropic. "OCI" and "Oracle Cloud Infrastructure" are trademarks of Oracle Corporation. "Claude" and "Anthropic" are trademarks of Anthropic, PBC.
 
 ## License
 

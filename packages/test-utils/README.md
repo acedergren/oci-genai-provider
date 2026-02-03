@@ -4,6 +4,8 @@ Shared test utilities for the OCI GenAI monorepo.
 
 > **Private Package:** This package is not published to npm. It's only used within the monorepo for testing.
 
+> **Community Project** — This is part of an independent, community-maintained project with no official affiliation with Oracle Corporation.
+
 ## Purpose
 
 This package provides common test mocks, fixtures, and helpers used across all packages in the monorepo. By centralizing test utilities, we ensure:

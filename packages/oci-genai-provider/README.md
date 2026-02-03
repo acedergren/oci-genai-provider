@@ -1,5 +1,7 @@
 # @acedergren/oci-genai-provider
 
+> **Community Project** — This is an independent, community-maintained project with no official affiliation with Oracle Corporation.
+
 Oracle Cloud Infrastructure (OCI) Generative AI provider for the [Vercel AI SDK](https://sdk.vercel.ai/docs).
 
 Complete ProviderV3 implementation supporting language models, embeddings, speech synthesis, transcription, and reranking.
@@ -540,6 +542,10 @@ pnpm --filter @acedergren/oci-genai-provider test -- --watch
 ## Contributing
 
 See [CONTRIBUTING.md](../../CONTRIBUTING.md) for development setup and guidelines.
+
+## Legal
+
+**Community Project** — This package is not affiliated with, endorsed by, or sponsored by Oracle Corporation. "OCI" and "Oracle Cloud Infrastructure" are trademarks of Oracle Corporation.
 
 ## License
 
