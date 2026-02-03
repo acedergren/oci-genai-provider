@@ -33,6 +33,7 @@ oci_api_key*.pem
 # Project-specific
 .firecrawl/
 .worktrees/
+.agents/
 
 # Claude agent configs (may contain sensitive paths)
 .claude/
@@ -55,7 +56,6 @@ repo-explorer.html
 .oci-chat-history.json
 .gemini-clipboard/
 .codex/
-.agents/
 
 # Test and debug logs
 *.log

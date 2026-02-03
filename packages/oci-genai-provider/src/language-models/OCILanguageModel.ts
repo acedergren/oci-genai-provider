@@ -13,7 +13,7 @@ import { NoSuchModelError } from '@ai-sdk/provider';
 import { GenerativeAiInferenceClient, models as OCIModel } from 'oci-generativeaiinference';
 import { Region } from 'oci-common';
 import type { OCIConfig, RequestOptions } from '../types';
-import { isValidModelId, getModelMetadata, supportsReasoning } from './registry';
+import { isValidModelId, getModelMetadata, supportsReasoning, supportsVision } from './registry';
 import { convertToOCIMessages } from './converters/messages';
 import type { OCIMessage } from './converters/messages';
 import { convertToCohereFormat } from './converters/cohere-messages';
@@ -98,11 +98,12 @@ export class OCILanguageModel implements LanguageModelV3 {
     return resolveRequestOptions(this.config.requestOptions, perRequestOptions);
   }
 
-  private getApiFormat(): OCIApiFormat {
+  private getApiFormat(hasImages: boolean = false): OCIApiFormat {
     const metadata = getModelMetadata(this.modelId);
     if (metadata?.family === 'cohere') {
-      // COHEREV2 format is required for vision-capable Cohere models
-      if (metadata.capabilities?.vision) {
+      // Upgrade to COHEREV2 for vision-capable models when images are present
+      // COHERE V1 format silently drops images, V2 supports them properly
+      if (hasImages && metadata.capabilities.vision) {
         return 'COHEREV2';
       }
       return 'COHERE';
@@ -161,6 +162,11 @@ export class OCILanguageModel implements LanguageModelV3 {
         if (done) break;
 
         switch (value.type) {
+          case 'stream-start':
+            if (value.warnings) {
+              warnings.push(...value.warnings);
+            }
+            break;
           case 'text-delta': {
             const last = content[content.length - 1];
             if (last?.type === 'text') {
@@ -219,7 +225,10 @@ export class OCILanguageModel implements LanguageModelV3 {
       getCompartmentId(this.config),
       ociOptions?.compartmentId
     );
-    const apiFormat = this.getApiFormat();
+
+    // Check for images early - needed for API format selection
+    const hasImages = messages.some((m) => m.content.some((c) => c.type === 'IMAGE'));
+    const apiFormat = this.getApiFormat(hasImages);
     const warnings: SharedV3Warning[] = [];
 
     if (options.responseFormat?.type === 'json') {
@@ -258,6 +267,27 @@ export class OCILanguageModel implements LanguageModelV3 {
         type: 'unsupported',
         feature: 'thinking',
         details: `Model ${this.modelId} does not support thinking/reasoning. Use a reasoning model like cohere.command-a-reasoning-08-2025.`,
+      });
+    }
+
+    // Vision support validation
+    const modelSupportsVision = supportsVision(this.modelId);
+
+    if (hasImages && !modelSupportsVision) {
+      warnings.push({
+        type: 'unsupported',
+        feature: 'vision',
+        details: `Model ${this.modelId} does not support image input. Use a vision model like meta.llama-3.2-90b-vision-instruct, google.gemini-2.5-flash, or cohere.command-a-vision.`,
+      });
+    }
+
+    // Cohere V1 format silently drops images - warn the user
+    // Note: vision-capable Cohere models are automatically upgraded to COHEREV2 format
+    if (hasImages && apiFormat === 'COHERE') {
+      warnings.push({
+        type: 'unsupported',
+        feature: 'vision',
+        details: `Cohere V1 API format does not support images. Images in your prompt will be ignored. Use a vision-capable model like cohere.command-a-vision which uses the Cohere V2 format.`,
       });
     }
 
@@ -456,6 +486,8 @@ export class OCILanguageModel implements LanguageModelV3 {
                 }
               }
             } catch (error) {
+              // Log stream errors for debugging and monitoring
+              console.error('[OCI Stream] Error during stream processing:', error);
               controller.enqueue({ type: 'error', error });
             } finally {
               controller.close();

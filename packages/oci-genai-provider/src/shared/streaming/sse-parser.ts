@@ -191,7 +191,13 @@ export async function* parseSSEStream(
             };
           }
         }
-      } catch {
+      } catch (error) {
+        // Log parsing errors - silent failures here cause major debugging issues
+        console.error('[OCI SSE Parser] Failed to parse chunk:', {
+          data: data.length > 200 ? data.substring(0, 200) + '...' : data,
+          error: error instanceof Error ? error.message : String(error),
+        });
+
         if (includeRawChunks) {
           parts.push({
             type: 'raw',
@@ -216,17 +222,14 @@ export async function* parseSSEStream(
     }
   }
 
-  // Yield the combined finish event at the very end
-  if (hasFinishOrUsage) {
-    yield {
-      type: 'finish',
-      finishReason: {
-        unified: lastFinishReason,
-        raw: lastRawFinishReason,
-      },
-      usage: lastUsage,
-    };
-  }
+  // Always yield a finish event - use defaults if none received from API
+  yield {
+    type: 'finish',
+    finishReason: hasFinishOrUsage
+      ? { unified: lastFinishReason, raw: lastRawFinishReason }
+      : { unified: 'other', raw: 'INCOMPLETE' },
+    usage: lastUsage,
+  };
 
   // Yield any remaining parts
   while (yieldedIndex < parts.length) {

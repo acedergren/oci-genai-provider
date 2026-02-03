@@ -482,3 +482,21 @@ export function supportsReasoning(modelId: string): boolean {
   const model = MODEL_CATALOG.find((m) => m.id === modelId);
   return model?.capabilities.reasoning ?? false;
 }
+
+/**
+ * Check if a model supports vision/image inputs
+ * @param modelId - Model ID to check
+ * @returns true if the model supports image inputs
+ */
+export function supportsVision(modelId: string): boolean {
+  const model = MODEL_CATALOG.find((m) => m.id === modelId);
+  return model?.capabilities.vision ?? false;
+}
+
+/**
+ * Get all vision-capable models
+ * @returns Array of models that support image inputs
+ */
+export function getVisionModels(): ModelMetadata[] {
+  return MODEL_CATALOG.filter((m) => m.capabilities.vision);
+}
