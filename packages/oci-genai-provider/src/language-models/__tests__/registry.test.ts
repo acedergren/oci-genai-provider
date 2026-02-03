@@ -192,12 +192,13 @@ describe('Model Registry', () => {
 
   describe('supportsReasoning', () => {
     describe('reasoning-capable models', () => {
-      it('should return true for xai.grok-4-1-fast-reasoning', () => {
-        expect(supportsReasoning('xai.grok-4-1-fast-reasoning')).toBe(true);
+      // Note: Grok models don't support reasoningEffort parameter despite the "-reasoning" name
+      it('should return false for xai.grok-4-1-fast-reasoning (no API support)', () => {
+        expect(supportsReasoning('xai.grok-4-1-fast-reasoning')).toBe(false);
       });
 
-      it('should return true for xai.grok-4-fast-reasoning', () => {
-        expect(supportsReasoning('xai.grok-4-fast-reasoning')).toBe(true);
+      it('should return false for xai.grok-4-fast-reasoning (no API support)', () => {
+        expect(supportsReasoning('xai.grok-4-fast-reasoning')).toBe(false);
       });
 
       it('should return true for cohere.command-a-reasoning-08-2025', () => {

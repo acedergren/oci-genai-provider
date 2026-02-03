@@ -10,17 +10,17 @@ import { generateText, tool } from 'ai';
 import { z } from 'zod';
 
 const tools = {
-  getWeather: tool({
-    description: 'Get current weather',
-    parameters: z.object({
-      location: z.string()
-    }),
-    execute: async ({ location }) => ({
-      location,
-      temperature: 22,
-      conditions: 'Sunny'
-    })
-  })
+getWeather: tool({
+description: 'Get current weather',
+parameters: z.object({
+location: z.string()
+}),
+execute: async ({ location }) => ({
+location,
+temperature: 22,
+conditions: 'Sunny'
+})
+})
 };
 \`\`\`
 
@@ -30,9 +30,9 @@ const tools = {
 const oci = createOCI({ region: 'eu-frankfurt-1' });
 
 const { text } = await generateText({
-  model: oci('cohere.command-r-plus'),
-  prompt: 'What's the weather in Frankfurt?',
-  tools
+model: oci('cohere.command-r-plus'),
+prompt: 'What's the weather in Frankfurt?',
+tools
 });
 
 console.log(text);
@@ -40,5 +40,4 @@ console.log(text);
 
 ## Next Steps
 
-- [Tutorial 4: OpenCode Integration](04-opencode-integration.md)
 - [Tool Calling Guide](../guides/tool-calling/)

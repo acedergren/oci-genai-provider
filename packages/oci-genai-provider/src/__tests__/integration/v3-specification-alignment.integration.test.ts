@@ -34,6 +34,12 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { NoSuchModelError } from '@ai-sdk/provider';
 import type {
   LanguageModelV3,
+  LanguageModelV3CallOptions,
+  LanguageModelV3Content,
+  LanguageModelV3FunctionTool,
+  LanguageModelV3ToolChoice,
+  LanguageModelV3StreamPart,
+  SharedV3Warning,
 } from '@ai-sdk/provider';
 import { OCILanguageModel } from '../../language-models/OCILanguageModel';
 import type { AuthenticationDetailsProvider } from 'oci-common';

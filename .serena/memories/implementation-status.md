@@ -24,7 +24,7 @@
 ✅ **Monorepo Structure**
 
 - pnpm workspace configured
-- 3 packages created (core, opencode-integration, test-utils)
+- 3 packages created (core, oci-openai-compatible, test-utils)
 - 6 example applications (chatbot-demo, nextjs-chatbot, cli-tool, rag-demo, rag-reranking-demo, stt-demo)
 - Workspace dependencies configured
 - Build tooling set up (tsup for CJS + ESM)

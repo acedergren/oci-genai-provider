@@ -130,6 +130,7 @@ const focused = await generateText({
 ### Tool Calling
 
 Tool calling allows models to invoke external functions. Supported models:
+
 - **Cohere:** Command R, Command R+
 - **Meta Llama:** 3.1+, 3.2+, 3.3+
 - **xAI:** Grok models
@@ -206,20 +207,18 @@ import { generateText, tool } from 'ai';
 // First turn: model decides to call a tool
 const turn1 = await generateText({
   model: oci.languageModel('cohere.command-r-plus'),
-  messages: [
-    { role: 'user', content: "What's the weather like in Paris and Tokyo?" },
-  ],
+  messages: [{ role: 'user', content: "What's the weather like in Paris and Tokyo?" }],
   tools: {
     weather: tool({
       description: 'Get weather for a city',
-      parameters: z.object({ city: z.string() }),
+      inputSchema: z.object({ city: z.string() }),
       execute: async ({ city }) => ({ temp: 20, city }),
     }),
   },
-  maxSteps: 3, // Allow multiple tool call rounds
+  stopWhen: stepCountIs(3), // AI SDK 6.0+: Allow multiple tool call rounds
 });
 
-// With maxSteps, the SDK handles the tool call loop automatically
+// With stopWhen, the SDK handles the tool call loop automatically
 console.log(turn1.text); // Final response after tool calls
 ```
 

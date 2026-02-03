@@ -324,10 +324,8 @@ export class OCILanguageModel implements LanguageModelV3 {
               }
               return { type: 'TEXT', text: c.text ?? '' } as OCIModel.CohereTextContentV2;
             });
-            let role = m.role;
-            if (role === 'ASSISTANT') role = 'ASSISTANT';
             return {
-              role,
+              role: m.role,
               content,
             } as OCIModel.CohereMessageV2;
           }),
@@ -335,11 +333,15 @@ export class OCILanguageModel implements LanguageModelV3 {
           ...toolParams,
         } as OCIModel.CohereChatRequestV2;
       } else if (apiFormat === 'COHERE') {
+        const cohereFormat = convertToCohereFormat(messages);
         chatRequest = {
           apiFormat,
-          ...convertToCohereFormat(messages),
+          ...cohereFormat,
           ...commonParams,
           ...toolParams,
+          // Cohere requires isForceSingleStep=true when tool results are present
+          // This ensures multi-step tool use works correctly
+          ...(cohereFormat.hasToolResults ? { isForceSingleStep: true } : {}),
         } as OCIModel.CohereChatRequest;
       } else {
         chatRequest = {
@@ -358,11 +360,13 @@ export class OCILanguageModel implements LanguageModelV3 {
 
       if (ociOptions?.reasoningEffort && apiFormat === 'GENERIC') {
         const genericReq = chatRequest as OCIModel.GenericChatRequest;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- OCI SDK type mismatch
         genericReq.reasoningEffort = toOCIReasoningEffort(ociOptions.reasoningEffort) as any;
       }
 
       if (ociOptions?.thinking && (apiFormat === 'COHEREV2' || apiFormat === 'COHERE')) {
         const cohereReq = chatRequest as OCIModel.CohereChatRequestV2;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- OCI SDK type mismatch
         cohereReq.thinking = createThinkingConfig(true, ociOptions.tokenBudget) as any;
       }
 

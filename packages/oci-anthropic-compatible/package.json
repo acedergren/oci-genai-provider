@@ -1,0 +1,69 @@
+{
+  "name": "@acedergren/oci-anthropic-compatible",
+  "version": "0.1.0",
+  "description": "Anthropic-compatible proxy for OCI Generative AI Service",
+  "keywords": [
+    "oci",
+    "oracle",
+    "generative-ai",
+    "anthropic",
+    "claude",
+    "claude-code",
+    "proxy",
+    "llm"
+  ],
+  "author": "Anders Cedergren",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/acedergren/oci-genai-provider.git",
+    "directory": "packages/oci-anthropic-compatible"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/@acedergren",
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "oci-anthropic-proxy": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.mjs",
+      "require": "./dist/server.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "bun run src/cli.ts",
+    "start": "node dist/cli.js",
+    "test": "bun test",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "@acedergren/oci-genai-provider": "workspace:*",
+    "ai": "^6.0.61",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^22.0.0",
+    "tsup": "^8.3.7",
+    "typescript": "^5.7.3"
+  }
+}

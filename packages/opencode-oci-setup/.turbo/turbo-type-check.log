@@ -1,8 +1,0 @@
-
-> @acedergren/opencode-oci-setup@0.1.0 type-check /Users/acedergr/Projects/opencode-oci-genai/packages/opencode-oci-setup
-> tsc --noEmit
-
-src/flows/models.ts(21,10): error TS6133: 'select' is declared but its value is never read.
-src/flows/models.ts(63,3): error TS6133: 'options' is declared but its value is never read.
-src/flows/profile.ts(180,3): error TS6133: 'options' is declared but its value is never read.
- ELIFECYCLE  Command failed with exit code 2.

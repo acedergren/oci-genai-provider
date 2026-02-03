@@ -51,27 +51,6 @@ npm install @acedergren/oci-genai-provider ai
 
 [Core Provider Documentation](./packages/oci-genai-provider/README.md)
 
-### OpenCode Integration (Optional)
-
-**[@acedergren/opencode-oci-genai](./packages/opencode-integration)** — A convenience layer for OpenCode users. Adds config helpers and model validation on top of the core provider.
-
-```bash
-npm install @acedergren/opencode-oci-genai
-```
-
-```json
-// opencode.json
-{
-  "provider": {
-    "oci-genai": {
-      "npm": "@acedergren/opencode-oci-genai"
-    }
-  }
-}
-```
-
-[OpenCode Integration Guide](./docs/guides/opencode-integration/README.md)
-
 ### OpenAI-Compatible Wrapper (Migration Path)
 
 **[@acedergren/oci-openai-compatible](./packages/oci-openai-compatible)** — For teams migrating from OpenAI. Provides an OpenAI SDK-compatible interface with minimal code changes.
@@ -176,20 +155,19 @@ for await (const chunk of stream.textStream) {
 
 **[oci-genai-chatbot.pages.dev](https://oci-genai-chatbot.pages.dev)** — Try the SvelteKit chatbot with bioluminescence design (requires Cloudflare Access).
 
-### Run Locally
+### Run Examples
 
-```bash
-# SvelteKit chatbot with beautiful UI
-cd examples/chatbot-demo && pnpm install && pnpm dev
+Examples are maintained in a separate repository to keep this provider focused and lean:
 
-# Next.js 15 App Router chatbot
-cd examples/nextjs-chatbot && pnpm install && pnpm dev
+**[oci-genai-examples](https://github.com/acedergren/oci-genai-examples)** — Complete example collection including:
 
-# Command-line interface
-cd examples/cli-tool && pnpm install && pnpm dev "Hello!"
-```
-
-[Browse all examples](./examples/)
+- SvelteKit chatbot with beautiful UI
+- Next.js 15 App Router chatbot
+- Command-line interface
+- RAG with semantic search
+- Multi-turn conversations
+- Streaming responses
+- Tool calling examples
 
 ## Documentation
 
@@ -203,7 +181,6 @@ cd examples/cli-tool && pnpm install && pnpm dev "Hello!"
 
 - [Streaming Responses](./docs/guides/streaming/README.md)
 - [Tool Calling](./docs/guides/tool-calling/README.md)
-- [OpenCode Integration](./docs/guides/opencode-integration/README.md)
 - [Troubleshooting](./docs/guides/troubleshooting.md)
 
 **Reference**
@@ -236,7 +213,7 @@ pnpm test:coverage # Generate coverage report
 packages/
 ├── oci-genai-provider/     # Core Vercel AI SDK provider
 ├── oci-openai-compatible/  # OpenAI-compatible wrapper
-├── opencode-integration/   # Optional OpenCode wrapper
+├── oci-genai-setup/        # Setup CLI tool
 └── test-utils/             # Shared test utilities
 ```
 

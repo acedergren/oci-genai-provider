@@ -69,8 +69,8 @@ describe('Tool Converters', () => {
           name: 'search_database',
           description: 'Search the database',
           parameterDefinitions: {
-            query: { type: 'string', description: 'Search query', required: true },
-            limit: { type: 'number', description: 'Max results', required: false },
+            query: { type: 'string', description: 'Search query', isRequired: true },
+            limit: { type: 'number', description: 'Max results', isRequired: false },
           },
         },
       ]);

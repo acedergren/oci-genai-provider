@@ -1,3 +1,65 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Turbo cache
+.turbo/
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+
+# Environment files (contain secrets)
+.env
+.env.local
+.env.*.local
+
+# Credentials and certificates
+*.pem
+*.p12
+*.pfx
+*.key
+*secret*
+*wallet*
+*.sso
+oci_api_key*.pem
+
+# Project-specific
 .firecrawl/
 .worktrees/
 .agents/
+
+# Claude agent configs (may contain sensitive paths)
+.claude/
+
+# SvelteKit/Next.js build artifacts
+.svelte-kit/
+build/
+.next/
+
+# Turbo build logs
+.turbo/turbo-*.log
+
+# Temporary debug files
+PROJECT_PLAN.md
+DEBUG_REPORT.md
+oci-genai-dashboard.html
+opentui-playground.html
+tui-design-playground.html
+repo-explorer.html
+.oci-chat-history.json
+.gemini-clipboard/
+.codex/
+
+# Test and debug logs
+*.log
+
+# Security scan artifacts
+codeql-db/
+codeql-results.sarif

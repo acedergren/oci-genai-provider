@@ -6,10 +6,8 @@
   "scripts": {
     "build": "turbo run build",
     "build:packages": "turbo run build --filter='./packages/*'",
-    "build:examples": "turbo run build --filter='./examples/*'",
     "test": "turbo run test",
     "test:packages": "turbo run test --filter='./packages/*'",
-    "test:examples": "turbo run test --filter='./examples/*'",
     "test:watch": "turbo run test:watch",
     "test:coverage": "turbo run test:coverage",
     "lint": "turbo run lint",
@@ -20,7 +18,6 @@
     "validate:packages": "vitest run scripts/validate-packages.test.ts",
     "clean": "turbo run clean && rm -rf node_modules",
     "clean:packages": "turbo run clean --filter='./packages/*'",
-    "clean:examples": "turbo run clean --filter='./examples/*'",
     "prepare": "husky"
   },
   "repository": {

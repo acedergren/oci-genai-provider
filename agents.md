@@ -4,20 +4,22 @@ Context and guidelines for AI coding agents working with this repository.
 
 ## Project Summary
 
-OCI Generative AI provider for Vercel AI SDK. A pnpm workspace monorepo with three packages:
+OCI Generative AI provider for Vercel AI SDK. A pnpm workspace monorepo with provider packages:
 
-| Package                          | Purpose                      | Published |
-| -------------------------------- | ---------------------------- | --------- |
-| `@acedergren/oci-genai-provider` | Core Vercel AI SDK provider  | Yes       |
-| `@acedergren/opencode-oci-genai` | OpenCode convenience wrapper | Yes       |
-| `@acedergren/test-utils`         | Shared test infrastructure   | No        |
+| Package                                | Purpose                        | Published |
+| -------------------------------------- | ------------------------------ | --------- |
+| `@acedergren/oci-genai-provider`       | Core Vercel AI SDK provider    | Yes       |
+| `@acedergren/oci-openai-compatible`    | OpenAI-compatible API wrapper  | Yes       |
+| `@acedergren/oci-anthropic-compatible` | Anthropic-compatible API proxy | Yes       |
+| `@acedergren/oci-genai-setup`          | CLI setup wizard               | Yes       |
+| `@acedergren/test-utils`               | Shared test infrastructure     | No        |
 
 ## Essential Commands
 
 ```bash
 pnpm install          # Install dependencies
 pnpm build            # Build all packages
-pnpm test             # Run all tests (121 tests)
+pnpm test             # Run all tests (700+ tests)
 pnpm test:coverage    # Run with coverage report
 pnpm type-check       # TypeScript validation
 pnpm lint             # ESLint
@@ -63,16 +65,19 @@ git commit -m "feat(provider): add embedding support"
 
 ```
 packages/
-├── oci-genai-provider/          # Core provider
+├── oci-genai-provider/          # Core AI SDK provider
 │   └── src/
 │       ├── index.ts             # Public exports
 │       ├── types.ts             # Type definitions
 │       ├── auth/                # Authentication
-│       ├── models/              # Model registry
-│       ├── converters/          # Message conversion
+│       ├── language-models/     # Language model implementation
+│       ├── embedding-models/    # Embedding model implementation
+│       ├── reranking-models/    # Reranking model implementation
 │       ├── streaming/           # SSE parsing
 │       └── errors/              # Error handling
-├── opencode-integration/        # OpenCode wrapper
+├── oci-openai-compatible/       # OpenAI API wrapper
+├── oci-anthropic-compatible/    # Anthropic API proxy
+├── oci-genai-setup/             # CLI setup tool
 └── test-utils/                  # Shared mocks
 ```
 
@@ -83,7 +88,7 @@ test-utils (mocks)
     ↑ devDependencies
 oci-genai-provider (core)
     ↑ dependencies
-opencode-integration (wrapper)
+oci-openai-compatible, oci-anthropic-compatible (wrappers)
 ```
 
 ## Key Patterns
@@ -134,8 +139,8 @@ OCI_CONFIG_PROFILE=FRANKFURT                      # Optional
 
 ### Adding a Model
 
-1. Add to `packages/oci-genai-provider/src/models/registry.ts`
-2. Add test in `packages/oci-genai-provider/src/models/__tests__/registry.test.ts`
+1. Add to `packages/oci-genai-provider/src/language-models/registry.ts`
+2. Add test in `packages/oci-genai-provider/src/language-models/__tests__/registry.test.ts`
 3. Update `docs/reference/oci-genai-models/README.md`
 
 ### Adding a Test
@@ -180,4 +185,4 @@ rm -rf packages/*/dist && pnpm build && pnpm type-check
 
 ---
 
-**Last Updated**: 2026-01-28
+**Last Updated**: 2026-02-02

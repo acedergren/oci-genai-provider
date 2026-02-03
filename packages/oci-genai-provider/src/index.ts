@@ -179,6 +179,33 @@ export { withRetry, withTimeout, TimeoutError, isRetryableError } from './shared
 export type { RetryOptions } from './shared/utils';
 
 // ============================================================================
+// Validation Schema Exports
+// ============================================================================
+
+export {
+  CompartmentIdSchema,
+  RegionSchema,
+  ConfigProfileSchema,
+  ServingModeSchema,
+  EndpointIdSchema,
+  OCIProviderSettingsSchema,
+  ModelIdSchema,
+  OCIChatModelIdSchema,
+  validateProviderSettings,
+  parseProviderSettings,
+  OCIProviderOptionsSchema,
+  parseProviderOptions,
+} from './shared/schemas';
+
+export type {
+  OCIProviderSettingsInput,
+  OCIProviderSettingsValidated,
+  OCIChatModelId,
+  OCIProviderOptions,
+  OCIProviderOptionsInput,
+} from './shared/schemas';
+
+// ============================================================================
 // Realtime Transcription Exports (Streaming STT)
 // ============================================================================
 

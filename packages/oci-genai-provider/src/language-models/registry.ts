@@ -84,12 +84,15 @@ export const MODEL_CATALOG: ExtendedModelMetadata[] = [
     id: 'xai.grok-4-1-fast-reasoning',
     name: 'Grok 4.1 Fast Reasoning',
     family: 'grok',
-    capabilities: { streaming: true, tools: true, vision: false, reasoning: true },
+    // Note: Grok models don't support reasoningEffort parameter despite the "-reasoning" name
+    // They throw: "This model does not support `reasoning_effort`"
+    // Reasoning is built-in but not controllable via API parameter
+    capabilities: { streaming: true, tools: true, vision: false },
     contextWindow: 2000000,
     speed: 'very-fast',
     regions: GROK_REGIONS,
     codingRecommended: true,
-    codingNote: '2M context window - ideal for large codebases',
+    codingNote: 'Built-in reasoning always active - 2M context window ideal for large codebases',
   },
   {
     id: 'xai.grok-4-1-fast-non-reasoning',
@@ -104,10 +107,13 @@ export const MODEL_CATALOG: ExtendedModelMetadata[] = [
     id: 'xai.grok-4-fast-reasoning',
     name: 'Grok 4 Fast Reasoning',
     family: 'grok',
-    capabilities: { streaming: true, tools: true, vision: false, reasoning: true },
+    // Note: Grok models don't support reasoningEffort parameter (see xai.grok-4-1-fast-reasoning)
+    capabilities: { streaming: true, tools: true, vision: false },
     contextWindow: 131072,
     speed: 'very-fast',
     regions: GROK_REGIONS,
+    codingRecommended: true,
+    codingNote: 'Built-in reasoning always active',
   },
   {
     id: 'xai.grok-4-fast-non-reasoning',
@@ -344,6 +350,7 @@ export const MODEL_CATALOG: ExtendedModelMetadata[] = [
     contextWindow: 128000,
     speed: 'medium',
     regions: COHERE_REGIONS,
+    dedicatedOnly: true,
   },
   {
     id: 'cohere.command-a-reasoning',
@@ -435,17 +442,9 @@ export function getModelsByRegion(
   region: OCIGenAIRegion,
   includeDedicatedOnly = false
 ): ModelMetadata[] {
-  return MODEL_CATALOG.filter((m) => {
-    // Filter by region
-    if (!m.regions.includes(region)) {
-      return false;
-    }
-    // Filter dedicated-only models unless explicitly requested
-    if (m.dedicatedOnly && !includeDedicatedOnly) {
-      return false;
-    }
-    return true;
-  });
+  return MODEL_CATALOG.filter(
+    (m) => m.regions.includes(region) && (includeDedicatedOnly || !m.dedicatedOnly)
+  );
 }
 
 /**
@@ -454,18 +453,13 @@ export function getModelsByRegion(
  * @param region - OCI region identifier (e.g., 'eu-frankfurt-1')
  */
 export function getCodingRecommendedModels(region: OCIGenAIRegion): ModelMetadata[] {
-  return MODEL_CATALOG.filter((m) => {
-    // Must be available in region (on-demand, not dedicated-only)
-    if (!m.regions.includes(region) || m.dedicatedOnly) {
-      return false;
-    }
-    // Must have tool support (essential for coding agents)
-    if (!m.capabilities.tools) {
-      return false;
-    }
-    // Return explicitly recommended models
-    return m.codingRecommended === true;
-  });
+  return MODEL_CATALOG.filter(
+    (m) =>
+      m.regions.includes(region) &&
+      !m.dedicatedOnly &&
+      m.capabilities.tools &&
+      m.codingRecommended === true
+  );
 }
 
 /**

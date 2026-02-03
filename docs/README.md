@@ -7,40 +7,45 @@ Complete documentation for the OCI Generative AI provider for Vercel AI SDK.
 This provider connects the Vercel AI SDK to Oracle Cloud Infrastructure's Generative AI service. It works with any application built on the Vercel AI SDK—Next.js, Remix, SvelteKit, Node.js, or custom implementations.
 
 **Key packages:**
-- **[@acedergren/oci-genai-provider](../packages/oci-genai-provider)** — Core provider (works everywhere)
-- **[@acedergren/opencode-oci-genai](../packages/opencode-integration)** — Optional OpenCode wrapper
+
+- **[@acedergren/oci-genai-provider](../packages/oci-genai-provider)** — Core Vercel AI SDK provider
+- **[@acedergren/oci-openai-compatible](../packages/oci-openai-compatible)** — OpenAI API compatibility wrapper
+- **[@acedergren/oci-anthropic-compatible](../packages/oci-anthropic-compatible)** — Anthropic API compatibility wrapper
+- **[@acedergren/oci-genai-setup](../packages/oci-genai-setup)** — Interactive CLI setup tool
 - **[@acedergren/test-utils](../packages/test-utils)** — Shared test utilities
 
 ## Start Here
 
-| Guide | Description |
-|-------|-------------|
-| [Getting Started](getting-started/README.md) | Installation and first request |
-| [Authentication](guides/authentication/README.md) | Configure OCI credentials |
-| [Core Provider API](../packages/oci-genai-provider/README.md) | Main API reference |
+| Guide                                                         | Description                    |
+| ------------------------------------------------------------- | ------------------------------ |
+| [Getting Started](getting-started/README.md)                  | Installation and first request |
+| [Authentication](guides/authentication/README.md)             | Configure OCI credentials      |
+| [Core Provider API](../packages/oci-genai-provider/README.md) | Main API reference             |
 
 ## Guides
 
 ### Setup & Configuration
+
 - [Authentication](guides/authentication/README.md) — API keys, instance principal, resource principal
 - [IAM Policies](guides/iam-policies/README.md) — Required OCI permissions
 - [Troubleshooting](guides/troubleshooting.md) — Common issues and solutions
 
 ### Features
+
 - [Streaming](guides/streaming/README.md) — Real-time response streaming
 - [Tool Calling](guides/tool-calling/README.md) — Function calling integration
-- [OpenCode Integration](guides/opencode-integration/README.md) — Using with OpenCode
 
 ### Deployment
+
 - [Publishing](guides/publishing.md) — Release process and npm publishing
 
 ## Reference
 
-| Resource | Description |
-|----------|-------------|
-| [Model Catalog](reference/oci-genai-models/README.md) | Available models and capabilities |
-| [OCI SDK](api-reference/oci-sdk/README.md) | OCI TypeScript SDK |
-| [Vercel AI SDK](api-reference/vercel-ai-sdk/README.md) | AI SDK v3 interface |
+| Resource                                               | Description                       |
+| ------------------------------------------------------ | --------------------------------- |
+| [Model Catalog](reference/oci-genai-models/README.md)  | Available models and capabilities |
+| [OCI SDK](api-reference/oci-sdk/README.md)             | OCI TypeScript SDK                |
+| [Vercel AI SDK](api-reference/vercel-ai-sdk/README.md) | AI SDK v3 interface               |
 
 ## Tutorials
 
@@ -85,6 +90,7 @@ See [DEVELOPMENT.md](../DEVELOPMENT.md) for complete setup instructions.
 ## Contributing
 
 We welcome contributions. See:
+
 - [Contributing Guidelines](../CONTRIBUTING.md)
 - [Code of Conduct](../CODE_OF_CONDUCT.md)
 - [Security Policy](../SECURITY.md)

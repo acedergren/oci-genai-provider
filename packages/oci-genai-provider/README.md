@@ -17,8 +17,6 @@ This provider implements the Vercel AI SDK's `ProviderV3` interface, which means
 
 **No special setup required** - just install and use like any other AI SDK provider.
 
-> 💡 **Using OpenCode?** Check out [@acedergren/oci-genai-provider](../opencode-integration) for a convenient integration package with config helpers and model presets.
-
 ## Features
 
 - **5+ Model Types** - Language models, embeddings, speech, transcription, reranking

@@ -9,14 +9,15 @@ Everything you need to work on this project locally.
 - **Git**
 
 Optional but recommended:
+
 - **OCI account** with Generative AI access for integration testing
 - **VS Code** with TypeScript and Prettier extensions
 
 ## Quick Start
 
 ```bash
-git clone https://github.com/acedergren/opencode-oci-genai.git
-cd opencode-oci-genai
+git clone https://github.com/acedergren/oci-genai-provider.git
+cd oci-genai-provider
 pnpm install
 pnpm build
 pnpm test
@@ -32,30 +33,26 @@ This is a pnpm workspace monorepo:
 packages/
 ├── oci-genai-provider/     # Core provider (published)
 ├── oci-openai-compatible/  # OpenAI-compatible wrapper (published)
-├── opencode-integration/   # OpenCode convenience wrapper (published)
+├── oci-genai-setup/        # CLI setup tool (published)
+├── agent-state/            # Agent state management (private)
 └── test-utils/             # Shared test utilities (private)
-
-examples/
-├── chatbot-demo/           # SvelteKit chatbot
-├── nextjs-chatbot/         # Next.js chatbot
-└── cli-tool/               # Command-line interface
 
 docs/                       # Documentation
 ```
 
 ## Common Commands
 
-| Command | Purpose |
-|---------|---------|
-| `pnpm install` | Install all dependencies |
-| `pnpm build` | Build all packages |
-| `pnpm test` | Run all tests |
-| `pnpm test:watch` | Run tests in watch mode |
-| `pnpm test:coverage` | Generate coverage report |
-| `pnpm type-check` | TypeScript validation |
-| `pnpm lint` | Run ESLint |
-| `pnpm format` | Format code with Prettier |
-| `pnpm dev` | Watch mode for development |
+| Command              | Purpose                    |
+| -------------------- | -------------------------- |
+| `pnpm install`       | Install all dependencies   |
+| `pnpm build`         | Build all packages         |
+| `pnpm test`          | Run all tests              |
+| `pnpm test:watch`    | Run tests in watch mode    |
+| `pnpm test:coverage` | Generate coverage report   |
+| `pnpm type-check`    | TypeScript validation      |
+| `pnpm lint`          | Run ESLint                 |
+| `pnpm format`        | Format code with Prettier  |
+| `pnpm dev`           | Watch mode for development |
 
 ### Working with Specific Packages
 
@@ -248,10 +245,12 @@ pnpm build
 ### Build Order
 
 Packages build in dependency order:
+
 1. `test-utils` (no dependencies)
 2. `oci-genai-provider` (depends on test-utils for dev)
 3. `oci-openai-compatible` (standalone)
-4. `opencode-integration` (depends on oci-genai-provider)
+4. `oci-genai-setup` (depends on oci-genai-provider)
+5. `agent-state` (standalone)
 
 ### Clean Build
 
@@ -347,6 +346,6 @@ import { createAuth } from './auth/index.js';
 
 ## Getting Help
 
-- **Development questions**: Open a [discussion](https://github.com/acedergren/opencode-oci-genai/discussions)
-- **Bug reports**: Open an [issue](https://github.com/acedergren/opencode-oci-genai/issues)
+- **Development questions**: Open a [discussion](https://github.com/acedergren/oci-genai-provider/discussions)
+- **Bug reports**: Open an [issue](https://github.com/acedergren/oci-genai-provider/issues)
 - **Contributing**: See [CONTRIBUTING.md](./CONTRIBUTING.md)

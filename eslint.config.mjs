@@ -73,6 +73,14 @@ export default [
     },
   },
 
+  // Anthropic-compatible package: disable no-misused-promises for Bun.serve
+  {
+    files: ['packages/oci-anthropic-compatible/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-misused-promises': 'off',
+    },
+  },
+
   // JavaScript files configuration (no type checking)
   {
     files: ['**/*.js', '**/*.mjs', '**/*.cjs'],

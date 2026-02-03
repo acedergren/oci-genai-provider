@@ -14,7 +14,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/acedergren/opencode-oci-genai.git",
+    "url": "https://github.com/acedergren/oci-genai-provider.git",
     "directory": "packages/oci-openai-compatible"
   },
   "publishConfig": {
