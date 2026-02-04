@@ -27,14 +27,8 @@ interface PackageJson {
 
 describe('Package validation', () => {
   const packagesDir = path.join(__dirname, '../packages');
-  // Packages to validate for publishing to GitHub Packages
-  const packages = [
-    'oci-genai-provider',
-    'oci-anthropic-compatible',
-    'oci-openai-compatible',
-    'oci-genai-setup',
-    'test-utils',
-  ];
+  // Publishable packages to validate (excludes internal packages like test-utils)
+  const packages = ['oci-genai-provider'];
 
   packages.forEach((pkg) => {
     describe(`@acedergren/${pkg}`, () => {
