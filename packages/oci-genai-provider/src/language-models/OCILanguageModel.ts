@@ -366,7 +366,7 @@ export class OCILanguageModel implements LanguageModelV3 {
 
       if (ociOptions?.thinking && (apiFormat === 'COHEREV2' || apiFormat === 'COHERE')) {
         const cohereReq = chatRequest as OCIModel.CohereChatRequestV2;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- OCI SDK type mismatch
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any -- OCI SDK type mismatch
         cohereReq.thinking = createThinkingConfig(true, ociOptions.tokenBudget) as any;
       }
 

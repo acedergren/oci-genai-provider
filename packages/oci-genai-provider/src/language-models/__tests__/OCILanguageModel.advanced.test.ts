@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/require-await */
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { OCILanguageModel } from '../OCILanguageModel';
 import type { AuthenticationDetailsProvider } from 'oci-common';
@@ -87,7 +88,7 @@ describe('OCILanguageModel - Advanced V3 Features', () => {
     it('should convert file parts (images) to OCI format for Generic models', async () => {
       const model = new OCILanguageModel('google.gemini-2.5-flash', mockConfig);
 
-      mockChat.mockImplementation(async () => createMockResponse({ text: 'I see a cat' }));
+      mockChat.mockImplementation(() => createMockResponse({ text: 'I see a cat' }));
 
       await model.doGenerate({
         prompt: [
