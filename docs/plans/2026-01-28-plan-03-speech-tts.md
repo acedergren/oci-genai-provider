@@ -15,6 +15,7 @@
 ## Prerequisites
 
 **Required:**
+
 - ✅ Plan 1 must be complete
 - Provider implements ProviderV3 interface
 - Shared utilities in `src/shared/` folder
@@ -24,9 +25,11 @@
 ## Dependencies
 
 **Required:**
+
 - `oci-aispeech`: ^3.5.0 (OCI AI Speech SDK)
 
 **Update package.json:**
+
 ```json
 {
   "dependencies": {
@@ -40,6 +43,7 @@
 ## Task 1: Update Dependencies
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/package.json`
 
 **Step 1: Add oci-aispeech SDK**
@@ -66,6 +70,7 @@ git commit -m "chore: add oci-aispeech SDK dependency"
 ## Task 2: Create Speech Model Registry
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/speech-models/registry.ts`
 - Create: `packages/oci-genai-provider/src/speech-models/__tests__/registry.test.ts`
 
@@ -187,9 +192,7 @@ export function isValidSpeechModelId(modelId: string): boolean {
   return SPEECH_MODELS.some((m) => m.id === modelId);
 }
 
-export function getSpeechModelMetadata(
-  modelId: string
-): SpeechModelMetadata | undefined {
+export function getSpeechModelMetadata(modelId: string): SpeechModelMetadata | undefined {
   return SPEECH_MODELS.find((m) => m.id === modelId);
 }
 
@@ -219,6 +222,7 @@ git commit -m "feat(speech): add speech model registry with Phoenix region requi
 ## Task 3: Implement OCISpeechModel Class
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/speech-models/OCISpeechModel.ts`
 - Create: `packages/oci-genai-provider/src/speech-models/__tests__/OCISpeechModel.test.ts`
 
@@ -310,10 +314,7 @@ Expected: FAIL - "Cannot find module '../OCISpeechModel'"
 Create: `packages/oci-genai-provider/src/speech-models/OCISpeechModel.ts`
 
 ```typescript
-import {
-  SpeechModelV3,
-  SpeechModelV3CallOptions,
-} from '@ai-sdk/provider';
+import { SpeechModelV3, SpeechModelV3CallOptions } from '@ai-sdk/provider';
 import { AIServiceSpeechClient } from 'oci-aispeech';
 import { createAuthProvider, getCompartmentId, getRegion } from '../auth';
 import { getSpeechModelMetadata, isValidSpeechModelId } from './registry';
@@ -332,8 +333,7 @@ export class OCISpeechModel implements SpeechModelV3 {
     // Validate model ID
     if (!isValidSpeechModelId(modelId)) {
       throw new Error(
-        `Invalid speech model ID: ${modelId}. ` +
-          `Valid models: oci.tts-1-hd, oci.tts-1`
+        `Invalid speech model ID: ${modelId}. ` + `Valid models: oci.tts-1-hd, oci.tts-1`
       );
     }
 
@@ -392,12 +392,10 @@ export class OCISpeechModel implements SpeechModelV3 {
     const compartmentId = getCompartmentId(this.config);
 
     // Determine voice (use config or option or default)
-    const selectedVoice =
-      voice || this.config.voice || 'en-US-Neural2-C';
+    const selectedVoice = voice || this.config.voice || 'en-US-Neural2-C';
 
     // Determine output format
-    const selectedFormat =
-      outputFormat || this.config.format || 'mp3';
+    const selectedFormat = outputFormat || this.config.format || 'mp3';
 
     // Validate format
     if (!metadata!.supportedFormats.includes(selectedFormat as any)) {
@@ -479,6 +477,7 @@ git commit -m "feat(speech): implement OCISpeechModel class with region validati
 ## Task 4: Wire Up Speech Models to Provider
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/provider.ts`
 - Modify: `packages/oci-genai-provider/src/__tests__/provider.test.ts`
 
@@ -546,10 +545,7 @@ export class OCIProvider implements ProviderV3 {
    * IMPORTANT: OCI Speech is only available in us-phoenix-1 region.
    * You must configure the provider or model with region: 'us-phoenix-1'.
    */
-  speechModel(
-    modelId: string,
-    settings?: OCISpeechSettings
-  ): SpeechModelV3 {
+  speechModel(modelId: string, settings?: OCISpeechSettings): SpeechModelV3 {
     const mergedConfig = { ...this.config, ...settings };
     return new OCISpeechModel(modelId, mergedConfig);
   }
@@ -575,6 +571,7 @@ git commit -m "feat(speech): wire up speech models to provider"
 ## Task 5: Export Speech Models from Index
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/index.ts`
 
 **Step 1: Write test for exports**
@@ -635,6 +632,7 @@ git commit -m "feat(speech): export speech models from index"
 ## Task 6: Create TTS Demo Example
 
 **Files:**
+
 - Create: `examples/tts-demo/`
 - Create: `examples/tts-demo/index.ts`
 - Create: `examples/tts-demo/package.json`
@@ -680,7 +678,8 @@ async function main() {
     region: 'us-phoenix-1',
   });
 
-  const textToSpeak = 'Hello! This is Oracle Cloud Infrastructure Speech service converting text to natural sounding speech.';
+  const textToSpeak =
+    'Hello! This is Oracle Cloud Infrastructure Speech service converting text to natural sounding speech.';
 
   console.log(`📝 Text: "${textToSpeak}"\n`);
 
@@ -767,6 +766,7 @@ git commit -m "feat(speech): add TTS demo example with multiple voices"
 ## Task 7: Update Documentation
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/README.md`
 - Create: `docs/speech-tts.md`
 
@@ -788,8 +788,8 @@ import fs from 'fs/promises';
 const oci = createOCI({ region: 'us-phoenix-1' });
 
 const result = await generateSpeech({
-  model: oci.speechModel('oci.tts-1-hd'),
-  text: 'Hello, this is a text-to-speech demo.',
+model: oci.speechModel('oci.tts-1-hd'),
+text: 'Hello, this is a text-to-speech demo.',
 });
 
 await fs.writeFile('output.mp3', result.audio);
@@ -811,30 +811,32 @@ const oci = createOCI({ region: 'eu-frankfurt-1' });
 
 ### Available Speech Models
 
-| Model ID | Quality | Use Case |
-|----------|---------|----------|
+| Model ID       | Quality         | Use Case                       |
+| -------------- | --------------- | ------------------------------ |
 | `oci.tts-1-hd` | High Definition | Production, high-quality audio |
-| `oci.tts-1` | Standard | Development, faster generation |
+| `oci.tts-1`    | Standard        | Development, faster generation |
 
 ### Speech Options
 
 \`\`\`typescript
 oci.speechModel('oci.tts-1-hd', {
-  voice: 'en-US-Neural2-A',  // Male voice
-  format: 'mp3',             // 'mp3' | 'ogg' | 'pcm'
-  speed: 1.0,                // 0.5 to 2.0
+voice: 'en-US-Neural2-A', // Male voice
+format: 'mp3', // 'mp3' | 'ogg' | 'pcm'
+speed: 1.0, // 0.5 to 2.0
 });
 \`\`\`
 
 ### Available Voices
 
 **Male voices:**
+
 - `en-US-Neural2-A`
 - `en-US-Neural2-D`
 - `en-US-Neural2-I`
 - `en-US-Neural2-J`
 
 **Female voices:**
+
 - `en-US-Neural2-C` (default)
 - `en-US-Neural2-E`
 - `en-US-Neural2-F`
@@ -866,7 +868,7 @@ import { createOCI } from '@acedergren/oci-genai-provider';
 
 // Explicitly set Phoenix region
 const oci = createOCI({
-  region: 'us-phoenix-1',
+region: 'us-phoenix-1',
 });
 
 const model = oci.speechModel('oci.tts-1-hd');
@@ -892,8 +894,8 @@ import fs from 'fs/promises';
 const oci = createOCI({ region: 'us-phoenix-1' });
 
 const result = await generateSpeech({
-  model: oci.speechModel('oci.tts-1-hd'),
-  text: 'Hello world!',
+model: oci.speechModel('oci.tts-1-hd'),
+text: 'Hello world!',
 });
 
 await fs.writeFile('speech.mp3', result.audio);
@@ -902,17 +904,20 @@ await fs.writeFile('speech.mp3', result.audio);
 ## Voice Selection
 
 ### Default Voice
+
 If no voice is specified, `en-US-Neural2-C` (female) is used.
 
 ### All Available Voices
 
 **Male:**
+
 - `en-US-Neural2-A` - Warm, conversational
 - `en-US-Neural2-D` - Clear, professional
 - `en-US-Neural2-I` - Young, energetic
 - `en-US-Neural2-J` - Deep, authoritative
 
 **Female:**
+
 - `en-US-Neural2-C` - Natural, friendly (default)
 - `en-US-Neural2-E` - Calm, soothing
 - `en-US-Neural2-F` - Professional, articulate
@@ -923,11 +928,11 @@ If no voice is specified, `en-US-Neural2-C` (female) is used.
 
 ### Supported Formats
 
-| Format | Extension | Use Case |
-|--------|-----------|----------|
-| MP3 | `.mp3` | General use, web playback |
-| OGG | `.ogg` | Open source, web streaming |
-| PCM | `.pcm` | Raw audio, processing |
+| Format | Extension | Use Case                   |
+| ------ | --------- | -------------------------- |
+| MP3    | `.mp3`    | General use, web playback  |
+| OGG    | `.ogg`    | Open source, web streaming |
+| PCM    | `.pcm`    | Raw audio, processing      |
 
 ### Format Examples
 
@@ -948,9 +953,9 @@ Control speech rate from 0.5x (slow) to 2.0x (fast):
 
 \`\`\`typescript
 await generateSpeech({
-  model: oci.speechModel('oci.tts-1'),
-  text: 'This will be spoken slowly.',
-  speed: 0.75, // 75% speed
+model: oci.speechModel('oci.tts-1'),
+text: 'This will be spoken slowly.',
+speed: 0.75, // 75% speed
 });
 \`\`\`
 

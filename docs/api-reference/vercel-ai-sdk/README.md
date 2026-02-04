@@ -7,6 +7,7 @@ Complete reference for implementing custom providers for the Vercel AI SDK v3 us
 The Vercel AI SDK v3 provides a standardized interface (`LanguageModelV3`) for integrating custom language model providers. This enables applications to use different LLM services through a unified API.
 
 **Key Features:**
+
 - Unified provider API across all models
 - Streaming support with async iterators
 - Function/tool calling integration
@@ -14,6 +15,7 @@ The Vercel AI SDK v3 provides a standardized interface (`LanguageModelV3`) for i
 - TypeScript-first with full type safety
 
 **Sources:**
+
 - [AI SDK Documentation](https://ai-sdk.dev)
 - [Vercel AI Repository](https://github.com/vercel/ai)
 - [Custom Providers Guide](https://ai-sdk.dev/providers/community-providers/custom-providers)
@@ -52,16 +54,12 @@ interface LanguageModelV3 {
   /**
    * Generate text without streaming
    */
-  doGenerate(
-    options: LanguageModelV3CallOptions
-  ): Promise<LanguageModelV3GenerateResult>;
+  doGenerate(options: LanguageModelV3CallOptions): Promise<LanguageModelV3GenerateResult>;
 
   /**
    * Generate text with streaming
    */
-  doStream(
-    options: LanguageModelV3CallOptions
-  ): Promise<LanguageModelV3StreamResult>;
+  doStream(options: LanguageModelV3CallOptions): Promise<LanguageModelV3StreamResult>;
 }
 ```
 
@@ -231,6 +229,7 @@ interface LanguageModelV3FunctionTool {
 ```
 
 **Example:**
+
 ```typescript
 const weatherTool: LanguageModelV3FunctionTool = {
   type: 'function',
@@ -241,16 +240,16 @@ const weatherTool: LanguageModelV3FunctionTool = {
     properties: {
       location: {
         type: 'string',
-        description: 'The city and state, e.g., San Francisco, CA'
+        description: 'The city and state, e.g., San Francisco, CA',
       },
       unit: {
         type: 'string',
         enum: ['celsius', 'fahrenheit'],
-        description: 'Temperature unit'
-      }
+        description: 'Temperature unit',
+      },
     },
-    required: ['location']
-  }
+    required: ['location'],
+  },
 };
 ```
 
@@ -260,9 +259,9 @@ Controls how the model selects tools.
 
 ```typescript
 type LanguageModelV3ToolChoice =
-  | { type: 'auto' }           // Model decides
-  | { type: 'none' }           // No tool calling
-  | { type: 'required' }       // Must call a tool
+  | { type: 'auto' } // Model decides
+  | { type: 'none' } // No tool calling
+  | { type: 'required' } // Must call a tool
   | { type: 'function'; name: string }; // Call specific function
 ```
 
@@ -323,13 +322,13 @@ type LanguageModelV3Content =
     };
 
 type LanguageModelV3FinishReason =
-  | 'stop'           // Natural completion
-  | 'length'         // Max tokens reached
+  | 'stop' // Natural completion
+  | 'length' // Max tokens reached
   | 'content-filter' // Content filtered
-  | 'tool-calls'     // Tool calling
-  | 'error'          // Error occurred
-  | 'other'          // Other/unknown
-  | 'unknown';       // Unknown reason
+  | 'tool-calls' // Tool calling
+  | 'error' // Error occurred
+  | 'other' // Other/unknown
+  | 'unknown'; // Unknown reason
 ```
 
 ### LanguageModelV3Usage
@@ -504,9 +503,7 @@ export class CustomLanguageModel implements LanguageModelV3 {
     };
   }
 
-  async doGenerate(
-    options: LanguageModelV3CallOptions
-  ): Promise<LanguageModelV3GenerateResult> {
+  async doGenerate(options: LanguageModelV3CallOptions): Promise<LanguageModelV3GenerateResult> {
     // 1. Convert AI SDK prompt to provider format
     const { args, warnings } = this.prepareRequest(options);
 
@@ -522,29 +519,24 @@ export class CustomLanguageModel implements LanguageModelV3 {
     return this.processResponse(response, args, warnings);
   }
 
-  async doStream(
-    options: LanguageModelV3CallOptions
-  ): Promise<LanguageModelV3StreamResult> {
+  async doStream(options: LanguageModelV3CallOptions): Promise<LanguageModelV3StreamResult> {
     // 1. Convert AI SDK prompt to provider format
     const { args, warnings } = this.prepareRequest(options);
 
     // 2. Make streaming API call
-    const response = await fetch(
-      `${this.config.baseURL}/chat/completions`,
-      {
-        method: 'POST',
-        headers: {
-          ...this.config.headers(),
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ ...args, stream: true }),
-        signal: options.abortSignal,
-      }
-    );
+    const response = await fetch(`${this.config.baseURL}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        ...this.config.headers(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ...args, stream: true }),
+      signal: options.abortSignal,
+    });
 
     // 3. Transform stream to AI SDK format
-    const stream = response.body!
-      .pipeThrough(new TextDecoderStream())
+    const stream = response
+      .body!.pipeThrough(new TextDecoderStream())
       .pipeThrough(this.createSSEParser())
       .pipeThrough(this.createStreamTransformer(warnings));
 
@@ -558,9 +550,7 @@ export class CustomLanguageModel implements LanguageModelV3 {
     const messages = this.convertMessages(options.prompt.messages);
 
     // Convert tools
-    const tools = options.tools
-      ? this.convertTools(options.tools)
-      : undefined;
+    const tools = options.tools ? this.convertTools(options.tools) : undefined;
 
     const args = {
       model: this.modelId,
@@ -605,9 +595,7 @@ export class CustomLanguageModel implements LanguageModelV3 {
 
     return {
       content,
-      finishReason: this.mapFinishReason(
-        response.choices[0].finish_reason
-      ),
+      finishReason: this.mapFinishReason(response.choices[0].finish_reason),
       usage: {
         inputTokens: response.usage.prompt_tokens,
         outputTokens: response.usage.completion_tokens,
@@ -655,9 +643,7 @@ export class CustomLanguageModel implements LanguageModelV3 {
         if (chunk.choices?.[0]?.finish_reason) {
           controller.enqueue({
             type: 'finish',
-            finishReason: this.mapFinishReason(
-              chunk.choices[0].finish_reason
-            ),
+            finishReason: this.mapFinishReason(chunk.choices[0].finish_reason),
             usage: {
               inputTokens: chunk.usage?.prompt_tokens || 0,
               outputTokens: chunk.usage?.completion_tokens || 0,
@@ -698,9 +684,7 @@ export interface CustomProviderSettings {
   apiKey?: string;
 }
 
-export function createCustom(
-  settings: CustomProviderSettings = {}
-): ProviderV3 {
+export function createCustom(settings: CustomProviderSettings = {}): ProviderV3 {
   const config = {
     baseURL: settings.baseURL ?? 'https://api.example.com',
     headers: () => ({
@@ -735,10 +719,7 @@ const model = provider.languageModel('custom-model-name');
 ## Error Handling
 
 ```typescript
-import {
-  NoSuchToolError,
-  InvalidToolInputError,
-} from '@ai-sdk/provider';
+import { NoSuchToolError, InvalidToolInputError } from '@ai-sdk/provider';
 
 try {
   const result = await generateText({
@@ -783,6 +764,7 @@ The AI SDK provides several reference implementations:
 ---
 
 **Sources:**
+
 - [AI SDK Documentation](https://ai-sdk.dev/providers/community-providers/custom-providers)
 - [Vercel AI Repository](https://github.com/vercel/ai) via DeepWiki
 - Context7 Library Query Results (2026-01-26)

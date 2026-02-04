@@ -191,6 +191,7 @@ husky - install command is DEPRECATED
 **Changes Applied:**
 
 1. ✅ Updated `package.json` prepare script:
+
    ```json
    {
      "scripts": {
@@ -200,6 +201,7 @@ husky - install command is DEPRECATED
    ```
 
 2. ✅ Updated `.husky/pre-commit` hook to work with pnpm and turbo:
+
    ```bash
    #!/usr/bin/env sh
 

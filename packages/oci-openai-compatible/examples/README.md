@@ -5,6 +5,7 @@ This directory contains usage examples for the `@acedergren/oci-openai-compatibl
 ## Prerequisites
 
 1. Set up OCI credentials:
+
    ```bash
    export OCI_API_KEY="your-api-key"
    export OCI_COMPARTMENT_ID="ocid1.compartment.oc1..yourcompartmentid"

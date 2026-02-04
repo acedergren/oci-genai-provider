@@ -5,6 +5,7 @@ Complete guide to implementing function/tool calling with the OCI GenAI provider
 ## Overview
 
 Tool calling (also called function calling) allows language models to request execution of user-defined functions, enabling:
+
 - **External data access** (APIs, databases)
 - **Action execution** (sending emails, creating files)
 - **Dynamic computation** (calculations, data processing)
@@ -25,29 +26,29 @@ const oci = createOCI({ region: 'eu-frankfurt-1' });
 
 // Define tools
 const tools = {
-  getWeather: tool({
-    description: 'Get current weather for a location',
-    parameters: z.object({
-      location: z.string().describe('City and country, e.g., Paris, France'),
-      unit: z.enum(['celsius', 'fahrenheit']).optional(),
-    }),
-    execute: async ({ location, unit = 'celsius' }) => {
-      // Call weather API
-      return {
-        location,
-        temperature: 22,
-        unit,
-        conditions: 'Partly cloudy',
-      };
-    },
-  }),
+getWeather: tool({
+description: 'Get current weather for a location',
+parameters: z.object({
+location: z.string().describe('City and country, e.g., Paris, France'),
+unit: z.enum(['celsius', 'fahrenheit']).optional(),
+}),
+execute: async ({ location, unit = 'celsius' }) => {
+// Call weather API
+return {
+location,
+temperature: 22,
+unit,
+conditions: 'Partly cloudy',
+};
+},
+}),
 };
 
 // Generate with tools
 const { text } = await generateText({
-  model: oci('cohere.command-r-plus'),
-  prompt: 'What's the weather like in Frankfurt?',
-  tools,
+model: oci('cohere.command-r-plus'),
+prompt: 'What's the weather like in Frankfurt?',
+tools,
 });
 
 console.log(text);
@@ -57,6 +58,7 @@ console.log(text);
 **That's it!** The AI SDK handles tool calling automatically.
 
 **Sources:**
+
 - [Vercel AI SDK Tools Documentation](https://sdk.vercel.ai/docs/ai-sdk-core/tools-and-tool-calling)
 - [OCI GenAI Agents Documentation](https://docs.oracle.com/en-us/iaas/Content/generative-ai/use-playground-chat.htm#use-playground-chat-tools)
 - Project Archive Requirements Specification

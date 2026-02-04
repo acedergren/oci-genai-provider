@@ -60,6 +60,7 @@ package.json                      # Added packageManager field
 ```
 
 **package.json update:**
+
 ```json
 {
   "packageManager": "pnpm@8.15.0"
@@ -96,6 +97,7 @@ pnpm list --depth=0
 ### Verification
 
 **Check pnpm is active:**
+
 ```bash
 which pnpm
 # /opt/homebrew/bin/pnpm
@@ -108,6 +110,7 @@ pnpm list --depth=0
 ```
 
 **Verify workspace structure:**
+
 ```bash
 pnpm ls -r --depth=0
 # Lists all packages in the monorepo
@@ -115,12 +118,12 @@ pnpm ls -r --depth=0
 
 ### Commands Changed
 
-| Old Command | New Command |
-|-------------|-------------|
-| `npm install` | `pnpm install` |
-| `npm run build` | `pnpm build` |
-| `npm test` | `pnpm test` |
-| `npm run lint` | `pnpm lint` |
+| Old Command     | New Command    |
+| --------------- | -------------- |
+| `npm install`   | `pnpm install` |
+| `npm run build` | `pnpm build`   |
+| `npm test`      | `pnpm test`    |
+| `npm run lint`  | `pnpm lint`    |
 
 ### Rollback Procedure
 
@@ -156,7 +159,7 @@ Updated Node.js type definitions from version 22 to 25 to match Node.js 25.5.0 r
 // package.json (root)
 {
   "devDependencies": {
-    "@types/node": "^25.0.10"  // Was: ^22.10.5
+    "@types/node": "^25.0.10" // Was: ^22.10.5
   }
 }
 ```
@@ -240,12 +243,13 @@ All package.json files updated to remove `--ext` flag:
 ```json
 {
   "scripts": {
-    "lint": "eslint src"  // Was: "eslint src --ext .ts,.tsx"
+    "lint": "eslint src" // Was: "eslint src --ext .ts,.tsx"
   }
 }
 ```
 
 **Affected packages:**
+
 - `packages/oci-genai-provider/package.json`
 - `packages/opencode-integration/package.json`
 - `packages/test-utils/package.json`
@@ -261,6 +265,7 @@ All package.json files updated to remove `--ext` flag:
 ### Key Features of New Config
 
 **TypeScript Type-Aware Linting:**
+
 ```javascript
 languageOptions: {
   parserOptions: {
@@ -271,6 +276,7 @@ languageOptions: {
 ```
 
 **Separate TypeScript and JavaScript configs:**
+
 - TypeScript files: Full type-aware linting
 - JavaScript files: Standard linting without type checking
 
@@ -310,12 +316,14 @@ pnpm exec turbo run lint
 ### Common Issues & Fixes
 
 **Issue: "No files matching pattern" error**
+
 ```bash
 # Fix: Remove --ext flag from package.json lint scripts
 "lint": "eslint src"  // Don't use: "eslint src --ext .ts"
 ```
 
 **Issue: Type information not available**
+
 ```javascript
 // Fix: Ensure projectService is enabled
 parserOptions: {
@@ -358,24 +366,26 @@ pnpm lint
 ### Files Modified
 
 **package.json (root):**
+
 ```json
 {
   "scripts": {
-    "prepare": "husky"  // Was: "husky install"
+    "prepare": "husky" // Was: "husky install"
   },
   "devDependencies": {
-    "lint-staged": "^16.2.7"  // Was: ^15.2.11
+    "lint-staged": "^16.2.7" // Was: ^15.2.11
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "npx eslint --fix",      // Added npx prefix
-      "npx prettier --write"   // Added npx prefix
+      "npx eslint --fix", // Added npx prefix
+      "npx prettier --write" // Added npx prefix
     ]
   }
 }
 ```
 
 **.husky/pre-commit:**
+
 ```bash
 #!/usr/bin/env sh
 
@@ -387,11 +397,13 @@ pnpm exec turbo run test
 ### Why Upgrade?
 
 **Husky 9:**
+
 - Simpler initialization (no `husky install`)
 - Better cross-platform support
 - Cleaner hook scripts (no boilerplate)
 
 **lint-staged v16:**
+
 - Node.js 20+ compatibility
 - Better PATH handling with `npx` prefix
 - Performance improvements
@@ -439,6 +451,7 @@ git commit -m "test: verify hooks work"
 ### Common Issues & Fixes
 
 **Issue: Hooks not running**
+
 ```bash
 # Fix: Reinstall Husky hooks
 rm -rf .husky
@@ -447,14 +460,12 @@ pnpm exec husky init
 ```
 
 **Issue: PATH issues with lint-staged**
+
 ```json
 // Fix: Use npx prefix in lint-staged config
 {
   "lint-staged": {
-    "*.{ts,tsx}": [
-      "npx eslint --fix",
-      "npx prettier --write"
-    ]
+    "*.{ts,tsx}": ["npx eslint --fix", "npx prettier --write"]
   }
 }
 ```
@@ -520,6 +531,7 @@ git commit -m "test: verify rollback"
 ### When to Migrate
 
 Consider migrating when:
+
 - Jest 29 reaches end-of-life
 - Jest 30 stabilizes further (currently 30.2.0)
 - Specific Jest 30 features are needed
@@ -611,6 +623,7 @@ git commit -m "test: verify all migrations"
 ### Expected Results
 
 **Build Output:**
+
 ```bash
 packages/oci-genai-provider:build: ✓ built in 1.2s
   - ESM: 19.93 KB
@@ -619,6 +632,7 @@ packages/oci-genai-provider:build: ✓ built in 1.2s
 ```
 
 **Test Output:**
+
 ```bash
 Test Suites: 13 passed, 13 total
 Tests:       208 passed, 208 total
@@ -627,6 +641,7 @@ Time:        5.123 s
 ```
 
 **Lint Output:**
+
 ```bash
 ✓ No ESLint errors found
 ⚠ 18 warnings (unused eslint-disable directives - cosmetic only)

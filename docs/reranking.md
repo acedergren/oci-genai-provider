@@ -31,12 +31,14 @@ console.log(ranking);
 ## Why Use Reranking?
 
 ### Without Reranking (Embeddings Only)
+
 - Fast similarity search
 - Good recall (finds relevant documents)
 - Can miss nuanced semantic meaning
 - May rank documents with keyword overlap higher
 
 ### With Reranking (Two-Stage Pipeline)
+
 - Combines speed of embeddings with precision of reranking
 - Better semantic understanding
 - Improved relevance for complex queries
@@ -70,26 +72,28 @@ const { ranking } = await rerank({
 });
 
 // Use top 5 for LLM context
-const finalDocs = ranking.map(r => candidates[r.index]);
+const finalDocs = ranking.map((r) => candidates[r.index]);
 ```
 
 ## Configuration Options
 
 ### topN
+
 - Limit results to top N documents
 - Default: returns all documents ranked
 - Use for focusing on most relevant results
 
 ### returnDocuments
+
 - Include document text in response
 - Default: false (only indices and scores)
 - Set true if you need the text in response
 
 ## Available Reranking Models
 
-| Model ID | Max Documents | Multilingual | Use Case |
-|----------|---------------|--------------|----------|
-| `cohere.rerank-v3.5` | 1000 | Yes | Production RAG reranking |
+| Model ID             | Max Documents | Multilingual | Use Case                 |
+| -------------------- | ------------- | ------------ | ------------------------ |
+| `cohere.rerank-v3.5` | 1000          | Yes          | Production RAG reranking |
 
 ## Best Practices
 
@@ -124,6 +128,7 @@ See `examples/rag-reranking-demo/index.ts` for a complete two-stage RAG pipeline
 ## Integration with Embeddings
 
 Reranking works best when combined with embeddings:
+
 - Use embeddings for initial retrieval (fast, good recall)
 - Use reranking for final precision (accurate, semantic understanding)
 - Together they create a production-ready RAG pipeline
@@ -135,13 +140,13 @@ The reranking response includes:
 ```typescript
 interface RerankingResponse {
   ranking: Array<{
-    index: number;              // Index of the document in input array
-    relevanceScore: number;     // Score between 0 and 1
+    index: number; // Index of the document in input array
+    relevanceScore: number; // Score between 0 and 1
   }>;
   response?: {
-    id?: string;                // Request ID
-    modelId?: string;           // Model used
-    timestamp?: Date;           // Response timestamp
+    id?: string; // Request ID
+    modelId?: string; // Model used
+    timestamp?: Date; // Response timestamp
   };
 }
 ```

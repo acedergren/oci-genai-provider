@@ -23,6 +23,7 @@ Every code-related task in all plans follows this 5-step cycle:
 ### Plan 1: Core Provider Refactoring
 
 **Task 2: Create Provider Types**
+
 ```
 Step 1: Write test for OCIBaseConfig          ✅ RED
 Step 2: Run test to verify it fails           ✅ Verify RED
@@ -32,6 +33,7 @@ Step 5: Commit                                 ✅ Lock in
 ```
 
 **Task 3: Create OCIProvider Class**
+
 ```
 Step 1: Write test for OCIProvider class      ✅ RED
 Step 2: Run test to verify it fails           ✅ Verify RED
@@ -48,6 +50,7 @@ Step 5: Commit                                 ✅ Lock in
 ### Plan 2: Embedding Models
 
 **Task 1: Create Embedding Model Registry**
+
 ```
 Step 1: Write test for embedding model registry  ✅ RED
 Step 2: Run test to verify it fails              ✅ Verify RED
@@ -57,6 +60,7 @@ Step 5: Commit                                    ✅ Lock in
 ```
 
 **Task 2: Implement OCIEmbeddingModel**
+
 ```
 Step 1: Write test for OCIEmbeddingModel         ✅ RED
 Step 2: Run test to verify it fails              ✅ Verify RED
@@ -72,6 +76,7 @@ Step 5: Commit                                    ✅ Lock in
 ### Plan 3: Speech Models (TTS)
 
 **Task 2: Create Speech Model Registry**
+
 ```
 Step 1: Write test for speech model registry     ✅ RED
 Step 2: Run test to verify it fails              ✅ Verify RED
@@ -87,6 +92,7 @@ Step 5: Commit                                    ✅ Lock in
 ### Plan 4: Transcription Models (STT)
 
 **Task 2: Create Transcription Model Registry**
+
 ```
 Step 1: Write test for transcription registry    ✅ RED
 Step 2: Run test to verify it fails              ✅ Verify RED
@@ -102,6 +108,7 @@ Step 5: Commit                                    ✅ Lock in
 ### Plan 5: Reranking Models
 
 **Task 1: Create Reranking Model Registry**
+
 ```
 Step 1: Write test for reranking model registry  ✅ RED
 Step 2: Run test to verify it fails              ✅ Verify RED
@@ -117,6 +124,7 @@ Step 5: Commit                                    ✅ Lock in
 ### Plan 6: Documentation & Examples
 
 **Task 1: Update Main README**
+
 ```
 Step 1: Write test for README completeness       ✅ RED
 Step 2: Run test to verify it fails              ✅ Verify RED
@@ -132,6 +140,7 @@ Step 5: Commit                                    ✅ Lock in
 ### Plan 7: Testing Infrastructure
 
 **Task 1: Enhance Jest Coverage Configuration**
+
 ```
 Step 1: Write test to verify coverage config     ✅ RED
 Step 2: Run test to verify it passes             ✅ Verify RED (expects fail)
@@ -148,7 +157,9 @@ Step 6: Commit                                    ✅ Lock in
 ## TDD Cycle Verification
 
 ### RED Phase
+
 Every plan explicitly states:
+
 ```
 Step X: Run test to verify it fails
 Expected: FAIL - "[specific error message]"
@@ -157,7 +168,9 @@ Expected: FAIL - "[specific error message]"
 This ensures you're starting from a failing state (RED).
 
 ### GREEN Phase
+
 Every plan explicitly states:
+
 ```
 Step X: Run test to verify it passes
 Expected: PASS - All tests passing
@@ -166,6 +179,7 @@ Expected: PASS - All tests passing
 This confirms the implementation works (GREEN).
 
 ### REFACTOR Phase
+
 Implicit in the commit step - each commit locks in working code.
 
 ---
@@ -214,16 +228,16 @@ Following strict TDD in all plans ensures:
 
 ### Breakdown by Plan
 
-| Plan | Tasks | TDD Tasks | TDD % |
-|------|-------|-----------|-------|
-| Plan 1 | 7 | 5 | 71% |
-| Plan 2 | 6 | 6 | 100% |
-| Plan 3 | 7 | 6 | 86% |
-| Plan 4 | 8 | 7 | 88% |
-| Plan 5 | 6 | 6 | 100% |
-| Plan 6 | 7 | 5 | 71% |
-| Plan 7 | 9 | 9 | 100% |
-| **Total** | **50** | **44** | **88%** |
+| Plan      | Tasks  | TDD Tasks | TDD %   |
+| --------- | ------ | --------- | ------- |
+| Plan 1    | 7      | 5         | 71%     |
+| Plan 2    | 6      | 6         | 100%    |
+| Plan 3    | 7      | 6         | 86%     |
+| Plan 4    | 8      | 7         | 88%     |
+| Plan 5    | 6      | 6         | 100%    |
+| Plan 6    | 7      | 5         | 71%     |
+| Plan 7    | 9      | 9         | 100%    |
+| **Total** | **50** | **44**    | **88%** |
 
 Non-TDD tasks are appropriate exceptions (dependencies, file moves, demos).
 
@@ -234,6 +248,7 @@ Non-TDD tasks are appropriate exceptions (dependencies, file moves, demos).
 ✅ **All plans are strictly TDD-compliant**
 
 Every task that involves writing code follows:
+
 1. Write test first (RED)
 2. Verify it fails
 3. Implement minimal code (GREEN)
@@ -241,6 +256,7 @@ Every task that involves writing code follows:
 5. Commit
 
 This ensures:
+
 - High-quality code
 - Complete test coverage
 - Clear success criteria

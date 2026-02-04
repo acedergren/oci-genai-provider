@@ -7,11 +7,13 @@ Common issues and solutions for OCI Generative AI Provider.
 ### Error: "Authentication failed"
 
 **Symptoms:**
+
 ```
 Error: Authentication failed
 ```
 
 **Causes:**
+
 - Invalid OCI config file
 - Missing API key file
 - Incorrect fingerprint
@@ -20,22 +22,26 @@ Error: Authentication failed
 **Solutions:**
 
 1. **Verify config file exists:**
+
    ```bash
    cat ~/.oci/config
    ```
 
 2. **Check file permissions:**
+
    ```bash
    chmod 600 ~/.oci/config
    chmod 600 ~/.oci/oci_api_key.pem
    ```
 
 3. **Verify fingerprint:**
+
    ```bash
    openssl rsa -pubout -outform DER -in ~/.oci/oci_api_key.pem | openssl md5 -c | awk '{print $2}'
    ```
 
 4. **Check environment variables:**
+
    ```bash
    echo $OCI_CONFIG_PROFILE
    echo $OCI_COMPARTMENT_ID
@@ -49,6 +55,7 @@ Error: Authentication failed
 ### Error: "Compartment not found"
 
 **Symptoms:**
+
 ```
 Error: Compartment ocid1.compartment... not found
 ```
@@ -56,11 +63,13 @@ Error: Compartment ocid1.compartment... not found
 **Solutions:**
 
 1. **Verify compartment exists:**
+
    ```bash
    oci iam compartment get --compartment-id <OCID>
    ```
 
 2. **Check permissions:**
+
    ```bash
    oci iam policy list --compartment-id <TENANCY_OCID>
    ```
@@ -77,6 +86,7 @@ Error: Compartment ocid1.compartment... not found
 ### Error: "Invalid model ID"
 
 **Symptoms:**
+
 ```
 Error: Invalid model ID: my-model
 ```
@@ -84,14 +94,16 @@ Error: Invalid model ID: my-model
 **Solutions:**
 
 1. **Check available models:**
+
    ```typescript
    import { getAllModels } from '@acedergren/oci-genai-provider';
 
    const models = getAllModels();
-   console.log(models.map(m => m.id));
+   console.log(models.map((m) => m.id));
    ```
 
 2. **Use correct model ID format:**
+
    ```typescript
    // Correct
    oci.languageModel('cohere.command-r-plus');
@@ -101,6 +113,7 @@ Error: Invalid model ID: my-model
    ```
 
 3. **Verify model type:**
+
    ```typescript
    // Language models
    oci.languageModel('cohere.command-r-plus');
@@ -112,6 +125,7 @@ Error: Invalid model ID: my-model
 ### Error: "Model not available in region"
 
 **Symptoms:**
+
 ```
 Error: Model not available in region eu-frankfurt-1
 ```
@@ -123,6 +137,7 @@ Error: Model not available in region eu-frankfurt-1
    - Speech/Transcription: Only `us-phoenix-1`
 
 2. **Use correct region for speech:**
+
    ```typescript
    oci.speechModel('oci-tts-standard', {
      region: 'us-phoenix-1', // Required
@@ -137,6 +152,7 @@ Error: Model not available in region eu-frankfurt-1
 ### Error: "Speech services not available in this region"
 
 **Symptoms:**
+
 ```
 Error: Speech services are only available in us-phoenix-1
 ```
@@ -157,6 +173,7 @@ const transcriptionModel = provider.transcriptionModel('oci-stt-standard');
 ### Error: "Region not configured"
 
 **Symptoms:**
+
 ```
 Error: Region must be specified
 ```
@@ -164,6 +181,7 @@ Error: Region must be specified
 **Solutions:**
 
 1. **Set region in config:**
+
    ```typescript
    const provider = createOCI({
      region: 'us-phoenix-1',
@@ -171,6 +189,7 @@ Error: Region must be specified
    ```
 
 2. **Set environment variable:**
+
    ```bash
    export OCI_REGION=us-phoenix-1
    ```
@@ -186,6 +205,7 @@ Error: Region must be specified
 ### Error: "Connection timeout"
 
 **Symptoms:**
+
 ```
 Error: Request timeout after 30000ms
 ```
@@ -193,6 +213,7 @@ Error: Request timeout after 30000ms
 **Solutions:**
 
 1. **Increase timeout:**
+
    ```typescript
    oci.languageModel('cohere.command-r-plus', {
      requestOptions: {
@@ -202,6 +223,7 @@ Error: Request timeout after 30000ms
    ```
 
 2. **Check network connectivity:**
+
    ```bash
    ping inference.generativeai.us-phoenix-1.oci.oraclecloud.com
    ```
@@ -213,6 +235,7 @@ Error: Request timeout after 30000ms
 ### Error: "Rate limit exceeded"
 
 **Symptoms:**
+
 ```
 Error: Rate limit exceeded. Retry after 60 seconds
 ```
@@ -220,6 +243,7 @@ Error: Rate limit exceeded. Retry after 60 seconds
 **Solutions:**
 
 1. **Implement retry logic:**
+
    ```typescript
    import { RateLimitError } from '@acedergren/oci-genai-provider';
 
@@ -228,13 +252,14 @@ Error: Rate limit exceeded. Retry after 60 seconds
    } catch (error) {
      if (error instanceof RateLimitError) {
        const retryAfter = error.retryAfter || 60;
-       await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+       await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
        // Retry request
      }
    }
    ```
 
 2. **Enable automatic retry:**
+
    ```typescript
    oci.languageModel('cohere.command-r-plus', {
      requestOptions: {
@@ -255,6 +280,7 @@ Error: Rate limit exceeded. Retry after 60 seconds
 ### Error: "Batch size exceeds maximum"
 
 **Symptoms:**
+
 ```
 Error: Batch size (100) exceeds maximum allowed (96)
 ```
@@ -285,6 +311,7 @@ for (const batch of batches) {
 ### Error: "Text exceeds maximum length"
 
 **Symptoms:**
+
 ```
 Error: Input text exceeds 512 tokens
 ```
@@ -292,6 +319,7 @@ Error: Input text exceeds 512 tokens
 **Solutions:**
 
 1. **Use truncation:**
+
    ```typescript
    oci.embeddingModel('cohere.embed-multilingual-v3.0', {
      truncate: 'END', // Truncate from end
@@ -314,6 +342,7 @@ Error: Input text exceeds 512 tokens
 ### Error: "Type 'OCIProvider' is not assignable..."
 
 **Symptoms:**
+
 ```
 Type 'OCIProvider' is not assignable to type 'ProviderV1'
 ```
@@ -321,11 +350,13 @@ Type 'OCIProvider' is not assignable to type 'ProviderV1'
 **Solutions:**
 
 1. **Update AI SDK:**
+
    ```bash
    npm install ai@^6.0.0
    ```
 
 2. **Update TypeScript:**
+
    ```bash
    npm install -D typescript@^5.6.0
    ```
@@ -349,12 +380,14 @@ Type 'OCIProvider' is not assignable to type 'ProviderV1'
 **Solutions:**
 
 1. **Reinstall dependencies:**
+
    ```bash
    rm -rf node_modules pnpm-lock.yaml
    pnpm install
    ```
 
 2. **Clear build cache:**
+
    ```bash
    pnpm build
    rm -rf dist

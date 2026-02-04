@@ -179,6 +179,7 @@ Configuration resolves in priority order:
    - `~/.oci/config`, `DEFAULT` profile
 
 Supported authentication methods:
+
 - API Key (config file)
 - Instance Principal (OCI Compute)
 - Resource Principal (OCI Functions)
@@ -187,21 +188,21 @@ Supported authentication methods:
 
 ### Retry-able Errors
 
-| Error | Strategy |
-|-------|----------|
-| 429 Rate Limit | Exponential backoff, respect Retry-After |
-| 500 Server Error | Retry up to 3 times |
-| 503 Unavailable | Retry up to 3 times |
-| Network timeout | Retry with increased timeout |
+| Error            | Strategy                                 |
+| ---------------- | ---------------------------------------- |
+| 429 Rate Limit   | Exponential backoff, respect Retry-After |
+| 500 Server Error | Retry up to 3 times                      |
+| 503 Unavailable  | Retry up to 3 times                      |
+| Network timeout  | Retry with increased timeout             |
 
 ### Non-Retry-able Errors
 
-| Error | Meaning |
-|-------|---------|
+| Error            | Meaning                            |
+| ---------------- | ---------------------------------- |
 | 401 Unauthorized | Authentication configuration issue |
-| 403 Forbidden | IAM policy issue |
-| 404 Not Found | Model or endpoint not found |
-| 400 Bad Request | Invalid request parameters |
+| 403 Forbidden    | IAM policy issue                   |
+| 404 Not Found    | Model or endpoint not found        |
+| 400 Bad Request  | Invalid request parameters         |
 
 ## Testing
 
@@ -212,6 +213,7 @@ The project uses test-driven development with comprehensive coverage:
 - **Shared mocks** in `@acedergren/test-utils`
 
 Test categories:
+
 - Type definitions
 - Authentication
 - Model registry

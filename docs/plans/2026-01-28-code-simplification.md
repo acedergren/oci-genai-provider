@@ -15,6 +15,7 @@
 ### Task 1: Create Generic Registry Factory
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/shared/registries.ts`
 - Test: `packages/oci-genai-provider/src/shared/__tests__/registries.test.ts`
 
@@ -65,7 +66,7 @@ describe('createRegistry', () => {
     const registry = createRegistry(testCatalog);
     const testModels = registry.filterBy('category', 'test');
     expect(testModels).toHaveLength(2);
-    expect(testModels.every(m => m.category === 'test')).toBe(true);
+    expect(testModels.every((m) => m.category === 'test')).toBe(true);
   });
 
   it('should validate and throw on invalid ID', () => {
@@ -170,6 +171,7 @@ Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>"
 ### Task 2: Refactor Language Models Registry
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/language-models/registry.ts`
 - Test: `packages/oci-genai-provider/src/language-models/__tests__/registry.test.ts`
 
@@ -234,6 +236,7 @@ Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>"
 ### Task 3: Refactor Embedding Models Registry
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/embedding-models/registry.ts`
 
 **Step 1: Update registry to use factory**
@@ -273,6 +276,7 @@ git commit -m "refactor(embedding-models): use generic registry factory"
 ### Task 4: Refactor Speech Models Registry
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/speech-models/registry.ts`
 
 **Step 1: Update registry to use factory**
@@ -310,6 +314,7 @@ git commit -m "refactor(speech-models): use generic registry factory"
 ### Task 5: Refactor Transcription Models Registry
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/transcription-models/registry.ts`
 
 **Step 1: Update registry to use factory**
@@ -347,6 +352,7 @@ git commit -m "refactor(transcription-models): use generic registry factory"
 ### Task 6: Refactor Reranking Models Registry
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/reranking-models/registry.ts`
 
 **Step 1: Update registry to use factory**
@@ -386,6 +392,7 @@ git commit -m "refactor(reranking-models): use generic registry factory"
 ### Task 7: Create Shared Configuration Utility
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/shared/config.ts`
 - Test: `packages/oci-genai-provider/src/shared/__tests__/config.test.ts`
 
@@ -421,17 +428,13 @@ describe('getCompartmentId', () => {
 
   it('should throw error if no compartmentId available', () => {
     const config = {};
-    expect(() => getCompartmentId(config)).toThrow(
-      'OCI compartment ID must be provided'
-    );
+    expect(() => getCompartmentId(config)).toThrow('OCI compartment ID must be provided');
   });
 
   it('should support custom environment variable name', () => {
     process.env.CUSTOM_COMPARTMENT = 'ocid1.compartment.oc1..custom';
     const config = {};
-    expect(getCompartmentId(config, 'CUSTOM_COMPARTMENT')).toBe(
-      'ocid1.compartment.oc1..custom'
-    );
+    expect(getCompartmentId(config, 'CUSTOM_COMPARTMENT')).toBe('ocid1.compartment.oc1..custom');
   });
 });
 ```
@@ -502,6 +505,7 @@ Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>"
 ### Task 8: Update oci-genai-provider to Use Shared Utility
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/auth/index.ts`
 
 **Step 1: Replace getCompartmentId implementation**
@@ -548,6 +552,7 @@ Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>"
 ### Task 9: Update oci-openai-compatible to Use Shared Utility
 
 **Files:**
+
 - Modify: `packages/oci-openai-compatible/src/auth.ts`
 
 **Step 1: Replace getCompartmentId implementation**
@@ -592,6 +597,7 @@ Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>"
 ### Task 10: Remove Internal Utilities from Public API
 
 **Files:**
+
 - Modify: `packages/oci-openai-compatible/src/index.ts`
 
 **Step 1: Review current exports**
@@ -658,6 +664,7 @@ Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>"
 ### Task 11: Modernize OCIGenAIError Constructor
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/shared/errors/index.ts`
 
 **Step 1: Review current implementation**
@@ -766,7 +773,7 @@ If old pattern found, update to:
 ```typescript
 // Old: new OCIGenAIError('msg', 429, true)
 // New:
-new OCIGenAIError('msg', { statusCode: 429, retryable: true })
+new OCIGenAIError('msg', { statusCode: 429, retryable: true });
 ```
 
 **Step 7: Run full test suite**
@@ -799,6 +806,7 @@ Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>"
 ### Task 12: Simplify Role Mapping with as const
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/language-models/converters/messages.ts`
 
 **Step 1: Review current implementation**
@@ -842,7 +850,7 @@ const ROLE_MAP = {
 } as const;
 
 export type AIRole = keyof typeof ROLE_MAP;
-export type OCIRole = typeof ROLE_MAP[AIRole];
+export type OCIRole = (typeof ROLE_MAP)[AIRole];
 
 export function convertMessageRole(role: AIRole): OCIRole {
   return ROLE_MAP[role];
@@ -896,6 +904,7 @@ Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>"
 ### Task 13: Create Base OCI Configuration Type
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/shared/config-types.ts`
 - Modify: `packages/oci-genai-provider/src/types.ts`
 - Modify: `packages/oci-openai-compatible/src/types.ts`
@@ -1004,11 +1013,20 @@ export interface OCIConfig extends BaseOCIConfig {
 Modify: `packages/oci-openai-compatible/src/types.ts`
 
 ```typescript
-import type { BaseOCIConfig, OCIAuthMethod } from '@acedergren/oci-genai-provider/shared/config-types';
+import type {
+  BaseOCIConfig,
+  OCIAuthMethod,
+} from '@acedergren/oci-genai-provider/shared/config-types';
 
 export type { OCIAuthMethod } from '@acedergren/oci-genai-provider/shared/config-types';
 
-export type OCIRegion = 'us-ashburn-1' | 'us-chicago-1' | 'us-phoenix-1' | 'eu-frankfurt-1' | 'ap-hyderabad-1' | 'ap-osaka-1';
+export type OCIRegion =
+  | 'us-ashburn-1'
+  | 'us-chicago-1'
+  | 'us-phoenix-1'
+  | 'eu-frankfurt-1'
+  | 'ap-hyderabad-1'
+  | 'ap-osaka-1';
 
 export interface OCIOpenAIConfig extends BaseOCIConfig {
   /** OCI region (OpenAI-compatible endpoints only) */
@@ -1051,6 +1069,7 @@ Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>"
 ### Task 14: Create Reusable Test Setup Helper
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/__tests__/setup-mocks.ts`
 - Modify: Test files to use helper
 
@@ -1184,16 +1203,16 @@ After all tasks complete:
 
 ## Summary of Changes
 
-| Phase | Changes | Files | Lines Saved | Breaking |
-|-------|---------|-------|------------|----------|
-| 1 | Registry consolidation | 6 registry files | ~80 | No |
-| 2 | Config utilities | 3 files | ~10 | No |
-| 3 | API exports | 1 file | ~3 | Minor¹ |
-| 4 | Error constructors | 1 file | ~15 | Yes² |
-| 5 | Role mapping | 1 file | ~8 | No |
-| 6 | Config types | 3 files | ~20 | No |
-| 7 | Test setup | 7 test files | ~100 | No |
-| **Total** | — | 22 files | ~236 | — |
+| Phase     | Changes                | Files            | Lines Saved | Breaking |
+| --------- | ---------------------- | ---------------- | ----------- | -------- |
+| 1         | Registry consolidation | 6 registry files | ~80         | No       |
+| 2         | Config utilities       | 3 files          | ~10         | No       |
+| 3         | API exports            | 1 file           | ~3          | Minor¹   |
+| 4         | Error constructors     | 1 file           | ~15         | Yes²     |
+| 5         | Role mapping           | 1 file           | ~8          | No       |
+| 6         | Config types           | 3 files          | ~20         | No       |
+| 7         | Test setup             | 7 test files     | ~100        | No       |
+| **Total** | —                      | 22 files         | ~236        | —        |
 
 ¹ Only affects undocumented internal utilities
 ² Consider version bump (v1.0.0 → v2.0.0) for breaking error constructor changes

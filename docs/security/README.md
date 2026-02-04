@@ -22,11 +22,13 @@ This repository uses multiple security scanning tools to detect potential vulner
 Some test files contain **minimal RSA private keys** that are flagged by security scanners:
 
 **Files:**
+
 - `test/property/message-conversion.property.ts`
 - `test/spec/ai-sdk-v3/language-model-v3.spec.ts`
 - `test/session-store.test.ts`
 
 **Security Review Decision:**
+
 - ✅ **Approved as safe test fixtures** (reviewed 2026-01-26)
 - These are 512-bit RSA keys (deliberately weak for fast test execution)
 - Clearly marked with `// aikido-ignore-next-line: test-fixture` comments
@@ -34,7 +36,8 @@ Some test files contain **minimal RSA private keys** that are flagged by securit
 - **NOT connected to any real infrastructure or credentials**
 
 **Rationale:**
-1. Testing OCI SDK integration requires valid RSA key *format* (not real keys)
+
+1. Testing OCI SDK integration requires valid RSA key _format_ (not real keys)
 2. Generating keys at runtime would slow down test execution significantly
 3. These keys have no security value (too weak for production use)
 4. Clear code comments document their purpose
@@ -53,6 +56,7 @@ The following environment variables may contain sensitive information and should
 - `OCI_IDCS_TENANCY` - OCI tenancy OCID
 
 **Protection:**
+
 - `.env` files are in `.gitignore`
 - OAuth session files have `0o600` permissions (owner read/write only)
 - No environment variables are logged or exposed in test output
@@ -68,6 +72,7 @@ The provider supports multiple authentication methods with automatic fallback:
 3. **Resource Principal** - For OCI Functions and other managed services
 
 **Security Best Practices:**
+
 - Config files should have `0o600` permissions
 - API keys should be rotated regularly (every 90 days recommended)
 - Use Instance/Resource Principal for production workloads (no static keys)
@@ -75,6 +80,7 @@ The provider supports multiple authentication methods with automatic fallback:
 ### OAuth Sessions
 
 OAuth session files are stored securely:
+
 - Location: `~/.config/opencode/oci-genai-sessions/`
 - Permissions: `0o600` (owner read/write only)
 - Contains temporary access tokens (expire after configured TTL)

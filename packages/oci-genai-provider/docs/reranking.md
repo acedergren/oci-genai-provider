@@ -52,7 +52,7 @@ const searchResults = [
 
 // Rerank by semantic relevance
 const query = 'user query';
-const documents = searchResults.map(r => r.text);
+const documents = searchResults.map((r) => r.text);
 
 const result = await rerank({
   model: oci.rerankingModel('cohere.rerank-v3.0'),
@@ -61,7 +61,7 @@ const result = await rerank({
   topN: 5, // Keep top 5
 });
 
-const rerankedResults = result.rankings.map(rank => ({
+const rerankedResults = result.rankings.map((rank) => ({
   ...searchResults[rank.index],
   relevanceScore: rank.relevanceScore,
 }));
@@ -78,14 +78,14 @@ const allRankings = [];
 
 for (let i = 0; i < allDocuments.length; i += batchSize) {
   const batch = allDocuments.slice(i, i + batchSize);
-  
+
   const result = await rerank({
     model: oci.rerankingModel('cohere.rerank-v3.0'),
     query,
     documents: batch,
     topN: batch.length, // Keep all for merging
   });
-  
+
   allRankings.push(...result.rankings.map(r => ({
     ...r,
     batchOffset: i,

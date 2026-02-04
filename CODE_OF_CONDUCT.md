@@ -26,6 +26,7 @@ We are committed to providing a welcoming, respectful environment for everyone. 
 ## Scope
 
 This code applies to:
+
 - Repository interactions (issues, pull requests, discussions)
 - Community communications (email, chat)
 - Project events
@@ -45,21 +46,24 @@ All reports will be handled confidentially and investigated promptly.
 
 Depending on severity:
 
-| Level | Action |
-|-------|--------|
-| Minor | Private warning |
+| Level    | Action                              |
+| -------- | ----------------------------------- |
+| Minor    | Private warning                     |
 | Moderate | Temporary ban from community spaces |
-| Severe | Permanent removal from project |
+| Severe   | Permanent removal from project      |
 
 ## Examples
 
 **Welcoming a newcomer:**
+
 > "Welcome! Thanks for opening this issue. Here's some context that might help..."
 
 **Constructive code review:**
+
 > "This approach works. Have you considered X? It might improve performance."
 
 **Respectful disagreement:**
+
 > "I see your point, but I think approach X fits better because... What do you think?"
 
 ## Attribution

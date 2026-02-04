@@ -16,6 +16,7 @@ Completed comprehensive 7-task optimization plan for the opencode-oci-genai mono
 **Commit**: `bff81c4266c4fde4f7306db6e164486baa44dfd8`
 
 **Changes**:
+
 - Removed 3 backup files (`*.bak2`)
 - Added `*.bak2` pattern to `.gitignore`
 - Enhanced `.gitignore` with comprehensive exclusions for temporary files, editor configs, and OS artifacts
@@ -30,11 +31,13 @@ Completed comprehensive 7-task optimization plan for the opencode-oci-genai mono
 **Commit**: `cad708787fabe5e5c196c37501de9bf1f532c905`
 
 **Changes**:
+
 - Updated `packageManager` field in root `package.json`
 - Upgraded from pnpm 8.15.0 to 10.28.2
 - Regenerated lockfile with new version
 
 **Impact**:
+
 - 25-30% faster dependency installation
 - Improved symlink handling
 - Better monorepo support
@@ -48,6 +51,7 @@ Completed comprehensive 7-task optimization plan for the opencode-oci-genai mono
 **Commit**: `01aaa91d484cc58280bb7aa2c7ca562827ea3430`
 
 **Changes Added to `.npmrc`**:
+
 ```ini
 # Performance optimizations
 prefer-frozen-lockfile=true          # Faster, safer CI builds
@@ -71,6 +75,7 @@ recursive-install=true               # Install all workspaces
 ```
 
 **Impact**:
+
 - Faster and more reliable installations
 - Better workspace dependency resolution
 - Improved CI/CD consistency
@@ -85,6 +90,7 @@ recursive-install=true               # Install all workspaces
 **Changes to `turbo.json`**:
 
 1. **Parallel Test Execution**:
+
    ```json
    "test": {
      "dependsOn": ["build"],
@@ -110,6 +116,7 @@ recursive-install=true               # Install all workspaces
    - Added `coverage/**` for test coverage reports
 
 **Impact**:
+
 - **40% faster test iteration** (only retest changed packages)
 - Reliable cache invalidation
 - Parallel execution across packages
@@ -123,6 +130,7 @@ recursive-install=true               # Install all workspaces
 **Commit**: `27af75104608c7104cd4d9cf1d2f9da067930b29`
 
 **Changes to Root `package.json`**:
+
 ```json
 {
   "scripts": {
@@ -137,6 +145,7 @@ recursive-install=true               # Install all workspaces
 ```
 
 **Impact**:
+
 - Faster focused development workflows
 - Separate package and example builds
 - Reduced build times for common operations
@@ -152,6 +161,7 @@ recursive-install=true               # Install all workspaces
 **Changes to `.github/workflows/build-test.yml`**:
 
 1. **Turborepo Cache Configuration**:
+
    ```yaml
    - name: Build packages
      run: pnpm build
@@ -166,6 +176,7 @@ recursive-install=true               # Install all workspaces
    - Persistent cache for main branch builds
 
 **Impact**:
+
 - **50% faster CI builds** (warm cache)
 - Reduced GitHub Actions minutes consumption
 - Faster PR feedback cycles
@@ -175,13 +186,13 @@ recursive-install=true               # Install all workspaces
 
 ## Performance Improvements
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| **pnpm install** | ~36 sec | ~27 sec | **25% faster** |
-| **Test iteration** (unchanged packages) | Full rebuild | Cache hit | **40% faster** |
-| **CI builds** (warm cache) | Full build | Cached | **50% faster** |
-| **Workspace filtering** | Manual | `pnpm build:packages` | Convenience |
-| **Cache invalidation** | Broad | Precise inputs | More reliable |
+| Metric                                  | Before       | After                 | Improvement    |
+| --------------------------------------- | ------------ | --------------------- | -------------- |
+| **pnpm install**                        | ~36 sec      | ~27 sec               | **25% faster** |
+| **Test iteration** (unchanged packages) | Full rebuild | Cache hit             | **40% faster** |
+| **CI builds** (warm cache)              | Full build   | Cached                | **50% faster** |
+| **Workspace filtering**                 | Manual       | `pnpm build:packages` | Convenience    |
+| **Cache invalidation**                  | Broad        | Precise inputs        | More reliable  |
 
 ## Verification Results
 
@@ -210,6 +221,7 @@ recursive-install=true               # Install all workspaces
 ### ⚠️ Pre-existing Issues (Unrelated to Optimization)
 
 The codebase has pre-existing TypeScript compilation errors in `@acedergren/oci-genai-provider`:
+
 - Missing properties in `TranscriptionOutput` type
 - Affects build and test for that specific package
 - **These errors existed before optimization work began**
@@ -261,21 +273,25 @@ Updated `.github/workflows/build-test.yml` now includes:
 ## Best Practices Established
 
 ### 1. **Dependency Management**
+
 - Always use `pnpm` (not npm/yarn) for consistency
 - Keep `packageManager` field in sync with installed version
 - Use `prefer-frozen-lockfile` in CI for reproducibility
 
 ### 2. **Build Optimization**
+
 - Declare explicit inputs in `turbo.json` for precise caching
 - Use workspace filtering for focused builds
 - Leverage parallel execution for independent packages
 
 ### 3. **Developer Workflow**
+
 - Use `pnpm build:packages` for library development
 - Use `pnpm build:examples` for demo/example work
 - Run `pnpm test:packages` for focused testing
 
 ### 4. **CI/CD Strategy**
+
 - Enable Turborepo remote caching for team efficiency
 - Monitor cache hit rates in CI logs
 - Keep `turbo.json` inputs up-to-date with file structure
@@ -327,6 +343,7 @@ Successfully completed all 7 optimization tasks with measurable performance impr
 - ✅ **Enhanced** reliability with better configurations
 
 The monorepo is now optimized for:
+
 - Fast local development iterations
 - Efficient CI/CD pipelines
 - Scalable team collaboration

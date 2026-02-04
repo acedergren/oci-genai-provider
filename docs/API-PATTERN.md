@@ -115,7 +115,7 @@ const { ranking } = await rerank({
 // 5. Generate response
 const { text } = await generateText({
   model: languageModel,
-  prompt: `Context: ${ranking.map(r => candidates[r.index]).join('\n\n')}\n\nQuestion: ${query}`,
+  prompt: `Context: ${ranking.map((r) => candidates[r.index]).join('\n\n')}\n\nQuestion: ${query}`,
 });
 ```
 
@@ -204,13 +204,13 @@ export OCI_CONFIG_FILE="~/.oci/config"      # OCI config path
 
 ## Regional Availability
 
-| Service | Regions |
-|---------|---------|
-| **Language Models** | eu-frankfurt-1, eu-stockholm-1, us-ashburn-1, + more |
-| **Embeddings** | eu-frankfurt-1, eu-stockholm-1, us-ashburn-1, + more |
-| **Reranking** | eu-frankfurt-1, eu-stockholm-1, us-ashburn-1, + more |
-| **Speech (TTS)** | **us-phoenix-1 ONLY** ⚠️ |
-| **Transcription (STT)** | **us-phoenix-1 ONLY** ⚠️ |
+| Service                 | Regions                                              |
+| ----------------------- | ---------------------------------------------------- |
+| **Language Models**     | eu-frankfurt-1, eu-stockholm-1, us-ashburn-1, + more |
+| **Embeddings**          | eu-frankfurt-1, eu-stockholm-1, us-ashburn-1, + more |
+| **Reranking**           | eu-frankfurt-1, eu-stockholm-1, us-ashburn-1, + more |
+| **Speech (TTS)**        | **us-phoenix-1 ONLY** ⚠️                             |
+| **Transcription (STT)** | **us-phoenix-1 ONLY** ⚠️                             |
 
 ---
 

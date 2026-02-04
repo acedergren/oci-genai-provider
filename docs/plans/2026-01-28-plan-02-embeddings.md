@@ -13,6 +13,7 @@
 ## Prerequisites
 
 **Required:**
+
 - ✅ Plan 1 must be complete
 - Provider implements ProviderV3 interface
 - Shared utilities in `src/shared/` folder
@@ -22,6 +23,7 @@
 ## Task 1: Create Embedding Model Registry
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/embedding-models/registry.ts`
 - Create: `packages/oci-genai-provider/src/embedding-models/__tests__/registry.test.ts`
 
@@ -117,9 +119,7 @@ export function isValidEmbeddingModelId(modelId: string): boolean {
   return EMBEDDING_MODELS.some((m) => m.id === modelId);
 }
 
-export function getEmbeddingModelMetadata(
-  modelId: string
-): EmbeddingModelMetadata | undefined {
+export function getEmbeddingModelMetadata(modelId: string): EmbeddingModelMetadata | undefined {
   return EMBEDDING_MODELS.find((m) => m.id === modelId);
 }
 
@@ -145,6 +145,7 @@ git commit -m "feat(embeddings): add embedding model registry"
 ## Task 2: Implement OCIEmbeddingModel Class
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/embedding-models/OCIEmbeddingModel.ts`
 - Create: `packages/oci-genai-provider/src/embedding-models/__tests__/OCIEmbeddingModel.test.ts`
 
@@ -264,9 +265,7 @@ export class OCIEmbeddingModel implements EmbeddingModelV3<string> {
     return this._client;
   }
 
-  async doEmbed(
-    options: EmbeddingModelV3CallOptions
-  ): Promise<EmbeddingModelV3CallOutput> {
+  async doEmbed(options: EmbeddingModelV3CallOptions): Promise<EmbeddingModelV3CallOutput> {
     const { values } = options;
 
     // Validate batch size
@@ -327,6 +326,7 @@ git commit -m "feat(embeddings): implement OCIEmbeddingModel class"
 ## Task 3: Wire Up Embedding Models to Provider
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/provider.ts`
 - Modify: `packages/oci-genai-provider/src/__tests__/provider.test.ts`
 
@@ -383,10 +383,7 @@ export class OCIProvider implements ProviderV3 {
   /**
    * Create an embedding model instance
    */
-  embeddingModel(
-    modelId: string,
-    settings?: OCIEmbeddingSettings
-  ): EmbeddingModelV3 {
+  embeddingModel(modelId: string, settings?: OCIEmbeddingSettings): EmbeddingModelV3 {
     const mergedConfig = { ...this.config, ...settings };
     return new OCIEmbeddingModel(modelId, mergedConfig);
   }
@@ -412,6 +409,7 @@ git commit -m "feat(embeddings): wire up embedding models to provider"
 ## Task 4: Export Embedding Models from Index
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/index.ts`
 
 **Step 1: Write test for exports**
@@ -470,6 +468,7 @@ git commit -m "feat(embeddings): export embedding models from index"
 ## Task 5: Create RAG Example
 
 **Files:**
+
 - Create: `examples/rag-demo/`
 - Create: `examples/rag-demo/index.ts`
 - Create: `examples/rag-demo/package.json`
@@ -544,9 +543,7 @@ async function main() {
   });
 
   // Find most similar (cosine similarity)
-  const similarities = embeddings.map((docEmb) =>
-    cosineSimilarity(queryEmbedding, docEmb)
-  );
+  const similarities = embeddings.map((docEmb) => cosineSimilarity(queryEmbedding, docEmb));
 
   const bestMatch = similarities.indexOf(Math.max(...similarities));
 
@@ -590,6 +587,7 @@ git commit -m "feat(embeddings): add RAG example demo"
 ## Task 6: Update Documentation
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/README.md`
 - Create: `docs/embeddings.md`
 
@@ -608,32 +606,32 @@ import { embed, embedMany } from 'ai';
 
 // Single embedding
 const { embedding } = await embed({
-  model: oci.embeddingModel('cohere.embed-multilingual-v3.0'),
-  value: 'Hello world',
+model: oci.embeddingModel('cohere.embed-multilingual-v3.0'),
+value: 'Hello world',
 });
 
 // Batch embeddings (up to 96 texts)
 const { embeddings } = await embedMany({
-  model: oci.embeddingModel('cohere.embed-multilingual-v3.0'),
-  values: ['Text 1', 'Text 2', 'Text 3'],
+model: oci.embeddingModel('cohere.embed-multilingual-v3.0'),
+values: ['Text 1', 'Text 2', 'Text 3'],
 });
 \`\`\`
 
 ### Available Embedding Models
 
-| Model ID | Dimensions | Max Batch | Use Case |
-|----------|-----------|-----------|----------|
-| `cohere.embed-multilingual-v3.0` | 1024 | 96 | Multilingual semantic search |
-| `cohere.embed-english-v3.0` | 1024 | 96 | English semantic search |
-| `cohere.embed-english-light-v3.0` | 384 | 96 | Fast English embeddings |
+| Model ID                          | Dimensions | Max Batch | Use Case                     |
+| --------------------------------- | ---------- | --------- | ---------------------------- |
+| `cohere.embed-multilingual-v3.0`  | 1024       | 96        | Multilingual semantic search |
+| `cohere.embed-english-v3.0`       | 1024       | 96        | English semantic search      |
+| `cohere.embed-english-light-v3.0` | 384        | 96        | Fast English embeddings      |
 
 ### Embedding Options
 
 \`\`\`typescript
 oci.embeddingModel('cohere.embed-multilingual-v3.0', {
-  truncate: 'END',       // 'START' | 'END' | 'NONE'
-  inputType: 'DOCUMENT', // 'QUERY' | 'DOCUMENT'
-  dimensions: 1024,      // 384 | 1024
+truncate: 'END', // 'START' | 'END' | 'NONE'
+inputType: 'DOCUMENT', // 'QUERY' | 'DOCUMENT'
+dimensions: 1024, // 384 | 1024
 });
 \`\`\`
 ```
@@ -656,8 +654,8 @@ import { oci } from '@acedergren/oci-genai-provider';
 import { embedMany } from 'ai';
 
 const { embeddings } = await embedMany({
-  model: oci.embeddingModel('cohere.embed-multilingual-v3.0'),
-  values: ['text 1', 'text 2', 'text 3'],
+model: oci.embeddingModel('cohere.embed-multilingual-v3.0'),
+values: ['text 1', 'text 2', 'text 3'],
 });
 \`\`\`
 

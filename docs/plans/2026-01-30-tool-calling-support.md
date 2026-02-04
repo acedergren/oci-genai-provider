@@ -9,6 +9,7 @@
 **Tech Stack:** TypeScript, Vercel AI SDK v6 (v3 provider spec), OCI SDK, Jest
 
 **Model Support:**
+
 - GENERIC format (Llama 3.1+, Grok, Gemini): Uses `FunctionDefinition`, `FunctionCall`, `ToolChoice`
 - COHERE format (Command R/R+): Uses `CohereTool`, `CohereToolCall`
 
@@ -24,6 +25,7 @@ All 6 tasks completed successfully:
 6. ✅ **Task 6: Documentation** - Updated language-models.md with examples
 
 **Key Changes:**
+
 - AI SDK v3 uses `inputSchema` (not `parameters`) and `input: string` (not `args: object`)
 - AI SDK v3 tool result uses `output: { type: 'text', value: string }`
 - Streaming emits `tool-call` parts (complete, not incremental)
@@ -33,6 +35,7 @@ All 6 tasks completed successfully:
 ## Task 1: Create Tool Converters
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/language-models/converters/tools.ts`
 - Create: `packages/oci-genai-provider/src/language-models/converters/__tests__/tools.test.ts`
 
@@ -42,11 +45,7 @@ Create test file to verify tool conversion:
 
 ```typescript
 import { describe, it, expect } from 'vitest';
-import {
-  convertToOCITools,
-  convertToOCIToolChoice,
-  convertFromOCIToolCalls,
-} from '../tools';
+import { convertToOCITools, convertToOCIToolChoice, convertFromOCIToolCalls } from '../tools';
 import type { LanguageModelV3FunctionTool, LanguageModelV3ToolChoice } from '@ai-sdk/provider';
 
 describe('Tool Converters', () => {
@@ -254,7 +253,11 @@ interface OCIToolChoiceFunction {
   function: { name: string };
 }
 
-type OCIToolChoice = OCIToolChoiceAuto | OCIToolChoiceRequired | OCIToolChoiceNone | OCIToolChoiceFunction;
+type OCIToolChoice =
+  | OCIToolChoiceAuto
+  | OCIToolChoiceRequired
+  | OCIToolChoiceNone
+  | OCIToolChoiceFunction;
 
 /**
  * OCI GENERIC format tool call (from response)
@@ -324,7 +327,8 @@ function convertToCohereToolFormat(tool: LanguageModelV3FunctionTool): OCICohere
   return {
     name: tool.name,
     description: tool.description ?? '',
-    parameterDefinitions: Object.keys(parameterDefinitions).length > 0 ? parameterDefinitions : undefined,
+    parameterDefinitions:
+      Object.keys(parameterDefinitions).length > 0 ? parameterDefinitions : undefined,
   };
 }
 
@@ -357,7 +361,9 @@ export function convertFromOCIToolCalls(
   apiFormat: 'GENERIC' | 'COHERE'
 ): LanguageModelV3ToolCall[] {
   if (apiFormat === 'COHERE') {
-    return toolCalls.map((call, index) => convertFromCohereToolCall(call as OCICohereToolCall, index));
+    return toolCalls.map((call, index) =>
+      convertFromCohereToolCall(call as OCICohereToolCall, index)
+    );
   }
   return toolCalls.map((call) => convertFromGenericToolCall(call as OCIFunctionCall));
 }
@@ -378,7 +384,10 @@ function convertFromGenericToolCall(call: OCIFunctionCall): LanguageModelV3ToolC
   };
 }
 
-function convertFromCohereToolCall(call: OCICohereToolCall, index: number): LanguageModelV3ToolCall {
+function convertFromCohereToolCall(
+  call: OCICohereToolCall,
+  index: number
+): LanguageModelV3ToolCall {
   // Cohere doesn't provide tool call IDs, generate one
   const toolCallId = `tool-call-${Date.now()}-${index}`;
 
@@ -396,10 +405,10 @@ function convertFromCohereToolCall(call: OCICohereToolCall, index: number): Lang
  */
 export function supportsToolCalling(modelId: string): boolean {
   const supportedPatterns = [
-    /^meta\.llama-3\.[1-9]/,     // Llama 3.1+
-    /^cohere\.command-r/,         // Cohere Command R and R+
-    /^xai\.grok/,                 // Grok models
-    /^google\.gemini/,            // Gemini models
+    /^meta\.llama-3\.[1-9]/, // Llama 3.1+
+    /^cohere\.command-r/, // Cohere Command R and R+
+    /^xai\.grok/, // Grok models
+    /^google\.gemini/, // Gemini models
   ];
 
   return supportedPatterns.some((pattern) => pattern.test(modelId));
@@ -433,6 +442,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ## Task 2: Update Message Converters for Tool Parts
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/language-models/converters/messages.ts`
 - Modify: `packages/oci-genai-provider/src/language-models/converters/cohere-messages.ts`
 
@@ -504,7 +514,11 @@ describe('convertToOCIMessages - tool parts', () => {
 **Step 2: Update messages.ts to handle tool parts**
 
 ```typescript
-import type { LanguageModelV3Prompt, LanguageModelV3ToolCallPart, LanguageModelV3ToolResultPart } from '@ai-sdk/provider';
+import type {
+  LanguageModelV3Prompt,
+  LanguageModelV3ToolCallPart,
+  LanguageModelV3ToolResultPart,
+} from '@ai-sdk/provider';
 
 export interface OCIMessage {
   role: 'USER' | 'ASSISTANT' | 'SYSTEM' | 'TOOL';
@@ -647,6 +661,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ## Task 3: Update OCILanguageModel.doGenerate for Tool Calling
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/language-models/OCILanguageModel.ts`
 - Create: `packages/oci-genai-provider/src/language-models/__tests__/tool-calling.test.ts`
 
@@ -677,19 +692,23 @@ describe('OCILanguageModel - Tool Calling', () => {
       const mockChat = vi.fn().mockResolvedValue({
         chatResult: {
           chatResponse: {
-            choices: [{
-              message: {
-                toolCalls: [{
-                  id: 'call_123',
-                  type: 'FUNCTION',
-                  function: {
-                    name: 'get_weather',
-                    arguments: '{"location":"London"}',
-                  },
-                }],
+            choices: [
+              {
+                message: {
+                  toolCalls: [
+                    {
+                      id: 'call_123',
+                      type: 'FUNCTION',
+                      function: {
+                        name: 'get_weather',
+                        arguments: '{"location":"London"}',
+                      },
+                    },
+                  ],
+                },
+                finishReason: 'TOOL_CALLS',
               },
-              finishReason: 'TOOL_CALLS',
-            }],
+            ],
             usage: { promptTokens: 10, completionTokens: 20 },
           },
         },
@@ -699,17 +718,21 @@ describe('OCILanguageModel - Tool Calling', () => {
       model._client = { chat: mockChat };
 
       const result = await model.doGenerate({
-        prompt: [{ role: 'user', content: [{ type: 'text', text: 'What is the weather in London?' }] }],
-        tools: [{
-          type: 'function',
-          name: 'get_weather',
-          description: 'Get weather for a location',
-          parameters: {
-            type: 'object',
-            properties: { location: { type: 'string' } },
-            required: ['location'],
+        prompt: [
+          { role: 'user', content: [{ type: 'text', text: 'What is the weather in London?' }] },
+        ],
+        tools: [
+          {
+            type: 'function',
+            name: 'get_weather',
+            description: 'Get weather for a location',
+            parameters: {
+              type: 'object',
+              properties: { location: { type: 'string' } },
+              required: ['location'],
+            },
           },
-        }],
+        ],
         toolChoice: { type: 'auto' },
       });
 
@@ -761,18 +784,18 @@ describe('OCILanguageModel - Tool Calling', () => {
 
       const result = await model.doGenerate({
         prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
-        tools: [{
-          type: 'function',
-          name: 'test_tool',
-          description: 'Test',
-          parameters: { type: 'object', properties: {} },
-        }],
+        tools: [
+          {
+            type: 'function',
+            name: 'test_tool',
+            description: 'Test',
+            parameters: { type: 'object', properties: {} },
+          },
+        ],
       });
 
       // Should not have unsupported warning for tools
-      expect(result.warnings).not.toContainEqual(
-        expect.objectContaining({ feature: 'tools' })
-      );
+      expect(result.warnings).not.toContainEqual(expect.objectContaining({ feature: 'tools' }));
     });
   });
 });
@@ -784,7 +807,12 @@ Add tool handling to doGenerate method:
 
 ```typescript
 // Add imports
-import { convertToOCITools, convertToOCIToolChoice, convertFromOCIToolCalls, supportsToolCalling } from './converters/tools';
+import {
+  convertToOCITools,
+  convertToOCIToolChoice,
+  convertFromOCIToolCalls,
+  supportsToolCalling,
+} from './converters/tools';
 
 // In doGenerate method, update warnings check:
 if (options.tools && options.tools.length > 0) {
@@ -864,6 +892,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ## Task 4: Update OCILanguageModel.doStream for Tool Calling
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/language-models/OCILanguageModel.ts`
 - Modify: `packages/oci-genai-provider/src/shared/streaming/sse-parser.ts`
 - Modify: `packages/oci-genai-provider/src/shared/streaming/types.ts`
@@ -888,8 +917,21 @@ export type StreamPart = TextDeltaPart | FinishPart | RawPart | ToolCallPart;
 **Step 2: Update SSE parser to detect tool calls**
 
 The OCI streaming format for tool calls includes:
+
 ```json
-{"message":{"role":"ASSISTANT","toolCalls":[{"id":"call_123","type":"FUNCTION","function":{"name":"get_weather","arguments":"{\"location\":\"London\"}"}}]},"finishReason":"TOOL_CALLS"}
+{
+  "message": {
+    "role": "ASSISTANT",
+    "toolCalls": [
+      {
+        "id": "call_123",
+        "type": "FUNCTION",
+        "function": { "name": "get_weather", "arguments": "{\"location\":\"London\"}" }
+      }
+    ]
+  },
+  "finishReason": "TOOL_CALLS"
+}
 ```
 
 Update `sse-parser.ts`:
@@ -976,6 +1018,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ## Task 5: Add Integration Tests
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/__tests__/integration/tool-calling.integration.test.ts`
 
 **Step 1: Write integration test**
@@ -1103,6 +1146,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ## Task 6: Update Documentation
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/FEATURES.md`
 - Modify: `packages/oci-genai-provider/README.md`
 
@@ -1110,7 +1154,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 
 Change tool calling from "Not Supported" to "Supported":
 
-```markdown
+````markdown
 ## Fully Supported Features
 
 ### Tool/Function Calling
@@ -1120,31 +1164,37 @@ Change tool calling from "Not Supported" to "Supported":
 - ✅ **Tool Results** - Pass function execution results back to model
 
 **Supported Models:**
+
 - Meta Llama 3.1+ (70B, 405B Instruct)
 - Cohere Command R, Command R+
 - xAI Grok models
 - Google Gemini models
 
 **Example:**
+
 ```typescript
 const result = await model.doGenerate({
   prompt: [{ role: 'user', content: [{ type: 'text', text: 'Get weather in Tokyo' }] }],
-  tools: [{
-    type: 'function',
-    name: 'get_weather',
-    description: 'Get current weather',
-    parameters: {
-      type: 'object',
-      properties: { location: { type: 'string' } },
-      required: ['location'],
+  tools: [
+    {
+      type: 'function',
+      name: 'get_weather',
+      description: 'Get current weather',
+      parameters: {
+        type: 'object',
+        properties: { location: { type: 'string' } },
+        required: ['location'],
+      },
     },
-  }],
+  ],
   toolChoice: { type: 'auto' },
 });
 
 // result.content may include tool-call parts
 ```
-```
+````
+
+````
 
 **Step 2: Update README.md**
 
@@ -1163,7 +1213,7 @@ git commit -m "docs: update documentation for tool calling support
 - Update feature support summary
 
 Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
-```
+````
 
 ---
 
@@ -1187,6 +1237,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ## Final Verification
 
 Run full test suite:
+
 ```bash
 cd packages/oci-genai-provider
 pnpm test
@@ -1195,6 +1246,7 @@ pnpm build
 ```
 
 Test with real OCI credentials (if available):
+
 ```bash
 pnpm test src/__tests__/integration/tool-calling.integration.test.ts
 ```

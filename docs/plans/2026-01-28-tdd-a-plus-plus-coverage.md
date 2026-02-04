@@ -13,11 +13,13 @@
 ## Pre-Requisites
 
 **Before starting:** Read these files to understand current state:
+
 - `/Users/acedergr/Projects/opencode-oci-genai/packages/oci-genai-provider/src/transcription-models/OCITranscriptionModel.ts`
 - `/Users/acedergr/Projects/opencode-oci-genai/node_modules/@ai-sdk/provider/src/transcription-model/v3/transcription-model-v3.ts`
 - Current coverage report: Run `pnpm test:coverage` from root
 
 **Current State:**
+
 ```
 Test Suites: 1 failed (provider.test.ts), 30 passed
 Tests: 286 passed
@@ -27,6 +29,7 @@ Grade: B
 ```
 
 **Target State:**
+
 ```
 Test Suites: 31 passed
 Tests: 350+ passed
@@ -40,6 +43,7 @@ Grade: A++
 ## Task 1: Fix TranscriptionModelV3 Type Compatibility
 
 **Files:**
+
 - Modify: `/Users/acedergr/Projects/opencode-oci-genai/packages/oci-genai-provider/src/transcription-models/OCITranscriptionModel.ts:1-162`
 - Test: `/Users/acedergr/Projects/opencode-oci-genai/packages/oci-genai-provider/src/transcription-models/__tests__/OCITranscriptionModel.test.ts`
 
@@ -166,6 +170,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ## Task 2: Add Transcription Model Test Coverage (32% → 90%)
 
 **Files:**
+
 - Modify: `/Users/acedergr/Projects/opencode-oci-genai/packages/oci-genai-provider/src/transcription-models/__tests__/OCITranscriptionModel.test.ts`
 
 ### Step 1: Write failing test for audio size validation
@@ -183,9 +188,7 @@ describe('audio validation', () => {
     const largeAudio = new Uint8Array(1);
     Object.defineProperty(largeAudio, 'byteLength', { value: 3 * 1024 * 1024 * 1024 }); // 3GB
 
-    await expect(model.doGenerate({ audioData: largeAudio })).rejects.toThrow(
-      'Audio file size'
-    );
+    await expect(model.doGenerate({ audioData: largeAudio })).rejects.toThrow('Audio file size');
   });
 
   it('should accept audio under 2GB limit', async () => {
@@ -357,6 +360,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ## Task 3: Add Embedding Model Test Coverage (51% → 95%)
 
 **Files:**
+
 - Modify: `/Users/acedergr/Projects/opencode-oci-genai/packages/oci-genai-provider/src/embedding-models/__tests__/oci-embedding-model.test.ts`
 
 ### Step 1: Update mocks for proper testing
@@ -444,7 +448,10 @@ describe('doEmbed', () => {
     mockEmbedText.mockClear();
     mockEmbedText.mockResolvedValue({
       embedTextResult: {
-        embeddings: [[0.1, 0.2], [0.3, 0.4]],
+        embeddings: [
+          [0.1, 0.2],
+          [0.3, 0.4],
+        ],
       },
     });
   });
@@ -458,7 +465,10 @@ describe('doEmbed', () => {
       values: ['Hello world', 'Test text'],
     });
 
-    expect(result.embeddings).toEqual([[0.1, 0.2], [0.3, 0.4]]);
+    expect(result.embeddings).toEqual([
+      [0.1, 0.2],
+      [0.3, 0.4],
+    ]);
     expect(result.warnings).toEqual([]);
     expect(result.usage.tokens).toBeGreaterThan(0);
   });
@@ -574,6 +584,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ## Task 4: Add Reranking Model Test Coverage (51% → 95%)
 
 **Files:**
+
 - Modify: `/Users/acedergr/Projects/opencode-oci-genai/packages/oci-genai-provider/src/reranking-models/__tests__/OCIRerankingModel.test.ts`
 
 ### Step 1: Update mocks for proper testing
@@ -581,9 +592,9 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 Replace the mock setup at the top of the test file:
 
 ```typescript
-import { describe, it, expect, jest, beforeEach } from "@jest/globals";
-import { OCIRerankingModel } from "../OCIRerankingModel";
-import type { RerankingModelV3CallOptions } from "@ai-sdk/provider";
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { OCIRerankingModel } from '../OCIRerankingModel';
+import type { RerankingModelV3CallOptions } from '@ai-sdk/provider';
 
 // Mock OCI SDK with complete implementation
 const mockRerankText = jest.fn().mockResolvedValue({
@@ -598,13 +609,13 @@ const mockRerankText = jest.fn().mockResolvedValue({
   },
 });
 
-jest.mock("oci-generativeaiinference", () => ({
+jest.mock('oci-generativeaiinference', () => ({
   GenerativeAiInferenceClient: jest.fn().mockImplementation(() => ({
     rerankText: mockRerankText,
   })),
 }));
 
-jest.mock("../../auth", () => ({
+jest.mock('../../auth', () => ({
   createAuthProvider: jest.fn().mockResolvedValue({ type: 'mock_auth' }),
   getRegion: jest.fn().mockReturnValue('eu-frankfurt-1'),
   getCompartmentId: jest.fn().mockReturnValue('ocid1.compartment.test'),
@@ -918,6 +929,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ## Task 5: Add Speech Model Voice Fallback Test
 
 **Files:**
+
 - Modify: `/Users/acedergr/Projects/opencode-oci-genai/packages/oci-genai-provider/src/speech-models/__tests__/OCISpeechModel.test.ts`
 
 ### Step 1: Write test for voice fallback chain
@@ -979,6 +991,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ## Task 6: Final Coverage Verification and Cleanup
 
 **Files:**
+
 - All test files
 
 ### Step 1: Run full test suite
@@ -990,6 +1003,7 @@ Expected: All tests passing
 
 Run: `pnpm test:coverage`
 Expected:
+
 ```
 Statements: 95%+
 Branches: 85%+

@@ -13,6 +13,7 @@
 ## Task 1: Create OCI SDK Type Definitions
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/shared/oci-sdk-types.ts`
 - Test: `packages/oci-genai-provider/src/shared/__tests__/oci-sdk-types.test.ts`
 
@@ -141,10 +142,7 @@ export interface OCIThinkingConfig {
 /**
  * Creates a thinking configuration for Cohere models.
  */
-export function createThinkingConfig(
-  enabled: boolean,
-  tokenBudget?: number
-): OCIThinkingConfig {
+export function createThinkingConfig(enabled: boolean, tokenBudget?: number): OCIThinkingConfig {
   return {
     type: enabled ? 'ENABLED' : 'DISABLED',
     tokenBudget,
@@ -206,6 +204,7 @@ git commit -m "feat: add OCI SDK type definitions for type safety"
 ## Task 2: Update Tools Converter with Strict API Format Type
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/language-models/converters/tools.ts:85-93, 156-166`
 - Test: `packages/oci-genai-provider/src/language-models/converters/__tests__/tools.test.ts`
 
@@ -285,6 +284,7 @@ git commit -m "refactor(tools): use OCIApiFormat type instead of string"
 ## Task 3: Fix OCILanguageModel - Remove `as any` Casts for Reasoning
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/language-models/OCILanguageModel.ts:284-295, 491-502`
 - Test: `packages/oci-genai-provider/src/language-models/__tests__/OCILanguageModel.test.ts`
 
@@ -318,11 +318,7 @@ Update `OCILanguageModel.ts`:
 
 ```typescript
 // Add import at top:
-import {
-  OCIApiFormat,
-  toOCIReasoningEffort,
-  createThinkingConfig,
-} from '../shared/oci-sdk-types';
+import { OCIApiFormat, toOCIReasoningEffort, createThinkingConfig } from '../shared/oci-sdk-types';
 
 // Replace lines 284-295 in doGenerate():
 if (ociOptions?.reasoningEffort && apiFormat === 'GENERIC') {
@@ -359,6 +355,7 @@ git commit -m "refactor(language-model): remove as any casts for reasoning optio
 ## Task 4: Fix OCILanguageModel - Remove `as any` Casts for Tool Calls
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/language-models/OCILanguageModel.ts:222, 359, 429`
 
 **Step 1: Verify current state**
@@ -404,6 +401,7 @@ git commit -m "refactor(language-model): remove as any casts for tool conversion
 ## Task 5: Fix Inconsistent Error Handling in doStream
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/language-models/OCILanguageModel.ts:609-610`
 - Test: `packages/oci-genai-provider/src/language-models/__tests__/OCILanguageModel.stream.test.ts`
 
@@ -429,7 +427,7 @@ describe('Error Handling', () => {
       parts.push(value);
     }
 
-    const errorPart = parts.find(p => p.type === 'error');
+    const errorPart = parts.find((p) => p.type === 'error');
     expect(errorPart).toBeDefined();
     // Verify error is wrapped (would be OCIGenAIError subclass)
   });
@@ -473,6 +471,7 @@ git commit -m "fix(language-model): wrap stream errors with handleOCIError"
 ## Task 6: Restore Missing Warnings in doStream
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/language-models/OCILanguageModel.ts:407-414`
 - Test: `packages/oci-genai-provider/src/language-models/__tests__/OCILanguageModel.stream.test.ts`
 
@@ -574,6 +573,7 @@ git commit -m "fix(language-model): restore missing warnings in doStream for con
 ## Task 7: Add Reasoning Model Validation with Warning
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/language-models/OCILanguageModel.ts:15, 284-295, 491-502`
 - Test: `packages/oci-genai-provider/src/language-models/__tests__/OCILanguageModel.test.ts`
 
@@ -610,9 +610,7 @@ describe('Reasoning Model Validation', () => {
       },
     });
 
-    const reasoningWarnings = result.warnings?.filter(
-      w => w.feature === 'reasoningEffort'
-    );
+    const reasoningWarnings = result.warnings?.filter((w) => w.feature === 'reasoningEffort');
     expect(reasoningWarnings).toHaveLength(0);
   });
 });
@@ -674,6 +672,7 @@ git commit -m "feat(language-model): validate reasoning options against model ca
 ## Task 8: Fix Redundant URL Type Cast in Messages Converter
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/language-models/converters/messages.ts:143-145`
 - Test: `packages/oci-genai-provider/src/language-models/converters/__tests__/messages.test.ts`
 
@@ -743,6 +742,7 @@ git commit -m "refactor(messages): remove redundant URL type cast"
 ## Task 9: Fix Test File Naming Convention
 
 **Files:**
+
 - Rename: `packages/oci-genai-provider/src/__tests__/v3-specification-alignment.test.ts` → `packages/oci-genai-provider/src/__tests__/integration/v3-specification-alignment.integration.test.ts`
 
 **Step 1: Create integration test directory if needed**
@@ -773,6 +773,7 @@ git commit -m "refactor(tests): move v3-specification-alignment to integration t
 ## Task 10: Final Verification - Zero `as any` and Full Type Safety
 
 **Files:**
+
 - All modified files
 
 **Step 1: Verify no `as any` remains**
@@ -806,18 +807,18 @@ git commit -m "chore: verify 100% type safety - zero as any casts in production 
 
 ## Summary
 
-| Task | Issue Fixed | Files Changed |
-|------|-------------|---------------|
-| 1 | Create type definitions | +`oci-sdk-types.ts`, +test |
-| 2 | Type safety for tools converter | `tools.ts` |
-| 3 | Remove `as any` for reasoning | `OCILanguageModel.ts` |
-| 4 | Remove `as any` for tool calls | `OCILanguageModel.ts` |
-| 5 | Fix inconsistent error handling | `OCILanguageModel.ts:609-610` |
-| 6 | Restore missing doStream warnings | `OCILanguageModel.ts:407-414` |
-| 7 | Add reasoning model validation | `OCILanguageModel.ts` |
-| 8 | Remove redundant URL cast | `messages.ts:143-145` |
-| 9 | Fix test file naming | Move to `integration/` |
-| 10 | Final verification | All files |
+| Task | Issue Fixed                       | Files Changed                 |
+| ---- | --------------------------------- | ----------------------------- |
+| 1    | Create type definitions           | +`oci-sdk-types.ts`, +test    |
+| 2    | Type safety for tools converter   | `tools.ts`                    |
+| 3    | Remove `as any` for reasoning     | `OCILanguageModel.ts`         |
+| 4    | Remove `as any` for tool calls    | `OCILanguageModel.ts`         |
+| 5    | Fix inconsistent error handling   | `OCILanguageModel.ts:609-610` |
+| 6    | Restore missing doStream warnings | `OCILanguageModel.ts:407-414` |
+| 7    | Add reasoning model validation    | `OCILanguageModel.ts`         |
+| 8    | Remove redundant URL cast         | `messages.ts:143-145`         |
+| 9    | Fix test file naming              | Move to `integration/`        |
+| 10   | Final verification                | All files                     |
 
 ---
 
@@ -826,6 +827,7 @@ git commit -m "chore: verify 100% type safety - zero as any casts in production 
 **Why Zod Here?** Provider options come from SDK consumers (untrusted input at API boundary). Zod provides runtime validation with TypeScript inference, catching invalid configurations early with clear error messages.
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/package.json`
 - Create: `packages/oci-genai-provider/src/shared/schemas/provider-options.ts`
 - Create: `packages/oci-genai-provider/src/shared/schemas/__tests__/provider-options.test.ts`
@@ -910,8 +912,9 @@ describe('OCIProviderOptionsSchema', () => {
     });
 
     it('should throw OCIValidationError for invalid options', () => {
-      expect(() => parseProviderOptions({ reasoningEffort: 'invalid' }))
-        .toThrow('Invalid OCI provider options');
+      expect(() => parseProviderOptions({ reasoningEffort: 'invalid' })).toThrow(
+        'Invalid OCI provider options'
+      );
     });
 
     it('should handle undefined gracefully', () => {
@@ -929,7 +932,7 @@ Expected: FAIL with "Cannot find module '../provider-options'"
 
 **Step 4: Write minimal implementation**
 
-```typescript
+````typescript
 // packages/oci-genai-provider/src/shared/schemas/provider-options.ts
 import { z } from 'zod';
 import { OCIValidationError } from '../errors';
@@ -948,55 +951,47 @@ import { OCIValidationError } from '../errors';
  * }
  * ```
  */
-export const OCIProviderOptionsSchema = z.object({
-  /**
-   * Reasoning effort level for models that support extended thinking.
-   * Only applies to Generic API format models (e.g., Grok, Gemini).
-   */
-  reasoningEffort: z
-    .enum(['none', 'minimal', 'low', 'medium', 'high'])
-    .optional()
-    .describe('Reasoning effort level for Generic API format models'),
+export const OCIProviderOptionsSchema = z
+  .object({
+    /**
+     * Reasoning effort level for models that support extended thinking.
+     * Only applies to Generic API format models (e.g., Grok, Gemini).
+     */
+    reasoningEffort: z
+      .enum(['none', 'minimal', 'low', 'medium', 'high'])
+      .optional()
+      .describe('Reasoning effort level for Generic API format models'),
 
-  /**
-   * Enable thinking/reasoning for Cohere models.
-   */
-  thinking: z
-    .boolean()
-    .optional()
-    .describe('Enable thinking mode for Cohere models'),
+    /**
+     * Enable thinking/reasoning for Cohere models.
+     */
+    thinking: z.boolean().optional().describe('Enable thinking mode for Cohere models'),
 
-  /**
-   * Token budget for thinking/reasoning.
-   * Limits the number of tokens used for extended reasoning.
-   */
-  tokenBudget: z
-    .number()
-    .int()
-    .positive()
-    .optional()
-    .describe('Maximum tokens for reasoning (must be positive integer)'),
+    /**
+     * Token budget for thinking/reasoning.
+     * Limits the number of tokens used for extended reasoning.
+     */
+    tokenBudget: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe('Maximum tokens for reasoning (must be positive integer)'),
 
-  /**
-   * Serving mode for the model.
-   * ON_DEMAND: Pay-per-use pricing
-   * DEDICATED: Dedicated AI units with reserved capacity
-   */
-  servingMode: z
-    .enum(['ON_DEMAND', 'DEDICATED'])
-    .optional()
-    .describe('Model serving mode'),
+    /**
+     * Serving mode for the model.
+     * ON_DEMAND: Pay-per-use pricing
+     * DEDICATED: Dedicated AI units with reserved capacity
+     */
+    servingMode: z.enum(['ON_DEMAND', 'DEDICATED']).optional().describe('Model serving mode'),
 
-  /**
-   * Endpoint ID for dedicated serving mode.
-   * Required when servingMode is DEDICATED.
-   */
-  endpointId: z
-    .string()
-    .optional()
-    .describe('Endpoint ID for dedicated serving'),
-
-}).strict(); // Reject unknown properties for type safety
+    /**
+     * Endpoint ID for dedicated serving mode.
+     * Required when servingMode is DEDICATED.
+     */
+    endpointId: z.string().optional().describe('Endpoint ID for dedicated serving'),
+  })
+  .strict(); // Reject unknown properties for type safety
 
 /**
  * Inferred TypeScript type from the Zod schema.
@@ -1029,15 +1024,14 @@ export function parseProviderOptions(options: unknown): OCIProviderOptions {
       .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
       .join('; ');
 
-    throw new OCIValidationError(
-      `Invalid OCI provider options: ${issues}`,
-      { issues: result.error.issues }
-    );
+    throw new OCIValidationError(`Invalid OCI provider options: ${issues}`, {
+      issues: result.error.issues,
+    });
   }
 
   return result.data;
 }
-```
+````
 
 **Step 5: Create schemas directory index**
 
@@ -1086,6 +1080,7 @@ git commit -m "feat: add Zod schema for provider options validation"
 ## Task 12: Integrate Zod Validation into OCILanguageModel
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/language-models/OCILanguageModel.ts`
 - Modify: `packages/oci-genai-provider/src/language-models/__tests__/OCILanguageModel.test.ts`
 
@@ -1189,6 +1184,7 @@ git commit -m "feat(language-model): integrate Zod validation for provider optio
 ## Task 13: Final Verification - Complete Type Safety with Zod
 
 **Files:**
+
 - All modified files
 
 **Step 1: Verify no `as any` remains in production code**
@@ -1227,21 +1223,21 @@ git commit -m "chore: verify complete type safety with Zod validation"
 
 ## Summary (Updated)
 
-| Task | Issue Fixed | Files Changed |
-|------|-------------|---------------|
-| 1 | Create type definitions | +`oci-sdk-types.ts`, +test |
-| 2 | Type safety for tools converter | `tools.ts` |
-| 3 | Remove `as any` for reasoning | `OCILanguageModel.ts` |
-| 4 | Remove `as any` for tool calls | `OCILanguageModel.ts` |
-| 5 | Fix inconsistent error handling | `OCILanguageModel.ts:609-610` |
-| 6 | Restore missing doStream warnings | `OCILanguageModel.ts:407-414` |
-| 7 | Add reasoning model validation | `OCILanguageModel.ts` |
-| 8 | Remove redundant URL cast | `messages.ts:143-145` |
-| 9 | Fix test file naming | Move to `integration/` |
-| 10 | Final verification | All files |
-| 11 | Zod schema for provider options | +`schemas/provider-options.ts`, +test |
-| 12 | Integrate Zod into OCILanguageModel | `OCILanguageModel.ts` |
-| 13 | Final verification with Zod | All files |
+| Task | Issue Fixed                         | Files Changed                         |
+| ---- | ----------------------------------- | ------------------------------------- |
+| 1    | Create type definitions             | +`oci-sdk-types.ts`, +test            |
+| 2    | Type safety for tools converter     | `tools.ts`                            |
+| 3    | Remove `as any` for reasoning       | `OCILanguageModel.ts`                 |
+| 4    | Remove `as any` for tool calls      | `OCILanguageModel.ts`                 |
+| 5    | Fix inconsistent error handling     | `OCILanguageModel.ts:609-610`         |
+| 6    | Restore missing doStream warnings   | `OCILanguageModel.ts:407-414`         |
+| 7    | Add reasoning model validation      | `OCILanguageModel.ts`                 |
+| 8    | Remove redundant URL cast           | `messages.ts:143-145`                 |
+| 9    | Fix test file naming                | Move to `integration/`                |
+| 10   | Final verification                  | All files                             |
+| 11   | Zod schema for provider options     | +`schemas/provider-options.ts`, +test |
+| 12   | Integrate Zod into OCILanguageModel | `OCILanguageModel.ts`                 |
+| 13   | Final verification with Zod         | All files                             |
 
 **Total Commits:** 13
 **Estimated Time:** 60-75 minutes
@@ -1252,10 +1248,10 @@ git commit -m "chore: verify complete type safety with Zod validation"
 
 Based on analysis, Zod adds value specifically at **API boundaries** where untrusted input enters the system:
 
-| Location | Zod Value | Rationale |
-|----------|-----------|-----------|
-| `providerOptions` | ✅ HIGH | User input from SDK consumers, untrusted |
-| Internal types (`OCIApiFormat`) | ❌ LOW | Compile-time types, no runtime validation needed |
-| SSE stream chunks | ⚠️ OPTIONAL | Could add, but `try/catch` with JSON.parse is sufficient |
+| Location                        | Zod Value   | Rationale                                                |
+| ------------------------------- | ----------- | -------------------------------------------------------- |
+| `providerOptions`               | ✅ HIGH     | User input from SDK consumers, untrusted                 |
+| Internal types (`OCIApiFormat`) | ❌ LOW      | Compile-time types, no runtime validation needed         |
+| SSE stream chunks               | ⚠️ OPTIONAL | Could add, but `try/catch` with JSON.parse is sufficient |
 
 This targeted approach keeps bundle size minimal while providing runtime validation where it matters most.

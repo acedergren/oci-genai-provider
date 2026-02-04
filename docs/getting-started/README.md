@@ -44,6 +44,7 @@ key_file=~/.oci/oci_api_key.pem
 ```
 
 **Where to find these values:**
+
 - **user**: OCI Console → Profile Icon → User Settings
 - **tenancy**: OCI Console → Profile Icon → Tenancy
 - **fingerprint**: Displayed when you upload your API key

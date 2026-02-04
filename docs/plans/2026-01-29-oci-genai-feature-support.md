@@ -13,6 +13,7 @@
 ## Task 1: Add Seed Parameter Support
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/language-models/OCILanguageModel.ts:160-186`
 - Modify: `packages/oci-genai-provider/src/language-models/OCILanguageModel.ts:244-273`
 - Create: `packages/oci-genai-provider/src/language-models/__tests__/seed-parameter.test.ts`
@@ -38,10 +39,12 @@ describe('OCILanguageModel - Seed Parameter', () => {
     // Mock the client.chat method
     const mockChat = vi.fn().mockResolvedValue({
       chatResponse: {
-        choices: [{
-          message: { content: [{ text: 'test response' }] },
-          finishReason: 'STOP',
-        }],
+        choices: [
+          {
+            message: { content: [{ text: 'test response' }] },
+            finishReason: 'STOP',
+          },
+        ],
         usage: { promptTokens: 10, completionTokens: 20 },
       },
     });
@@ -96,10 +99,12 @@ describe('OCILanguageModel - Seed Parameter', () => {
 
     const mockChat = vi.fn().mockResolvedValue({
       chatResponse: {
-        choices: [{
-          message: { content: [{ text: 'test response' }] },
-          finishReason: 'STOP',
-        }],
+        choices: [
+          {
+            message: { content: [{ text: 'test response' }] },
+            finishReason: 'STOP',
+          },
+        ],
         usage: { promptTokens: 10, completionTokens: 20 },
       },
     });
@@ -242,13 +247,14 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ## Task 2: Document Feature Support
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/FEATURES.md`
 
 **Step 1: Write comprehensive feature support documentation**
 
 Create `FEATURES.md` documenting all AI SDK features and OCI support status:
 
-```markdown
+````markdown
 # OCI GenAI Provider - Feature Support
 
 This document details which Vercel AI SDK v6 features are supported by the OCI GenAI provider.
@@ -331,15 +337,19 @@ These features are not supported because the OCI GenAI API does not provide them
 - 🔄 **Implementation:** Pending AI SDK update
 
 **How to use (when available):**
+
 ```typescript
 const result = await model.doGenerate({
   prompt: [{ role: 'user', content: [{ type: 'text', text: 'Return JSON' }] }],
   responseFormat: {
     type: 'json',
-    schema: { /* JSON schema */ }
-  }
+    schema: {
+      /* JSON schema */
+    },
+  },
 });
 ```
+````
 
 ### Abort Signal (Request Cancellation)
 
@@ -348,12 +358,13 @@ const result = await model.doGenerate({
 - ⚠️ **Workaround:** Use timeout configuration instead
 
 **Alternative:**
+
 ```typescript
 const provider = createOCI({
   compartmentId: 'ocid1...',
   requestOptions: {
     timeoutMs: 10000, // 10 second timeout
-  }
+  },
 });
 ```
 
@@ -368,15 +379,18 @@ const provider = createOCI({
 Model availability varies by OCI region:
 
 ### Frankfurt (eu-frankfurt-1)
+
 - ✅ Llama 3.3 70B
 - ✅ Gemini 2.5 Flash, Pro, 2.0 Flash, 1.5 Pro, Flash
 - ✅ Cohere Command A-03-2025, Command Plus Latest
 
 ### Ashburn (us-ashburn-1)
+
 - ✅ Grok 3, Grok 4 Maverick
 - ✅ Gemini models
 
 ### Phoenix (us-phoenix-1)
+
 - ✅ Grok models
 - ✅ Gemini models
 
@@ -387,6 +401,7 @@ Model availability varies by OCI region:
 The provider automatically detects and handles format differences:
 
 ### GENERIC Format (Llama, Gemini, Grok)
+
 ```typescript
 {
   apiFormat: 'GENERIC',
@@ -398,6 +413,7 @@ The provider automatically detects and handles format differences:
 ```
 
 ### COHERE Format (Cohere Models)
+
 ```typescript
 {
   apiFormat: 'COHERE',
@@ -412,6 +428,7 @@ The provider automatically detects and handles format differences:
 ## Usage Examples
 
 ### Basic Text Generation
+
 ```typescript
 import { createOCI } from '@acedergren/oci-genai-provider';
 
@@ -423,9 +440,7 @@ const provider = createOCI({
 const model = provider.languageModel('meta.llama-3.3-70b-instruct');
 
 const result = await model.doGenerate({
-  prompt: [
-    { role: 'user', content: [{ type: 'text', text: 'Explain quantum computing' }] }
-  ],
+  prompt: [{ role: 'user', content: [{ type: 'text', text: 'Explain quantum computing' }] }],
   temperature: 0.7,
   maxOutputTokens: 500,
 });
@@ -434,6 +449,7 @@ console.log(result.content[0].text);
 ```
 
 ### Deterministic Generation (Best Effort)
+
 ```typescript
 const result1 = await model.doGenerate({
   prompt: [{ role: 'user', content: [{ type: 'text', text: 'Pick a number' }] }],
@@ -451,6 +467,7 @@ const result2 = await model.doGenerate({
 ```
 
 ### Streaming with Timeout
+
 ```typescript
 const provider = createOCI({
   compartmentId: process.env.OCI_COMPARTMENT_ID,
@@ -479,11 +496,13 @@ for await (const part of result.stream) {
 ## Testing Feature Support
 
 Run the feature test suite:
+
 ```bash
 node test-unclear-features.mjs
 ```
 
 Inventory models across regions:
+
 ```bash
 node inventory-regions.mjs
 ```
@@ -507,7 +526,8 @@ Found a feature that works but isn't documented? Please open an issue or PR!
 - [OCI GenAI API Documentation](https://docs.oracle.com/en-us/iaas/api/#/EN/generative-ai-inference/)
 - [Vercel AI SDK Documentation](https://sdk.vercel.ai/docs)
 - [Provider Implementation Guide](./README.md)
-```
+
+````
 
 **Step 2: Commit**
 
@@ -522,13 +542,14 @@ git commit -m "docs: add comprehensive feature support documentation
 - Include future roadmap for pending features
 
 Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
-```
+````
 
 ---
 
 ## Task 3: Update Main README
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/README.md`
 
 **Step 1: Add feature support section to README**
@@ -541,6 +562,7 @@ Add after "Quick Start" section (around line 50):
 This provider supports most Vercel AI SDK v6 features for text generation. See [FEATURES.md](./FEATURES.md) for complete details.
 
 ### Supported ✅
+
 - Streaming and non-streaming generation
 - Temperature, topP, topK, penalties
 - Seed parameter (best-effort determinism)
@@ -548,6 +570,7 @@ This provider supports most Vercel AI SDK v6 features for text generation. See [
 - Retry logic and timeout control
 
 ### Not Supported ❌
+
 - Tool/function calling (OCI API limitation)
 - Multi-modal input (vision, audio, documents)
 - JSON mode (pending AI SDK integration)
@@ -559,23 +582,23 @@ For detailed information on each feature, see [FEATURES.md](./FEATURES.md).
 
 Find the "Usage" section and add seed example after basic example:
 
-```markdown
+````markdown
 ### Deterministic Generation
 
 Use the seed parameter for more consistent outputs (best-effort):
 
 ```typescript
 const result = await model.doGenerate({
-  prompt: [
-    { role: 'user', content: [{ type: 'text', text: 'Generate a random story' }] }
-  ],
+  prompt: [{ role: 'user', content: [{ type: 'text', text: 'Generate a random story' }] }],
   seed: 42,
   temperature: 0.7,
 });
 
 // Repeated calls with same seed produce similar (not identical) results
 ```
-```
+````
+
+````
 
 **Step 3: Commit**
 
@@ -589,20 +612,21 @@ git commit -m "docs: update README with feature support summary
 - Clarify best-effort determinism
 
 Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
-```
+````
 
 ---
 
 ## Task 4: Update Type Definitions
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/types.ts`
 
 **Step 1: Add JSDoc comment about seed parameter**
 
 Add comment to OCIConfig or relevant type:
 
-```typescript
+````typescript
 /**
  * OCI GenAI Provider Configuration
  *
@@ -626,7 +650,7 @@ Add comment to OCIConfig or relevant type:
 export interface OCIConfig {
   // ... existing fields
 }
-```
+````
 
 **Step 2: Commit**
 
@@ -646,6 +670,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ## Task 5: Add Integration Test
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/__tests__/integration/seed-parameter.integration.test.ts`
 
 **Step 1: Write integration test (optional, requires live OCI credentials)**
@@ -667,18 +692,14 @@ describe('Seed Parameter Integration', () => {
     const model = provider.languageModel('meta.llama-3.3-70b-instruct');
 
     const result1 = await model.doGenerate({
-      prompt: [
-        { role: 'user', content: [{ type: 'text', text: 'Say one word' }] }
-      ],
+      prompt: [{ role: 'user', content: [{ type: 'text', text: 'Say one word' }] }],
       seed: 42,
       temperature: 0.7,
       maxOutputTokens: 10,
     });
 
     const result2 = await model.doGenerate({
-      prompt: [
-        { role: 'user', content: [{ type: 'text', text: 'Say one word' }] }
-      ],
+      prompt: [{ role: 'user', content: [{ type: 'text', text: 'Say one word' }] }],
       seed: 42,
       temperature: 0.7,
       maxOutputTokens: 10,
@@ -703,7 +724,7 @@ describe('Seed Parameter Integration', () => {
 
     const result1 = await model.doGenerate({
       prompt: [
-        { role: 'user', content: [{ type: 'text', text: 'Pick a number between 1 and 1000' }] }
+        { role: 'user', content: [{ type: 'text', text: 'Pick a number between 1 and 1000' }] },
       ],
       seed: 42,
       temperature: 0.9,
@@ -712,7 +733,7 @@ describe('Seed Parameter Integration', () => {
 
     const result2 = await model.doGenerate({
       prompt: [
-        { role: 'user', content: [{ type: 'text', text: 'Pick a number between 1 and 1000' }] }
+        { role: 'user', content: [{ type: 'text', text: 'Pick a number between 1 and 1000' }] },
       ],
       seed: 999,
       temperature: 0.9,
@@ -766,6 +787,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ## Final Verification
 
 Run full test suite:
+
 ```bash
 cd packages/oci-genai-provider
 pnpm test
@@ -774,6 +796,7 @@ pnpm build
 ```
 
 Test with real OCI credentials (if available):
+
 ```bash
 node ../../test-unclear-features.mjs
 ```

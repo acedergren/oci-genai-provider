@@ -25,31 +25,37 @@ src/
 ## Running Tests
 
 ### All Tests
+
 ```bash
 pnpm test
 ```
 
 ### With Coverage
+
 ```bash
 pnpm test:coverage
 ```
 
 ### Watch Mode
+
 ```bash
 pnpm test:watch
 ```
 
 ### Unit Tests Only
+
 ```bash
 pnpm test:unit
 ```
 
 ### Integration Tests Only
+
 ```bash
 pnpm test:integration
 ```
 
 ### CI Mode
+
 ```bash
 pnpm test:coverage:ci
 ```
@@ -61,6 +67,7 @@ pnpm test:coverage:ci
 **Location:** `src/<module>/__tests__/<file>.test.ts`
 
 **Example:**
+
 ```typescript
 import { describe, it, expect } from '@jest/globals';
 import { mockOCIError } from '../utils/test-helpers';
@@ -68,7 +75,7 @@ import { mockOCIError } from '../utils/test-helpers';
 describe('Error Handling', () => {
   it('should handle rate limit errors', () => {
     const error = mockOCIError('RateLimit', 'Too many requests');
-    
+
     expect(error.statusCode).toBe(429);
     expect(error.message).toContain('Too many requests');
   });
@@ -80,6 +87,7 @@ describe('Error Handling', () => {
 **Location:** `src/__tests__/integration/<feature>.integration.test.ts`
 
 **Example:**
+
 ```typescript
 import { describe, it, expect } from '@jest/globals';
 import { createMockOCIConfig } from '../utils/test-helpers';
@@ -119,11 +127,7 @@ const error = mockOCIError('RateLimit', 'Too many requests');
 ### Using Fixtures
 
 ```typescript
-import {
-  LANGUAGE_MODEL_FIXTURES,
-  EMBEDDING_FIXTURES,
-  COMMON_SCENARIOS,
-} from '../fixtures';
+import { LANGUAGE_MODEL_FIXTURES, EMBEDDING_FIXTURES, COMMON_SCENARIOS } from '../fixtures';
 
 // Use predefined responses
 const response = LANGUAGE_MODEL_FIXTURES.simpleCompletion;
@@ -164,11 +168,13 @@ const mockClient = mockGenerativeAiInferenceClient({
 ## Best Practices
 
 ### 1. Test Isolation
+
 - Each test should be independent
 - Use `beforeEach` to reset state
 - Don't rely on test execution order
 
 ### 2. Descriptive Names
+
 ```typescript
 // ✅ Good
 it('should throw error when model ID is invalid', () => {});
@@ -178,20 +184,22 @@ it('test 1', () => {});
 ```
 
 ### 3. Arrange-Act-Assert
+
 ```typescript
 it('should create mock config', () => {
   // Arrange
   const overrides = { region: 'us-ashburn-1' };
-  
+
   // Act
   const config = createMockOCIConfig(overrides);
-  
+
   // Assert
   expect(config.region).toBe('us-ashburn-1');
 });
 ```
 
 ### 4. Test Both Happy and Error Paths
+
 ```typescript
 describe('error handling', () => {
   it('should handle valid input', () => {
@@ -205,11 +213,13 @@ describe('error handling', () => {
 ```
 
 ### 5. Use Test Fixtures
+
 - Prefer fixtures over inline test data
 - Keep fixtures in `src/__tests__/fixtures/`
 - Update fixtures when API changes
 
 ### 6. Mock External Dependencies
+
 - Always mock OCI SDK in unit tests
 - Use real SDK only in manual integration tests
 - Mock network calls to prevent flakiness
@@ -217,11 +227,13 @@ describe('error handling', () => {
 ## CI/CD Integration
 
 Tests run automatically on:
+
 - Every push to main
 - Every pull request
 - Pre-commit (unit tests only)
 
 ### Pre-Commit Hook
+
 ```bash
 # Runs automatically before commit
 # - Type checking
@@ -230,6 +242,7 @@ Tests run automatically on:
 ```
 
 ### CI Pipeline
+
 ```bash
 # Full test suite on PR/push
 # - Unit tests
@@ -241,11 +254,13 @@ Tests run automatically on:
 ## Troubleshooting
 
 ### Tests Timeout
+
 - Increase timeout: `jest.setTimeout(30000)`
 - Check for unresolved promises
 - Ensure mocks are properly configured
 
 ### Coverage Below Threshold
+
 ```bash
 # Find uncovered lines
 pnpm test:coverage
@@ -253,6 +268,7 @@ open coverage/lcov-report/index.html
 ```
 
 ### Open Handles Warning
+
 - OCI SDK clients may not close properly
 - Use `forceExit: true` in jest.config.js
 - Or manually close clients in `afterAll`

@@ -13,6 +13,7 @@
 ## Prerequisites
 
 **Required:**
+
 - ✅ Plan 1 must be complete (Core Provider Refactoring)
 - Plan 2-5 should be complete or at least started (for model-specific docs)
 - Provider implements ProviderV3 interface
@@ -23,6 +24,7 @@
 ## Task 1: Update Main README
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/README.md`
 
 **Step 1: Write test for README completeness**
@@ -36,10 +38,7 @@ import { join } from 'path';
 
 describe('Documentation Validation', () => {
   it('README should document all model types', () => {
-    const readme = readFileSync(
-      join(__dirname, '../../README.md'),
-      'utf-8'
-    );
+    const readme = readFileSync(join(__dirname, '../../README.md'), 'utf-8');
 
     // Check for all model types
     expect(readme).toContain('Language Models');
@@ -50,30 +49,21 @@ describe('Documentation Validation', () => {
   });
 
   it('README should include installation instructions', () => {
-    const readme = readFileSync(
-      join(__dirname, '../../README.md'),
-      'utf-8'
-    );
+    const readme = readFileSync(join(__dirname, '../../README.md'), 'utf-8');
 
     expect(readme).toContain('npm install');
     expect(readme).toContain('pnpm add');
   });
 
   it('README should document authentication', () => {
-    const readme = readFileSync(
-      join(__dirname, '../../README.md'),
-      'utf-8'
-    );
+    const readme = readFileSync(join(__dirname, '../../README.md'), 'utf-8');
 
     expect(readme).toContain('Authentication');
     expect(readme).toContain('OCI_CONFIG_PROFILE');
   });
 
   it('README should link to examples', () => {
-    const readme = readFileSync(
-      join(__dirname, '../../README.md'),
-      'utf-8'
-    );
+    const readme = readFileSync(join(__dirname, '../../README.md'), 'utf-8');
 
     expect(readme).toContain('examples/');
   });
@@ -89,7 +79,7 @@ Expected: FAIL - Missing sections
 
 Replace `packages/oci-genai-provider/README.md`:
 
-```markdown
+````markdown
 # OCI Generative AI Provider for Vercel AI SDK
 
 Complete ProviderV3 implementation for Oracle Cloud Infrastructure (OCI) Generative AI services.
@@ -114,6 +104,7 @@ pnpm add @acedergren/oci-genai-provider ai
 # or
 yarn add @acedergren/oci-genai-provider ai
 ```
+````
 
 ## Quick Start
 
@@ -176,14 +167,14 @@ const provider = createOCI({
 
 ### Available Models
 
-| Model ID | Family | Context | Best For |
-|----------|--------|---------|----------|
-| `cohere.command-r-plus` | Cohere | 128K | Long context, RAG |
-| `cohere.command-r-08-2024` | Cohere | 128K | General purpose |
-| `meta.llama-3.3-70b` | Meta | 8K | Instruction following |
-| `meta.llama-3.1-405b-instruct` | Meta | 128K | Most capable |
-| `anthropic.claude-3-5-sonnet-v2` | Anthropic | 200K | Analysis, coding |
-| `mistral.mistral-large-2` | Mistral | 128K | Multilingual |
+| Model ID                         | Family    | Context | Best For              |
+| -------------------------------- | --------- | ------- | --------------------- |
+| `cohere.command-r-plus`          | Cohere    | 128K    | Long context, RAG     |
+| `cohere.command-r-08-2024`       | Cohere    | 128K    | General purpose       |
+| `meta.llama-3.3-70b`             | Meta      | 8K      | Instruction following |
+| `meta.llama-3.1-405b-instruct`   | Meta      | 128K    | Most capable          |
+| `anthropic.claude-3-5-sonnet-v2` | Anthropic | 200K    | Analysis, coding      |
+| `mistral.mistral-large-2`        | Mistral   | 128K    | Multilingual          |
 
 [See full model list](./docs/models.md)
 
@@ -195,9 +186,7 @@ import { streamText } from 'ai';
 
 const result = streamText({
   model: oci.languageModel('cohere.command-r-plus'),
-  messages: [
-    { role: 'user', content: 'Write a poem about clouds' }
-  ],
+  messages: [{ role: 'user', content: 'Write a poem about clouds' }],
   temperature: 0.7,
   maxTokens: 500,
 });
@@ -230,11 +219,11 @@ const { embeddings } = await embedMany({
 
 ### Available Embedding Models
 
-| Model ID | Dimensions | Max Batch | Use Case |
-|----------|-----------|-----------|----------|
-| `cohere.embed-multilingual-v3.0` | 1024 | 96 | Multilingual semantic search |
-| `cohere.embed-english-v3.0` | 1024 | 96 | English semantic search |
-| `cohere.embed-english-light-v3.0` | 384 | 96 | Fast English embeddings |
+| Model ID                          | Dimensions | Max Batch | Use Case                     |
+| --------------------------------- | ---------- | --------- | ---------------------------- |
+| `cohere.embed-multilingual-v3.0`  | 1024       | 96        | Multilingual semantic search |
+| `cohere.embed-english-v3.0`       | 1024       | 96        | English semantic search      |
+| `cohere.embed-english-light-v3.0` | 384        | 96        | Fast English embeddings      |
 
 ## Speech Models (TTS)
 
@@ -349,13 +338,13 @@ oci.speechModel('oci-tts-standard', {
 
 ## Regional Availability
 
-| Service | Available Regions |
-|---------|-------------------|
-| Language Models | All OCI regions |
-| Embeddings | All OCI regions |
-| Speech (TTS) | **us-phoenix-1 only** |
+| Service             | Available Regions     |
+| ------------------- | --------------------- |
+| Language Models     | All OCI regions       |
+| Embeddings          | All OCI regions       |
+| Speech (TTS)        | **us-phoenix-1 only** |
 | Transcription (STT) | **us-phoenix-1 only** |
-| Reranking | All OCI regions |
+| Reranking           | All OCI regions       |
 
 ## Examples
 
@@ -435,7 +424,8 @@ MIT - See [LICENSE](../../LICENSE)
 
 - GitHub Issues: [opencode-oci-genai/issues](https://github.com/acedergren/opencode-oci-genai/issues)
 - Documentation: [docs/](./docs/)
-```
+
+````
 
 **Step 4: Run test to verify it passes**
 
@@ -447,13 +437,14 @@ Expected: PASS
 ```bash
 git add README.md src/__tests__/docs-validation.test.ts
 git commit -m "docs: update main README with all model types"
-```
+````
 
 ---
 
 ## Task 2: Create API Reference Documentation
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/docs/api-reference.md`
 
 **Step 1: Write test for API reference completeness**
@@ -463,10 +454,7 @@ Add to `packages/oci-genai-provider/src/__tests__/docs-validation.test.ts`:
 ```typescript
 describe('API Reference Documentation', () => {
   it('should document all provider methods', () => {
-    const apiRef = readFileSync(
-      join(__dirname, '../../docs/api-reference.md'),
-      'utf-8'
-    );
+    const apiRef = readFileSync(join(__dirname, '../../docs/api-reference.md'), 'utf-8');
 
     expect(apiRef).toContain('languageModel()');
     expect(apiRef).toContain('embeddingModel()');
@@ -476,10 +464,7 @@ describe('API Reference Documentation', () => {
   });
 
   it('should document createOCI factory', () => {
-    const apiRef = readFileSync(
-      join(__dirname, '../../docs/api-reference.md'),
-      'utf-8'
-    );
+    const apiRef = readFileSync(join(__dirname, '../../docs/api-reference.md'), 'utf-8');
 
     expect(apiRef).toContain('createOCI');
     expect(apiRef).toContain('OCIBaseConfig');
@@ -496,7 +481,7 @@ Expected: FAIL - File doesn't exist
 
 Create: `packages/oci-genai-provider/docs/api-reference.md`
 
-```markdown
+````markdown
 # API Reference
 
 Complete API documentation for `@acedergren/oci-genai-provider`.
@@ -508,11 +493,13 @@ Complete API documentation for `@acedergren/oci-genai-provider`.
 Creates a new OCI provider instance with custom configuration.
 
 **Parameters:**
+
 - `config` (optional): Base configuration object
 
 **Returns:** `OCIProvider` instance
 
 **Example:**
+
 ```typescript
 import { createOCI } from '@acedergren/oci-genai-provider';
 
@@ -521,12 +508,14 @@ const provider = createOCI({
   compartmentId: 'ocid1.compartment.oc1..aaa...',
 });
 ```
+````
 
 ### oci: OCIProvider
 
 Default provider instance using environment variables or OCI config file.
 
 **Example:**
+
 ```typescript
 import { oci } from '@acedergren/oci-genai-provider';
 
@@ -540,12 +529,14 @@ const model = oci.languageModel('cohere.command-r-plus');
 Creates a language model instance.
 
 **Parameters:**
+
 - `modelId`: Model identifier (e.g., 'cohere.command-r-plus')
 - `settings` (optional): Language model configuration
 
 **Returns:** `LanguageModelV3` instance
 
 **Example:**
+
 ```typescript
 const model = oci.languageModel('cohere.command-r-plus', {
   requestOptions: {
@@ -559,12 +550,14 @@ const model = oci.languageModel('cohere.command-r-plus', {
 Creates an embedding model instance.
 
 **Parameters:**
+
 - `modelId`: Embedding model identifier (e.g., 'cohere.embed-multilingual-v3.0')
 - `settings` (optional): Embedding configuration
 
 **Returns:** `EmbeddingModelV3` instance
 
 **Example:**
+
 ```typescript
 const model = oci.embeddingModel('cohere.embed-multilingual-v3.0', {
   truncate: 'END',
@@ -577,12 +570,14 @@ const model = oci.embeddingModel('cohere.embed-multilingual-v3.0', {
 Creates a speech synthesis model instance.
 
 **Parameters:**
+
 - `modelId`: Speech model identifier (e.g., 'oci-tts-standard')
 - `settings` (optional): Speech configuration
 
 **Returns:** `SpeechModelV3` instance
 
 **Example:**
+
 ```typescript
 const model = oci.speechModel('oci-tts-standard', {
   voice: 'en-US-Standard-A',
@@ -596,12 +591,14 @@ const model = oci.speechModel('oci-tts-standard', {
 Creates a speech-to-text model instance.
 
 **Parameters:**
+
 - `modelId`: Transcription model identifier (e.g., 'oci-stt-standard')
 - `settings` (optional): Transcription configuration
 
 **Returns:** `TranscriptionModelV3` instance
 
 **Example:**
+
 ```typescript
 const model = oci.transcriptionModel('oci-stt-standard', {
   language: 'en',
@@ -614,12 +611,14 @@ const model = oci.transcriptionModel('oci-stt-standard', {
 Creates a reranking model instance.
 
 **Parameters:**
+
 - `modelId`: Reranking model identifier (e.g., 'cohere.rerank-v3.0')
 - `settings` (optional): Reranking configuration
 
 **Returns:** `RerankingModelV3` instance
 
 **Example:**
+
 ```typescript
 const model = oci.rerankingModel('cohere.rerank-v3.0', {
   topN: 5,
@@ -775,7 +774,7 @@ Base error class for all OCI GenAI errors.
 
 ```typescript
 class OCIGenAIError extends Error {
-  constructor(message: string, cause?: unknown)
+  constructor(message: string, cause?: unknown);
 }
 ```
 
@@ -785,7 +784,7 @@ Network-related errors.
 
 ```typescript
 class NetworkError extends OCIGenAIError {
-  constructor(message: string, cause?: unknown)
+  constructor(message: string, cause?: unknown);
 }
 ```
 
@@ -795,7 +794,7 @@ Rate limit exceeded errors.
 
 ```typescript
 class RateLimitError extends OCIGenAIError {
-  constructor(message: string, retryAfter?: number)
+  constructor(message: string, retryAfter?: number);
 }
 ```
 
@@ -805,7 +804,7 @@ Authentication and authorization errors.
 
 ```typescript
 class AuthenticationError extends OCIGenAIError {
-  constructor(message: string, cause?: unknown)
+  constructor(message: string, cause?: unknown);
 }
 ```
 
@@ -815,14 +814,15 @@ Invalid or unavailable model errors.
 
 ```typescript
 class ModelNotFoundError extends OCIGenAIError {
-  constructor(modelId: string, modelType: string)
+  constructor(modelId: string, modelType: string);
 }
 ```
 
 ## Examples
 
 See the [examples/](../../examples/) directory for complete working examples.
-```
+
+````
 
 **Step 4: Run test to verify it passes**
 
@@ -834,13 +834,14 @@ Expected: PASS
 ```bash
 git add docs/api-reference.md src/__tests__/docs-validation.test.ts
 git commit -m "docs: create comprehensive API reference"
-```
+````
 
 ---
 
 ## Task 3: Create Configuration Guide
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/docs/configuration.md`
 
 **Step 1: Write test for configuration guide**
@@ -850,10 +851,7 @@ Add to `packages/oci-genai-provider/src/__tests__/docs-validation.test.ts`:
 ```typescript
 describe('Configuration Guide', () => {
   it('should document all authentication methods', () => {
-    const configGuide = readFileSync(
-      join(__dirname, '../../docs/configuration.md'),
-      'utf-8'
-    );
+    const configGuide = readFileSync(join(__dirname, '../../docs/configuration.md'), 'utf-8');
 
     expect(configGuide).toContain('config_file');
     expect(configGuide).toContain('instance_principal');
@@ -861,10 +859,7 @@ describe('Configuration Guide', () => {
   });
 
   it('should document environment variables', () => {
-    const configGuide = readFileSync(
-      join(__dirname, '../../docs/configuration.md'),
-      'utf-8'
-    );
+    const configGuide = readFileSync(join(__dirname, '../../docs/configuration.md'), 'utf-8');
 
     expect(configGuide).toContain('OCI_CONFIG_PROFILE');
     expect(configGuide).toContain('OCI_COMPARTMENT_ID');
@@ -882,7 +877,7 @@ Expected: FAIL - File doesn't exist
 
 Create: `packages/oci-genai-provider/docs/configuration.md`
 
-```markdown
+````markdown
 # Configuration Guide
 
 Complete guide to configuring the OCI Generative AI Provider.
@@ -907,6 +902,7 @@ key_file=~/.oci/oci_api_key.pem
 tenancy=ocid1.tenancy.oc1..aaaaaaaa...
 region=us-phoenix-1
 ```
+````
 
 2. Set environment variables:
 
@@ -977,18 +973,18 @@ const provider = createOCI({
 
 ### Required Variables
 
-| Variable | Description | Example |
-|----------|-------------|---------|
+| Variable             | Description      | Example                         |
+| -------------------- | ---------------- | ------------------------------- |
 | `OCI_COMPARTMENT_ID` | Compartment OCID | `ocid1.compartment.oc1..aaa...` |
 
 ### Optional Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `OCI_CONFIG_PROFILE` | Config file profile name | `DEFAULT` |
-| `OCI_CONFIG_FILE` | Path to config file | `~/.oci/config` |
-| `OCI_REGION` | OCI region | From config file |
-| `OCI_CLI_AUTH` | Authentication method | `api_key` |
+| Variable             | Description              | Default          |
+| -------------------- | ------------------------ | ---------------- |
+| `OCI_CONFIG_PROFILE` | Config file profile name | `DEFAULT`        |
+| `OCI_CONFIG_FILE`    | Path to config file      | `~/.oci/config`  |
+| `OCI_REGION`         | OCI region               | From config file |
+| `OCI_CLI_AUTH`       | Authentication method    | `api_key`        |
 
 ### Setting Variables
 
@@ -1022,15 +1018,15 @@ OCI_REGION=eu-frankfurt-1
 
 OCI services are available in multiple regions. Choose the region closest to your users.
 
-| Region Code | Location |
-|-------------|----------|
-| `us-phoenix-1` | Phoenix, AZ (USA) |
-| `us-ashburn-1` | Ashburn, VA (USA) |
+| Region Code      | Location            |
+| ---------------- | ------------------- |
+| `us-phoenix-1`   | Phoenix, AZ (USA)   |
+| `us-ashburn-1`   | Ashburn, VA (USA)   |
 | `eu-frankfurt-1` | Frankfurt (Germany) |
-| `eu-stockholm-1` | Stockholm (Sweden) |
-| `uk-london-1` | London (UK) |
-| `ap-tokyo-1` | Tokyo (Japan) |
-| `ap-mumbai-1` | Mumbai (India) |
+| `eu-stockholm-1` | Stockholm (Sweden)  |
+| `uk-london-1`    | London (UK)         |
+| `ap-tokyo-1`     | Tokyo (Japan)       |
+| `ap-mumbai-1`    | Mumbai (India)      |
 
 ### Regional Service Availability
 
@@ -1171,7 +1167,8 @@ const model = oci.languageModel('cohere.command-r-plus', {
 - Verify region code is correct
 
 See [Troubleshooting Guide](./troubleshooting.md) for more solutions.
-```
+
+````
 
 **Step 4: Run test to verify it passes**
 
@@ -1183,20 +1180,21 @@ Expected: PASS
 ```bash
 git add docs/configuration.md src/__tests__/docs-validation.test.ts
 git commit -m "docs: create comprehensive configuration guide"
-```
+````
 
 ---
 
 ## Task 4: Create Migration Guide
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/docs/migration.md`
 
 **Step 1: Create migration guide**
 
 Create: `packages/oci-genai-provider/docs/migration.md`
 
-```markdown
+````markdown
 # Migration Guide: v1.x to v2.0
 
 This guide helps you migrate from v1.x to v2.0 with ProviderV3 support.
@@ -1215,13 +1213,16 @@ v2.0 introduces breaking changes to align with Vercel AI SDK v4+ and ProviderV3 
 ### 1. Language Model Creation
 
 **v1.x (deprecated):**
+
 ```typescript
 import { oci } from '@acedergren/oci-genai-provider';
 
 const model = oci('cohere.command-r-plus'); // ❌ No longer supported
 ```
+````
 
 **v2.0 (ProviderV3):**
+
 ```typescript
 import { oci } from '@acedergren/oci-genai-provider';
 
@@ -1231,6 +1232,7 @@ const model = oci.languageModel('cohere.command-r-plus'); // ✅ Required
 ### 2. Provider Factory
 
 **v1.x (deprecated):**
+
 ```typescript
 import { createOCI } from '@acedergren/oci-genai-provider';
 
@@ -1239,6 +1241,7 @@ const model = provider(modelId); // ❌ No longer supported
 ```
 
 **v2.0 (ProviderV3):**
+
 ```typescript
 import { createOCI } from '@acedergren/oci-genai-provider';
 
@@ -1249,6 +1252,7 @@ const model = provider.languageModel(modelId); // ✅ Required
 ### 3. Configuration Structure
 
 **v1.x:**
+
 ```typescript
 const provider = createOCI({
   region: 'us-phoenix-1',
@@ -1258,6 +1262,7 @@ const provider = createOCI({
 ```
 
 **v2.0:**
+
 ```typescript
 const provider = createOCI({
   region: 'us-phoenix-1',
@@ -1274,6 +1279,7 @@ const model = provider.languageModel('model-id', {
 ### 4. Error Handling
 
 **v1.x:**
+
 ```typescript
 try {
   await generateText({ model, prompt });
@@ -1283,12 +1289,9 @@ try {
 ```
 
 **v2.0:**
+
 ```typescript
-import {
-  NetworkError,
-  RateLimitError,
-  AuthenticationError,
-} from '@acedergren/oci-genai-provider';
+import { NetworkError, RateLimitError, AuthenticationError } from '@acedergren/oci-genai-provider';
 
 try {
   await generateText({ model, prompt });
@@ -1334,6 +1337,7 @@ const model = provider.languageModel('model-id'); // ✅ Use
 Move model-specific settings from provider config to model config:
 
 **Before:**
+
 ```typescript
 const provider = createOCI({
   region: 'us-phoenix-1',
@@ -1343,6 +1347,7 @@ const provider = createOCI({
 ```
 
 **After:**
+
 ```typescript
 const provider = createOCI({
   region: 'us-phoenix-1',
@@ -1454,16 +1459,10 @@ for (const file of files) {
   let content = readFileSync(file, 'utf-8');
 
   // Replace old v1.x callable pattern with ProviderV3 method
-  content = content.replace(
-    /oci\(['"`]([^'"`]+)['"`]\)/g,
-    "oci.languageModel('$1')"
-  );
+  content = content.replace(/oci\(['"`]([^'"`]+)['"`]\)/g, "oci.languageModel('$1')");
 
   // Replace provider callable pattern with explicit method
-  content = content.replace(
-    /provider\(['"`]([^'"`]+)['"`]\)/g,
-    "provider.languageModel('$1')"
-  );
+  content = content.replace(/provider\(['"`]([^'"`]+)['"`]\)/g, "provider.languageModel('$1')");
 
   writeFileSync(file, content);
   console.log(`Updated: ${file}`);
@@ -1471,6 +1470,7 @@ for (const file of files) {
 ```
 
 Run with:
+
 ```bash
 npx tsx migrate.ts
 ```
@@ -1542,20 +1542,22 @@ Then revert your code changes using git:
 ```bash
 git checkout -- .
 ```
-```
+
+````
 
 **Step 2: Commit**
 
 ```bash
 git add docs/migration.md
 git commit -m "docs: create migration guide from v1.x to v2.0"
-```
+````
 
 ---
 
 ## Task 5: Create Troubleshooting Guide
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/docs/troubleshooting.md`
 
 **Step 1: Create troubleshooting guide**
@@ -1573,8 +1575,10 @@ Common issues and solutions for OCI Generative AI Provider.
 
 **Symptoms:**
 ```
+
 Error: Authentication failed
-```
+
+````
 
 **Causes:**
 - Invalid OCI config file
@@ -1587,15 +1591,17 @@ Error: Authentication failed
 1. **Verify config file exists:**
    ```bash
    cat ~/.oci/config
-   ```
+````
 
 2. **Check file permissions:**
+
    ```bash
    chmod 600 ~/.oci/config
    chmod 600 ~/.oci/oci_api_key.pem
    ```
 
 3. **Verify fingerprint:**
+
    ```bash
    openssl rsa -pubout -outform DER -in ~/.oci/oci_api_key.pem | \
      openssl md5 -c | \
@@ -1603,6 +1609,7 @@ Error: Authentication failed
    ```
 
 4. **Check environment variables:**
+
    ```bash
    echo $OCI_CONFIG_PROFILE
    echo $OCI_COMPARTMENT_ID
@@ -1616,6 +1623,7 @@ Error: Authentication failed
 ### Error: "Compartment not found"
 
 **Symptoms:**
+
 ```
 Error: Compartment ocid1.compartment... not found
 ```
@@ -1623,11 +1631,13 @@ Error: Compartment ocid1.compartment... not found
 **Solutions:**
 
 1. **Verify compartment exists:**
+
    ```bash
    oci iam compartment get --compartment-id <OCID>
    ```
 
 2. **Check permissions:**
+
    ```bash
    # Ensure user has access to compartment
    oci iam policy list --compartment-id <TENANCY_OCID>
@@ -1646,6 +1656,7 @@ Error: Compartment ocid1.compartment... not found
 ### Error: "Invalid model ID"
 
 **Symptoms:**
+
 ```
 Error: Invalid model ID: my-model
 ```
@@ -1653,14 +1664,16 @@ Error: Invalid model ID: my-model
 **Solutions:**
 
 1. **Check available models:**
+
    ```typescript
    import { getAllModels } from '@acedergren/oci-genai-provider';
 
    const models = getAllModels();
-   console.log(models.map(m => m.id));
+   console.log(models.map((m) => m.id));
    ```
 
 2. **Use correct model ID format:**
+
    ```typescript
    // Correct
    oci.languageModel('cohere.command-r-plus');
@@ -1670,6 +1683,7 @@ Error: Invalid model ID: my-model
    ```
 
 3. **Verify model type:**
+
    ```typescript
    // Language models
    oci.languageModel('cohere.command-r-plus');
@@ -1681,6 +1695,7 @@ Error: Invalid model ID: my-model
 ### Error: "Model not available in region"
 
 **Symptoms:**
+
 ```
 Error: Model not available in region eu-frankfurt-1
 ```
@@ -1692,6 +1707,7 @@ Error: Model not available in region eu-frankfurt-1
    - Speech/Transcription: Only `us-phoenix-1`
 
 2. **Use correct region for speech:**
+
    ```typescript
    oci.speechModel('oci-tts-standard', {
      region: 'us-phoenix-1', // Required
@@ -1706,6 +1722,7 @@ Error: Model not available in region eu-frankfurt-1
 ### Error: "Speech services not available in this region"
 
 **Symptoms:**
+
 ```
 Error: Speech services are only available in us-phoenix-1
 ```
@@ -1726,6 +1743,7 @@ const transcriptionModel = provider.transcriptionModel('oci-stt-standard');
 ### Error: "Region not configured"
 
 **Symptoms:**
+
 ```
 Error: Region must be specified
 ```
@@ -1733,6 +1751,7 @@ Error: Region must be specified
 **Solutions:**
 
 1. **Set region in config:**
+
    ```typescript
    const provider = createOCI({
      region: 'us-phoenix-1',
@@ -1740,6 +1759,7 @@ Error: Region must be specified
    ```
 
 2. **Set environment variable:**
+
    ```bash
    export OCI_REGION=us-phoenix-1
    ```
@@ -1755,6 +1775,7 @@ Error: Region must be specified
 ### Error: "Connection timeout"
 
 **Symptoms:**
+
 ```
 Error: Request timeout after 30000ms
 ```
@@ -1762,6 +1783,7 @@ Error: Request timeout after 30000ms
 **Solutions:**
 
 1. **Increase timeout:**
+
    ```typescript
    oci.languageModel('cohere.command-r-plus', {
      requestOptions: {
@@ -1771,6 +1793,7 @@ Error: Request timeout after 30000ms
    ```
 
 2. **Check network connectivity:**
+
    ```bash
    ping inference.generativeai.us-phoenix-1.oci.oraclecloud.com
    ```
@@ -1782,6 +1805,7 @@ Error: Request timeout after 30000ms
 ### Error: "Rate limit exceeded"
 
 **Symptoms:**
+
 ```
 Error: Rate limit exceeded. Retry after 60 seconds
 ```
@@ -1789,6 +1813,7 @@ Error: Rate limit exceeded. Retry after 60 seconds
 **Solutions:**
 
 1. **Implement retry logic:**
+
    ```typescript
    import { RateLimitError } from '@acedergren/oci-genai-provider';
 
@@ -1797,13 +1822,14 @@ Error: Rate limit exceeded. Retry after 60 seconds
    } catch (error) {
      if (error instanceof RateLimitError) {
        const retryAfter = error.retryAfter || 60;
-       await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+       await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
        // Retry request
      }
    }
    ```
 
 2. **Enable automatic retry:**
+
    ```typescript
    oci.languageModel('cohere.command-r-plus', {
      requestOptions: {
@@ -1824,6 +1850,7 @@ Error: Rate limit exceeded. Retry after 60 seconds
 ### Error: "Stream connection closed unexpectedly"
 
 **Symptoms:**
+
 - Incomplete responses
 - Stream ends abruptly
 - Connection reset errors
@@ -1831,6 +1858,7 @@ Error: Rate limit exceeded. Retry after 60 seconds
 **Solutions:**
 
 1. **Handle stream errors:**
+
    ```typescript
    const result = streamText({
      model: oci.languageModel('cohere.command-r-plus'),
@@ -1848,6 +1876,7 @@ Error: Rate limit exceeded. Retry after 60 seconds
    ```
 
 2. **Increase timeout:**
+
    ```typescript
    oci.languageModel('cohere.command-r-plus', {
      requestOptions: {
@@ -1865,6 +1894,7 @@ Error: Rate limit exceeded. Retry after 60 seconds
 ### Error: "Batch size exceeds maximum"
 
 **Symptoms:**
+
 ```
 Error: Batch size (100) exceeds maximum allowed (96)
 ```
@@ -1898,6 +1928,7 @@ for (const batch of batches) {
 ### Error: "Text exceeds maximum length"
 
 **Symptoms:**
+
 ```
 Error: Input text exceeds 512 tokens
 ```
@@ -1905,6 +1936,7 @@ Error: Input text exceeds 512 tokens
 **Solutions:**
 
 1. **Use truncation:**
+
    ```typescript
    oci.embeddingModel('cohere.embed-multilingual-v3.0', {
      truncate: 'END', // Truncate from end
@@ -1927,6 +1959,7 @@ Error: Input text exceeds 512 tokens
 ### Error: "Type 'OCIProvider' is not assignable..."
 
 **Symptoms:**
+
 ```
 Type 'OCIProvider' is not assignable to type 'ProviderV1'
 ```
@@ -1934,11 +1967,13 @@ Type 'OCIProvider' is not assignable to type 'ProviderV1'
 **Solutions:**
 
 1. **Update AI SDK:**
+
    ```bash
    npm install ai@^6.0.0
    ```
 
 2. **Update TypeScript:**
+
    ```bash
    npm install -D typescript@^5.6.0
    ```
@@ -1962,12 +1997,14 @@ Type 'OCIProvider' is not assignable to type 'ProviderV1'
 **Solutions:**
 
 1. **Reinstall dependencies:**
+
    ```bash
    rm -rf node_modules pnpm-lock.yaml
    pnpm install
    ```
 
 2. **Clear build cache:**
+
    ```bash
    pnpm build
    rm -rf dist
@@ -2021,20 +2058,22 @@ const provider = createOCI({
 ```
 
 This will output detailed logs to help diagnose issues.
-```
+
+````
 
 **Step 2: Commit**
 
 ```bash
 git add docs/troubleshooting.md
 git commit -m "docs: create comprehensive troubleshooting guide"
-```
+````
 
 ---
 
 ## Task 6: Add JSDoc Comments to Public APIs
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/provider.ts`
 - Modify: `packages/oci-genai-provider/src/index.ts`
 - Modify: `packages/oci-genai-provider/src/types.ts`
@@ -2043,7 +2082,7 @@ git commit -m "docs: create comprehensive troubleshooting guide"
 
 Modify `packages/oci-genai-provider/src/provider.ts`:
 
-```typescript
+````typescript
 /**
  * OCI Provider implementing ProviderV3 interface
  *
@@ -2083,10 +2122,7 @@ export class OCIProvider implements ProviderV3 {
    * });
    * ```
    */
-  languageModel(
-    modelId: string,
-    settings?: OCILanguageModelSettings
-  ): LanguageModelV3 {
+  languageModel(modelId: string, settings?: OCILanguageModelSettings): LanguageModelV3 {
     const mergedConfig = { ...this.config, ...settings };
     return new OCILanguageModel(modelId, mergedConfig);
   }
@@ -2106,10 +2142,7 @@ export class OCIProvider implements ProviderV3 {
    * });
    * ```
    */
-  embeddingModel(
-    modelId: string,
-    settings?: OCIEmbeddingSettings
-  ): EmbeddingModelV3 {
+  embeddingModel(modelId: string, settings?: OCIEmbeddingSettings): EmbeddingModelV3 {
     const mergedConfig = { ...this.config, ...settings };
     return new OCIEmbeddingModel(modelId, mergedConfig);
   }
@@ -2132,10 +2165,7 @@ export class OCIProvider implements ProviderV3 {
    * @remarks
    * Speech services are only available in us-phoenix-1 region
    */
-  speechModel(
-    modelId: string,
-    settings?: OCISpeechSettings
-  ): SpeechModelV3 {
+  speechModel(modelId: string, settings?: OCISpeechSettings): SpeechModelV3 {
     const mergedConfig = { ...this.config, ...settings };
     return new OCISpeechModel(modelId, mergedConfig);
   }
@@ -2158,10 +2188,7 @@ export class OCIProvider implements ProviderV3 {
    * @remarks
    * Transcription services are only available in us-phoenix-1 region
    */
-  transcriptionModel(
-    modelId: string,
-    settings?: OCITranscriptionSettings
-  ): TranscriptionModelV3 {
+  transcriptionModel(modelId: string, settings?: OCITranscriptionSettings): TranscriptionModelV3 {
     const mergedConfig = { ...this.config, ...settings };
     return new OCITranscriptionModel(modelId, mergedConfig);
   }
@@ -2180,10 +2207,7 @@ export class OCIProvider implements ProviderV3 {
    * });
    * ```
    */
-  rerankingModel(
-    modelId: string,
-    settings?: OCIRerankingSettings
-  ): RerankingModelV3 {
+  rerankingModel(modelId: string, settings?: OCIRerankingSettings): RerankingModelV3 {
     const mergedConfig = { ...this.config, ...settings };
     return new OCIRerankingModel(modelId, mergedConfig);
   }
@@ -2201,7 +2225,7 @@ export class OCIProvider implements ProviderV3 {
     });
   }
 }
-```
+````
 
 **Step 2: Commit**
 
@@ -2215,6 +2239,7 @@ git commit -m "docs: add JSDoc comments to OCIProvider class"
 ## Task 7: Update Example README Files
 
 **Files:**
+
 - Create: `examples/chatbot-demo/README.md`
 - Create: `examples/nextjs-chatbot/README.md`
 - Create: `examples/rag-demo/README.md`
@@ -2226,7 +2251,7 @@ git commit -m "docs: add JSDoc comments to OCIProvider class"
 
 Create: `examples/chatbot-demo/README.md`
 
-```markdown
+````markdown
 # Chatbot Demo - SvelteKit
 
 Full-featured chatbot using OCI Generative AI with streaming responses.
@@ -2245,14 +2270,17 @@ Full-featured chatbot using OCI Generative AI with streaming responses.
    ```bash
    pnpm install
    ```
+````
 
 2. Configure OCI credentials:
+
    ```bash
    export OCI_CONFIG_PROFILE=DEFAULT
    export OCI_COMPARTMENT_ID=ocid1.compartment...
    ```
 
 3. Start development server:
+
    ```bash
    pnpm dev
    ```
@@ -2268,6 +2296,7 @@ Full-featured chatbot using OCI Generative AI with streaming responses.
 ## Models
 
 Supports all OCI language models:
+
 - Cohere Command R+
 - Meta Llama 3.3 70B
 - Anthropic Claude 3.5 Sonnet
@@ -2309,7 +2338,8 @@ export async function POST({ request }) {
 - [OCI GenAI Provider](../../packages/oci-genai-provider)
 - [Vercel AI SDK](https://sdk.vercel.ai)
 - [SvelteKit](https://kit.svelte.dev)
-```
+
+````
 
 **Step 2: Create other example READMEs**
 
@@ -2333,7 +2363,7 @@ Simple RAG implementation using OCI embeddings for semantic search.
 pnpm install
 export OCI_COMPARTMENT_ID=ocid1.compartment...
 pnpm start
-```
+````
 
 ## How It Works
 
@@ -2372,14 +2402,15 @@ pnpm start
 
 - [Embeddings Guide](../../packages/oci-genai-provider/docs/embeddings.md)
 - [RAG Best Practices](https://docs.oracle.com/iaas/Content/generative-ai/use-cases/rag.htm)
-```
+
+````
 
 **Step 3: Commit**
 
 ```bash
 git add examples/*/README.md
 git commit -m "docs: add comprehensive README files for all examples"
-```
+````
 
 ---
 

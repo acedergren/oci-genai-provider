@@ -5,6 +5,7 @@ Complete guide to configuring Oracle Cloud Infrastructure Identity and Access Ma
 ## Overview
 
 IAM policies control access to OCI resources. The OCI GenAI provider requires specific permissions to:
+
 - Call Generative AI inference APIs
 - Access models (on-demand and dedicated)
 - Read compartment metadata
@@ -28,6 +29,7 @@ Allow group <YOUR_GROUP_NAME> to read compartments in compartment AC
 **Replace `<YOUR_GROUP_NAME>`** with your OCI group (e.g., `Developers`, `GenAI-Users`).
 
 **This enables:**
+
 - ✅ Chat and completion API calls
 - ✅ Streaming responses
 - ✅ On-demand model access
@@ -36,6 +38,7 @@ Allow group <YOUR_GROUP_NAME> to read compartments in compartment AC
 ### Apply the Policies
 
 **OCI Console:**
+
 1. Navigate to **Identity → Policies**
 2. Select compartment (AC or root)
 3. Click **Create Policy**
@@ -44,6 +47,7 @@ Allow group <YOUR_GROUP_NAME> to read compartments in compartment AC
 6. Click **Create**
 
 **OCI CLI:**
+
 ```bash
 oci iam policy create \
   --compartment-id <compartment_ocid> \
@@ -66,6 +70,7 @@ For detailed policy configurations, troubleshooting, and advanced scenarios, see
 **[Required Policies Documentation →](required-policies.md)**
 
 This comprehensive guide includes:
+
 - Complete policy breakdown with explanations
 - Optional policies (Vault, RAG, OAuth)
 - Policy granularity options (dev vs. prod)
@@ -82,11 +87,13 @@ This comprehensive guide includes:
 ### Policy Components
 
 **Policy Statement Format:**
+
 ```
 Allow <subject> to <verb> <resource-type> in <location> where <conditions>
 ```
 
 **Example Breakdown:**
+
 ```hcl
 Allow group Developers to use generative-ai-chat in compartment AC
       └─────┬────────┘    └┬─┘ └───────────┬──────────┘    └────┬────┘
@@ -94,6 +101,7 @@ Allow group Developers to use generative-ai-chat in compartment AC
 ```
 
 **Components:**
+
 - **Subject**: Who gets access (`group`, `user`, `dynamic-group`, `any-user`)
 - **Verb**: What they can do (`manage`, `use`, `read`, `inspect`)
 - **Resource**: What they access (`generative-ai-family`, `generative-ai-chat`)
@@ -102,25 +110,25 @@ Allow group Developers to use generative-ai-chat in compartment AC
 
 ### Permission Verbs
 
-| Verb | Permissions | Use Case |
-|------|-------------|----------|
-| `manage` | Full control (create, update, delete, use, read) | Administrators |
-| `use` | Work with existing resources, invoke APIs | Developers |
-| `read` | View configurations and metadata | Auditors |
-| `inspect` | List and basic info only | Monitoring |
+| Verb      | Permissions                                      | Use Case       |
+| --------- | ------------------------------------------------ | -------------- |
+| `manage`  | Full control (create, update, delete, use, read) | Administrators |
+| `use`     | Work with existing resources, invoke APIs        | Developers     |
+| `read`    | View configurations and metadata                 | Auditors       |
+| `inspect` | List and basic info only                         | Monitoring     |
 
 **For GenAI inference, you need:** `use`
 
 ### Resource Types
 
-| Resource Type | What It Covers |
-|---------------|----------------|
-| `generative-ai-family` | All GenAI resources (recommended) |
-| `generative-ai-chat` | Chat/conversational models only |
-| `generative-ai-text-generation` | Text generation only |
-| `generative-ai-text-embedding` | Embeddings only |
-| `generative-ai-endpoint` | Custom/dedicated endpoints |
-| `generative-ai-model` | Fine-tuned models |
+| Resource Type                   | What It Covers                    |
+| ------------------------------- | --------------------------------- |
+| `generative-ai-family`          | All GenAI resources (recommended) |
+| `generative-ai-chat`            | Chat/conversational models only   |
+| `generative-ai-text-generation` | Text generation only              |
+| `generative-ai-text-embedding`  | Embeddings only                   |
+| `generative-ai-endpoint`        | Custom/dedicated endpoints        |
+| `generative-ai-model`           | Fine-tuned models                 |
 
 **Recommendation:** Use `generative-ai-family` for simplicity unless you need fine-grained control.
 
@@ -162,6 +170,7 @@ Allow group CI-CD-Users to read compartments in compartment GenAI-Test
 ```
 
 **GitHub Actions Configuration:**
+
 ```yaml
 - name: Setup OCI Config
   run: |
@@ -181,6 +190,7 @@ Allow group CI-CD-Users to read compartments in compartment GenAI-Test
 **Use case:** Application running on OCI Compute instance without stored credentials.
 
 **Step 1: Create Dynamic Group**
+
 ```hcl
 # Match instances in compartment
 ALL {instance.compartment.id = 'ocid1.compartment.oc1..<compartment_id>'}
@@ -190,19 +200,21 @@ ALL {instance.id = 'ocid1.instance.oc1..<instance_id>'}
 ```
 
 **Step 2: Create Policy for Dynamic Group**
+
 ```hcl
 Allow dynamic-group GenAI-Compute-DG to use generative-ai-family in compartment GenAI-Prod
 Allow dynamic-group GenAI-Compute-DG to read compartments in compartment GenAI-Prod
 ```
 
 **Application Code:**
+
 ```typescript
 import { createOCI } from '@acedergren/oci-genai-provider';
 
 // Automatically uses instance principal
 const oci = createOCI({
   auth: 'instance_principal',
-  region: 'us-ashburn-1'
+  region: 'us-ashburn-1',
 });
 ```
 
@@ -219,6 +231,7 @@ Allow any-user to use generative-ai-family in compartment GenAI-Prod where ALL {
 ```
 
 **Function Code:**
+
 ```typescript
 import fdk from '@fnproject/fdk';
 import { createOCI } from '@acedergren/oci-genai-provider';
@@ -229,7 +242,7 @@ fdk.handle(async (input: any) => {
 
   const { text } = await generateText({
     model: oci('cohere.command-r-plus'),
-    prompt: input.prompt
+    prompt: input.prompt,
   });
 
   return { response: text };
@@ -251,6 +264,7 @@ Tenancy (root)
 ```
 
 **Policy:**
+
 ```hcl
 Allow group GenAI-Users to use generative-ai-family in compartment GenAI-Compartment
 ```
@@ -271,6 +285,7 @@ Tenancy (root)
 ```
 
 **Policies:**
+
 ```hcl
 # Development - broader access
 Allow group Developers to use generative-ai-family in compartment GenAI-Development
@@ -295,16 +310,19 @@ Allow dynamic-group Production-Services to use generative-ai-chat in compartment
 ### Verify Policy Application
 
 **Check policy exists:**
+
 ```bash
 oci iam policy list --compartment-id <compartment_ocid>
 ```
 
 **View specific policy:**
+
 ```bash
 oci iam policy get --policy-id <policy_ocid>
 ```
 
 **Verify group membership:**
+
 ```bash
 # List users in group
 oci iam group list-users --group-id <group_ocid>
@@ -320,6 +338,7 @@ oci iam user list-groups --user-id <user_ocid>
 ### 403 NotAuthorizedOrNotFound
 
 **Error Message:**
+
 ```
 Authorization failed or requested resource not found
 ```
@@ -327,6 +346,7 @@ Authorization failed or requested resource not found
 **Cause:** Missing or incorrect IAM policies.
 
 **Solutions:**
+
 1. Verify policies exist: `oci iam policy list --compartment-id <id>`
 2. Check group membership: `oci iam group list-users --group-id <id>`
 3. Wait 1-2 minutes for policy propagation
@@ -336,6 +356,7 @@ Authorization failed or requested resource not found
 ### 401 NotAuthenticated
 
 **Error Message:**
+
 ```
 The required information to complete authentication was not provided
 ```
@@ -343,6 +364,7 @@ The required information to complete authentication was not provided
 **Cause:** Authentication configuration issue (not IAM policy).
 
 **Solutions:**
+
 1. Check OCI config file exists: `ls ~/.oci/config`
 2. Verify API key fingerprint matches OCI Console
 3. Ensure private key file exists and has correct permissions (600)
@@ -353,6 +375,7 @@ See [Authentication Guide](../authentication/) for auth troubleshooting.
 ### Service Not Enabled
 
 **Error Message:**
+
 ```
 The service generative-ai is not enabled for this tenancy
 ```
@@ -360,6 +383,7 @@ The service generative-ai is not enabled for this tenancy
 **Cause:** GenAI service not subscribed in your tenancy/region.
 
 **Solutions:**
+
 1. Navigate to: OCI Console → Analytics & AI → Generative AI
 2. Click "Enable Service" if prompted
 3. Verify your region supports GenAI
@@ -407,6 +431,7 @@ Allow dynamic-group Prod-Services to use generative-ai-chat in compartment Prod
 - Set up alerts for unexpected access patterns
 
 **Check audit logs:**
+
 ```bash
 oci audit event list \
   --compartment-id <compartment_ocid> \
@@ -455,7 +480,7 @@ import { generateText } from 'ai';
 async function testPolicies() {
   const oci = createOCI({
     profile: 'DEFAULT',
-    region: 'us-ashburn-1'
+    region: 'us-ashburn-1',
   });
 
   try {
@@ -463,8 +488,8 @@ async function testPolicies() {
       model: oci('cohere.command-r-plus'),
       prompt: 'Hello, world!',
       providerOptions: {
-        compartmentId: process.env.OCI_COMPARTMENT_ID
-      }
+        compartmentId: process.env.OCI_COMPARTMENT_ID,
+      },
     });
 
     console.log('✅ Success! IAM policies are correct.');
@@ -545,6 +570,7 @@ oci generative-ai-inference chat \
 ---
 
 **Sources:**
+
 - [OCI IAM Overview](https://docs.oracle.com/en-us/iaas/Content/Identity/Concepts/overview.htm)
 - [OCI GenAI IAM Policies](https://docs.oracle.com/en-us/iaas/Content/generative-ai/iam-policies.htm)
 - [Policy Reference Guide](https://docs.oracle.com/en-us/iaas/Content/Identity/Reference/policyreference.htm)

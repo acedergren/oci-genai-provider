@@ -7,6 +7,7 @@ Complete guide to configuring Oracle Cloud Infrastructure authentication for the
 The OCI GenAI provider supports multiple authentication methods, with a cascading configuration strategy that prioritizes environment variables, then constructor options, and finally defaults.
 
 **Authentication Methods:**
+
 1. **API Key Authentication** (recommended for development)
 2. **Instance Principal** (for OCI Compute instances)
 3. **Resource Principal** (for OCI Functions)
@@ -58,6 +59,7 @@ region=us-ashburn-1
 ```
 
 **Find your OCIDs:**
+
 - **User OCID**: OCI Console → Profile Icon → User Settings
 - **Tenancy OCID**: OCI Console → Profile Icon → Tenancy: [name]
 - **Fingerprint**: Displayed when you uploaded the public key
@@ -89,6 +91,7 @@ region=us-ashburn-1
 ```
 
 **Required Fields:**
+
 - `user` - Your user OCID
 - `fingerprint` - Your API key fingerprint
 - `key_file` - Path to your private key file
@@ -130,12 +133,13 @@ region=eu-stockholm-1
 ```
 
 **Using Profiles:**
+
 ```typescript
 import { createOCI } from '@acedergren/oci-genai-provider';
 
 // Use specific profile
 const oci = createOCI({
-  profile: 'PRODUCTION'
+  profile: 'PRODUCTION',
 });
 
 // Or via environment variable
@@ -162,6 +166,7 @@ log_level=DEBUG
 ```
 
 **Reading Custom Values (OCI SDK):**
+
 ```typescript
 import * as common from 'oci-common';
 
@@ -182,6 +187,7 @@ const logLevel = profile.get('log_level');
 **Best for:** Development, local testing, CI/CD pipelines
 
 **TypeScript (OCI SDK):**
+
 ```typescript
 import * as common from 'oci-common';
 import * as genai from 'oci-generativeaiinference';
@@ -190,19 +196,17 @@ import * as genai from 'oci-generativeaiinference';
 const provider = new common.ConfigFileAuthenticationDetailsProvider();
 
 // Using specific profile
-const provider = new common.ConfigFileAuthenticationDetailsProvider(
-  '~/.oci/config',
-  'PRODUCTION'
-);
+const provider = new common.ConfigFileAuthenticationDetailsProvider('~/.oci/config', 'PRODUCTION');
 
 // Create client
 const client = new genai.GenerativeAiInferenceClient({
-  authenticationDetailsProvider: provider
+  authenticationDetailsProvider: provider,
 });
 client.region = common.Region.US_ASHBURN_1;
 ```
 
 **Provider Usage:**
+
 ```typescript
 import { createOCI } from '@acedergren/oci-genai-provider';
 
@@ -211,17 +215,18 @@ const oci = createOCI();
 
 // Specific profile
 const oci = createOCI({
-  profile: 'PRODUCTION'
+  profile: 'PRODUCTION',
 });
 
 // Custom config file
 const oci = createOCI({
   configFile: '/path/to/config',
-  profile: 'CUSTOM'
+  profile: 'CUSTOM',
 });
 ```
 
 **OCI CLI:**
+
 ```bash
 # Uses DEFAULT profile
 oci generative-ai-inference chat ...
@@ -240,10 +245,12 @@ oci generative-ai-inference chat --config-file /path/to/config ...
 **Best for:** Applications running on OCI Compute instances
 
 **Prerequisites:**
+
 1. Create a dynamic group including your compute instance
 2. Create an IAM policy granting the dynamic group access to Generative AI
 
 **Dynamic Group Example:**
+
 ```
 # Match instances in a specific compartment
 ANY {instance.compartment.id = 'ocid1.compartment.oc1..<unique_id>'}
@@ -253,6 +260,7 @@ ANY {instance.id = 'ocid1.instance.oc1..<unique_id>'}
 ```
 
 **IAM Policy Example:**
+
 ```
 # Grant dynamic group access to Generative AI
 Allow dynamic-group GenAI-Compute-DG to use generative-ai-family in compartment GenAI-Compartment
@@ -261,6 +269,7 @@ Allow dynamic-group GenAI-Compute-DG to use generative-ai-family in compartment 
 See [IAM Policies Guide](../iam-policies/) for complete policy requirements.
 
 **TypeScript (OCI SDK):**
+
 ```typescript
 import * as common from 'oci-common';
 import * as genai from 'oci-generativeaiinference';
@@ -270,21 +279,23 @@ const provider = common.ResourcePrincipalAuthenticationDetailsProvider.builder()
 
 // Create client
 const client = new genai.GenerativeAiInferenceClient({
-  authenticationDetailsProvider: provider
+  authenticationDetailsProvider: provider,
 });
 ```
 
 **Provider Usage:**
+
 ```typescript
 import { createOCI } from '@acedergren/oci-genai-provider';
 
 const oci = createOCI({
   auth: 'instance_principal',
-  region: 'us-ashburn-1' // Specify region explicitly
+  region: 'us-ashburn-1', // Specify region explicitly
 });
 ```
 
 **OCI CLI:**
+
 ```bash
 oci generative-ai-inference chat \
   --auth instance_principal \
@@ -299,10 +310,12 @@ oci generative-ai-inference chat \
 **Best for:** OCI Functions, OCI Data Flow, other resource principal contexts
 
 **Prerequisites:**
+
 1. Resource principal is automatically available in supported services
 2. Create IAM policies granting resource access
 
 **IAM Policy Example:**
+
 ```
 # For OCI Functions
 Allow any-user to use generative-ai-family in compartment GenAI-Compartment where ALL {
@@ -312,6 +325,7 @@ Allow any-user to use generative-ai-family in compartment GenAI-Compartment wher
 ```
 
 **TypeScript (OCI SDK):**
+
 ```typescript
 import * as common from 'oci-common';
 import * as genai from 'oci-generativeaiinference';
@@ -321,20 +335,22 @@ const provider = common.ResourcePrincipalAuthenticationDetailsProvider.builder()
 
 // Create client
 const client = new genai.GenerativeAiInferenceClient({
-  authenticationDetailsProvider: provider
+  authenticationDetailsProvider: provider,
 });
 ```
 
 **Provider Usage:**
+
 ```typescript
 import { createOCI } from '@acedergren/oci-genai-provider';
 
 const oci = createOCI({
-  auth: 'resource_principal'
+  auth: 'resource_principal',
 });
 ```
 
 **OCI CLI:**
+
 ```bash
 oci generative-ai-inference chat \
   --auth resource_principal \
@@ -342,6 +358,7 @@ oci generative-ai-inference chat \
 ```
 
 **OCI Functions Example:**
+
 ```typescript
 import fdk from '@fnproject/fdk';
 import { createOCI } from '@acedergren/oci-genai-provider';
@@ -350,12 +367,12 @@ import { generateText } from 'ai';
 fdk.handle(async (input: any) => {
   // Automatically uses resource principal
   const oci = createOCI({
-    auth: 'resource_principal'
+    auth: 'resource_principal',
   });
 
   const { text } = await generateText({
     model: oci('cohere.command-r-plus'),
-    prompt: input.prompt
+    prompt: input.prompt,
   });
 
   return { response: text };
@@ -391,10 +408,10 @@ export OCI_COMPARTMENT_ID="ocid1.compartment.oc1..<unique_id>"
 
 ```typescript
 const oci = createOCI({
-  configFile: '/path/to/config',     // Override config file
-  profile: 'PRODUCTION',              // Override profile
-  region: 'us-ashburn-1',             // Override region
-  auth: 'instance_principal'          // Override auth method
+  configFile: '/path/to/config', // Override config file
+  profile: 'PRODUCTION', // Override profile
+  region: 'us-ashburn-1', // Override region
+  auth: 'instance_principal', // Override auth method
 });
 ```
 
@@ -411,13 +428,14 @@ const oci = createOCI({
 ```
 
 **Resolution Example:**
+
 ```typescript
 // Environment: OCI_CONFIG_PROFILE=PRODUCTION
 // Constructor: profile: 'FRANKFURT'
 // Result: Uses FRANKFURT (constructor overrides environment)
 
 const oci = createOCI({
-  profile: 'FRANKFURT' // This takes precedence
+  profile: 'FRANKFURT', // This takes precedence
 });
 ```
 
@@ -430,25 +448,27 @@ const oci = createOCI({
 OCI Generative AI is available in select regions. Always specify the correct region for your use case.
 
 **Common Regions:**
+
 ```typescript
 import * as common from 'oci-common';
 
 // US Regions
-common.Region.US_ASHBURN_1     // us-ashburn-1 (US East, Ashburn)
-common.Region.US_PHOENIX_1     // us-phoenix-1 (US West, Phoenix)
-common.Region.US_CHICAGO_1     // us-chicago-1 (US Midwest, Chicago)
+common.Region.US_ASHBURN_1; // us-ashburn-1 (US East, Ashburn)
+common.Region.US_PHOENIX_1; // us-phoenix-1 (US West, Phoenix)
+common.Region.US_CHICAGO_1; // us-chicago-1 (US Midwest, Chicago)
 
 // Europe Regions
-common.Region.EU_FRANKFURT_1   // eu-frankfurt-1 (Germany, Frankfurt)
-common.Region.EU_STOCKHOLM_1   // eu-stockholm-1 (Sweden, Stockholm)
-common.Region.UK_LONDON_1      // uk-london-1 (UK, London)
+common.Region.EU_FRANKFURT_1; // eu-frankfurt-1 (Germany, Frankfurt)
+common.Region.EU_STOCKHOLM_1; // eu-stockholm-1 (Sweden, Stockholm)
+common.Region.UK_LONDON_1; // uk-london-1 (UK, London)
 
 // Asia Pacific Regions
-common.Region.AP_TOKYO_1       // ap-tokyo-1 (Japan, Tokyo)
-common.Region.AP_MUMBAI_1      // ap-mumbai-1 (India, Mumbai)
+common.Region.AP_TOKYO_1; // ap-tokyo-1 (Japan, Tokyo)
+common.Region.AP_MUMBAI_1; // ap-mumbai-1 (India, Mumbai)
 ```
 
 **Setting Region:**
+
 ```typescript
 // In config file
 [DEFAULT]
@@ -491,6 +511,7 @@ chmod 700 ~/.oci
 ### Key Management
 
 **✅ DO:**
+
 - Store keys in `~/.oci/` directory
 - Use separate keys for development and production
 - Rotate API keys regularly (every 90 days)
@@ -499,6 +520,7 @@ chmod 700 ~/.oci
 - Use resource principals in cloud deployments
 
 **❌ DON'T:**
+
 - Commit `.pem` files to version control
 - Share API keys between team members
 - Use production keys in development
@@ -539,6 +561,7 @@ rm ~/.oci/oci_api_key_public.pem
 **Problem:** OCI SDK cannot find the configuration file.
 
 **Solutions:**
+
 ```bash
 # Check if file exists
 ls -la ~/.oci/config
@@ -556,12 +579,14 @@ export OCI_CONFIG_FILE="$HOME/.oci/config"
 **Problem:** Authentication failed (401 Unauthorized).
 
 **Check:**
+
 1. **Fingerprint matches**: Compare fingerprint in config with OCI Console
 2. **Key file exists**: `ls -la ~/.oci/oci_api_key.pem`
 3. **Correct user OCID**: Verify user OCID in config
 4. **Key not expired**: Check if API key is still active in Console
 
 **Verify:**
+
 ```bash
 # Test authentication
 oci iam user get --user-id ocid1.user.oc1..<your_id>
@@ -577,6 +602,7 @@ oci iam user get --user-id ocid1.user.oc1..<your_id>
 **Solution:** See [IAM Policies Guide](../iam-policies/) for required policies.
 
 **Verify:**
+
 ```bash
 # Check your permissions
 oci iam policy list --compartment-id <tenancy_ocid>
@@ -590,6 +616,7 @@ oci iam dynamic-group list --compartment-id <tenancy_ocid>
 **Problem:** Your tenancy is not subscribed to the specified region.
 
 **Check subscribed regions:**
+
 ```bash
 oci iam region-subscription list
 ```
@@ -601,11 +628,13 @@ oci iam region-subscription list
 **Problem:** Fingerprint mismatch.
 
 **Get correct fingerprint:**
+
 1. OCI Console → Profile Icon → User Settings → API Keys
 2. Find your key and copy the fingerprint
 3. Update `~/.oci/config` with correct fingerprint
 
 **Generate fingerprint from key:**
+
 ```bash
 openssl rsa -pubout -outform DER -in ~/.oci/oci_api_key.pem | openssl md5 -c
 ```
@@ -677,6 +706,7 @@ jobs:
 ```
 
 **GitHub Secrets:**
+
 - `OCI_CONFIG` - Contents of `~/.oci/config`
 - `OCI_API_KEY` - Contents of `~/.oci/oci_api_key.pem`
 
@@ -692,6 +722,7 @@ jobs:
 ---
 
 **Sources:**
+
 - [OCI SDK Documentation](https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/typescriptsdk.htm)
 - [OCI CLI Configuration](https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/cliconfigure.htm)
 - [OCI API Key Authentication](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/apisigningkey.htm)

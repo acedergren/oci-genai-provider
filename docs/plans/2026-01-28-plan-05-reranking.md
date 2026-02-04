@@ -13,11 +13,13 @@
 ## Prerequisites
 
 **Required:**
+
 - ✅ Plan 1 must be complete
 - Provider implements ProviderV3 interface
 - Shared utilities in `src/shared/` folder
 
 **Recommended:**
+
 - Plan 2 (Embeddings) enhances RAG when combined with reranking
 
 ---
@@ -25,6 +27,7 @@
 ## Task 1: Create Reranking Model Registry
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/reranking-models/registry.ts`
 - Create: `packages/oci-genai-provider/src/reranking-models/__tests__/registry.test.ts`
 
@@ -103,9 +106,7 @@ export function isValidRerankingModelId(modelId: string): boolean {
   return RERANKING_MODELS.some((m) => m.id === modelId);
 }
 
-export function getRerankingModelMetadata(
-  modelId: string
-): RerankingModelMetadata | undefined {
+export function getRerankingModelMetadata(modelId: string): RerankingModelMetadata | undefined {
   return RERANKING_MODELS.find((m) => m.id === modelId);
 }
 
@@ -131,6 +132,7 @@ git commit -m "feat(reranking): add reranking model registry"
 ## Task 2: Implement OCIRerankingModel Class
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/reranking-models/OCIRerankingModel.ts`
 - Create: `packages/oci-genai-provider/src/reranking-models/__tests__/OCIRerankingModel.test.ts`
 
@@ -208,10 +210,7 @@ Expected: FAIL - "Cannot find module '../OCIRerankingModel'"
 Create: `packages/oci-genai-provider/src/reranking-models/OCIRerankingModel.ts`
 
 ```typescript
-import {
-  RerankingModelV3,
-  RerankingModelV3CallOptions,
-} from '@ai-sdk/provider';
+import { RerankingModelV3, RerankingModelV3CallOptions } from '@ai-sdk/provider';
 import { GenerativeAiInferenceClient } from 'oci-generativeaiinference';
 import { createAuthProvider, getCompartmentId, getRegion } from '../auth';
 import { getRerankingModelMetadata, isValidRerankingModelId } from './registry';
@@ -229,8 +228,7 @@ export class OCIRerankingModel implements RerankingModelV3 {
   ) {
     if (!isValidRerankingModelId(modelId)) {
       throw new Error(
-        `Invalid reranking model ID: ${modelId}. ` +
-          `Valid models: cohere.rerank-v3.5`
+        `Invalid reranking model ID: ${modelId}. ` + `Valid models: cohere.rerank-v3.5`
       );
     }
   }
@@ -269,9 +267,7 @@ export class OCIRerankingModel implements RerankingModelV3 {
 
     // Validate we only support text documents
     if (documents.type !== 'text') {
-      throw new Error(
-        `OCI reranking only supports text documents, got: ${documents.type}`
-      );
+      throw new Error(`OCI reranking only supports text documents, got: ${documents.type}`);
     }
 
     const documentTexts = documents.values;
@@ -339,6 +335,7 @@ git commit -m "feat(reranking): implement OCIRerankingModel class"
 ## Task 3: Wire Up Reranking Models to Provider
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/provider.ts`
 - Modify: `packages/oci-genai-provider/src/__tests__/provider.test.ts`
 
@@ -395,10 +392,7 @@ export class OCIProvider implements ProviderV3 {
   /**
    * Create a reranking model instance
    */
-  rerankingModel(
-    modelId: string,
-    settings?: OCIRerankingSettings
-  ): RerankingModelV3 {
+  rerankingModel(modelId: string, settings?: OCIRerankingSettings): RerankingModelV3 {
     const mergedConfig = { ...this.config, ...settings };
     return new OCIRerankingModel(modelId, mergedConfig);
   }
@@ -424,6 +418,7 @@ git commit -m "feat(reranking): wire up reranking models to provider"
 ## Task 4: Export Reranking Models from Index
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/index.ts`
 
 **Step 1: Write test for exports**
@@ -482,6 +477,7 @@ git commit -m "feat(reranking): export reranking models from index"
 ## Task 5: Create Enhanced RAG Example
 
 **Files:**
+
 - Create: `examples/rag-reranking-demo/`
 - Create: `examples/rag-reranking-demo/index.ts`
 - Create: `examples/rag-reranking-demo/package.json`
@@ -525,7 +521,7 @@ async function main() {
     'The Pacific Ocean is the largest ocean on Earth, covering more than 63 million square miles.',
     'Paris is the capital city of France, known for the Eiffel Tower and Louvre Museum.',
     'Python is a high-level programming language created by Guido van Rossum in 1991.',
-    'The Amazon rainforest produces 20% of the Earth\'s oxygen and is home to millions of species.',
+    "The Amazon rainforest produces 20% of the Earth's oxygen and is home to millions of species.",
     'Machine learning is a subset of artificial intelligence that enables systems to learn from data.',
     'The Great Wall of China stretches over 13,000 miles and was built over many centuries.',
     'JavaScript is a programming language primarily used for web development and browser scripting.',
@@ -552,12 +548,10 @@ async function main() {
   const { embedding: queryEmbedding } = await embedMany({
     model: embeddingModel,
     values: [query],
-  }).then(result => ({ embedding: result.embeddings[0] }));
+  }).then((result) => ({ embedding: result.embeddings[0] }));
 
   // Calculate cosine similarity
-  const similarities = embeddings.map((docEmb) =>
-    cosineSimilarity(queryEmbedding, docEmb)
-  );
+  const similarities = embeddings.map((docEmb) => cosineSimilarity(queryEmbedding, docEmb));
 
   // Get top 5 candidates
   const topK = 5;
@@ -631,6 +625,7 @@ git commit -m "feat(reranking): add enhanced RAG example with embeddings + reran
 ## Task 6: Update Documentation
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/README.md`
 - Create: `docs/reranking.md`
 
@@ -648,34 +643,34 @@ import { oci } from '@acedergren/oci-genai-provider';
 import { rerank } from 'ai';
 
 const { ranking } = await rerank({
-  model: oci.rerankingModel('cohere.rerank-v3.5'),
-  query: 'What is machine learning?',
-  documents: [
-    'Machine learning is a subset of AI...',
-    'Python is a programming language...',
-    'The ocean covers 71% of Earth...',
-  ],
-  topN: 2,
+model: oci.rerankingModel('cohere.rerank-v3.5'),
+query: 'What is machine learning?',
+documents: [
+'Machine learning is a subset of AI...',
+'Python is a programming language...',
+'The ocean covers 71% of Earth...',
+],
+topN: 2,
 });
 
 // ranking = [
-//   { index: 0, relevanceScore: 0.98 },
-//   { index: 1, relevanceScore: 0.45 }
+// { index: 0, relevanceScore: 0.98 },
+// { index: 1, relevanceScore: 0.45 }
 // ]
 \`\`\`
 
 ### Available Reranking Models
 
-| Model ID | Max Documents | Multilingual | Use Case |
-|----------|--------------|--------------|----------|
-| `cohere.rerank-v3.5` | 1000 | Yes | Production RAG reranking |
+| Model ID             | Max Documents | Multilingual | Use Case                 |
+| -------------------- | ------------- | ------------ | ------------------------ |
+| `cohere.rerank-v3.5` | 1000          | Yes          | Production RAG reranking |
 
 ### Reranking Options
 
 \`\`\`typescript
 oci.rerankingModel('cohere.rerank-v3.5', {
-  topN: 5,              // Return only top 5 results
-  returnDocuments: true, // Include document text in response
+topN: 5, // Return only top 5 results
+returnDocuments: true, // Include document text in response
 });
 \`\`\`
 
@@ -707,32 +702,34 @@ import { oci } from '@acedergren/oci-genai-provider';
 import { rerank } from 'ai';
 
 const { ranking } = await rerank({
-  model: oci.rerankingModel('cohere.rerank-v3.5'),
-  query: 'What is the fastest programming language?',
-  documents: [
-    'Python is known for its simplicity.',
-    'Rust is designed for performance and safety.',
-    'C++ offers high performance for systems programming.',
-  ],
-  topN: 2,
+model: oci.rerankingModel('cohere.rerank-v3.5'),
+query: 'What is the fastest programming language?',
+documents: [
+'Python is known for its simplicity.',
+'Rust is designed for performance and safety.',
+'C++ offers high performance for systems programming.',
+],
+topN: 2,
 });
 
 console.log(ranking);
 // [
-//   { index: 2, relevanceScore: 0.95 },
-//   { index: 1, relevanceScore: 0.87 }
+// { index: 2, relevanceScore: 0.95 },
+// { index: 1, relevanceScore: 0.87 }
 // ]
 \`\`\`
 
 ## Why Use Reranking?
 
 ### Without Reranking (Embeddings Only)
+
 - Fast similarity search
 - Good recall (finds relevant documents)
 - Can miss nuanced semantic meaning
 - May rank documents with keyword overlap higher
 
 ### With Reranking (Two-Stage Pipeline)
+
 - Combines speed of embeddings with precision of reranking
 - Better semantic understanding
 - Improved relevance for complex queries
@@ -742,7 +739,7 @@ console.log(ranking);
 
 \`\`\`
 Query → Embeddings (retrieve top 50) → Reranking (top 5) → LLM
-         Fast retrieval                  Precise ranking
+Fast retrieval Precise ranking
 \`\`\`
 
 ### Implementation Pattern
@@ -750,8 +747,8 @@ Query → Embeddings (retrieve top 50) → Reranking (top 5) → LLM
 \`\`\`typescript
 // Stage 1: Fast retrieval with embeddings
 const { embeddings } = await embedMany({
-  model: oci.embeddingModel('cohere.embed-multilingual-v3.0'),
-  values: allDocuments, // e.g., 10,000 documents
+model: oci.embeddingModel('cohere.embed-multilingual-v3.0'),
+values: allDocuments, // e.g., 10,000 documents
 });
 
 const topK = 50; // Retrieve top 50 candidates
@@ -759,10 +756,10 @@ const candidates = findTopKSimilar(query, embeddings, topK);
 
 // Stage 2: Precise reranking
 const { ranking } = await rerank({
-  model: oci.rerankingModel('cohere.rerank-v3.5'),
-  query,
-  documents: candidates,
-  topN: 5, // Final top 5 results
+model: oci.rerankingModel('cohere.rerank-v3.5'),
+query,
+documents: candidates,
+topN: 5, // Final top 5 results
 });
 
 // Use top 5 for LLM context
@@ -772,11 +769,13 @@ const finalDocs = ranking.map(r => candidates[r.index]);
 ## Configuration Options
 
 ### topN
+
 - Limit results to top N documents
 - Default: returns all documents ranked
 - Use for focusing on most relevant results
 
 ### returnDocuments
+
 - Include document text in response
 - Default: false (only indices and scores)
 - Set true if you need the text in response
@@ -792,15 +791,17 @@ const finalDocs = ranking.map(r => candidates[r.index]);
 ## Examples
 
 ### Basic Reranking
+
 \`\`\`typescript
 const { ranking } = await rerank({
-  model: oci.rerankingModel('cohere.rerank-v3.5'),
-  query: 'machine learning frameworks',
-  documents: ['PyTorch...', 'TensorFlow...', 'Scikit-learn...'],
+model: oci.rerankingModel('cohere.rerank-v3.5'),
+query: 'machine learning frameworks',
+documents: ['PyTorch...', 'TensorFlow...', 'Scikit-learn...'],
 });
 \`\`\`
 
 ### Enhanced RAG
+
 See `examples/rag-reranking-demo/index.ts` for a complete two-stage RAG pipeline.
 
 ## Limitations
@@ -812,6 +813,7 @@ See `examples/rag-reranking-demo/index.ts` for a complete two-stage RAG pipeline
 ## Integration with Plan 2 (Embeddings)
 
 Reranking works best when combined with embeddings:
+
 - Use Plan 2 embeddings for initial retrieval
 - Use Plan 5 reranking for final precision
 - Together they create a production-ready RAG pipeline
@@ -847,15 +849,18 @@ After completing all tasks:
 **Plan 5 Complete!** 🎉
 
 Reranking is now fully functional. Your provider supports:
+
 - ✅ Language Models (Plan 1)
 - ✅ Embeddings (Plan 2)
 - ✅ Reranking (Plan 5)
 
 Continue with:
+
 - **Plan 3**: Speech Models (TTS) - Can run in parallel
 - **Plan 4**: Transcription Models (STT) - Can run in parallel
 
 **Production RAG Stack**: Combine Plans 1, 2, and 5 for a complete RAG pipeline:
+
 1. Embed documents (Plan 2)
 2. Retrieve candidates (Plan 2)
 3. Rerank for precision (Plan 5)

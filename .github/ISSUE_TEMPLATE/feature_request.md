@@ -1,9 +1,9 @@
 ---
 name: Feature Request
 about: Suggest an idea for this project
-title: "[FEATURE] "
+title: '[FEATURE] '
 labels: enhancement
-assignees: ""
+assignees: ''
 ---
 
 ## Description
@@ -26,7 +26,9 @@ Any alternative approaches you've considered.
 
 ```typescript
 // Show how the feature would be used
-const client = createOCIOpenAI({ /* config */ });
+const client = createOCIOpenAI({
+  /* config */
+});
 
 // New feature in action
 const result = await client.someNewFeature({

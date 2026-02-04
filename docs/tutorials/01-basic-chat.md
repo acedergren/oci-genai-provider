@@ -23,13 +23,13 @@ import { createOCI } from '@acedergren/oci-genai-provider';
 import { generateText } from 'ai';
 
 const oci = createOCI({
-  region: 'eu-frankfurt-1',
-  profile: 'DEFAULT'
+region: 'eu-frankfurt-1',
+profile: 'DEFAULT'
 });
 
 const { text } = await generateText({
-  model: oci('meta.llama-3.3-70b-instruct'),
-  prompt: 'Explain quantum computing in simple terms'
+model: oci('meta.llama-3.3-70b-instruct'),
+prompt: 'Explain quantum computing in simple terms'
 });
 
 console.log(text);

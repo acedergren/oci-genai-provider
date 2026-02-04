@@ -13,6 +13,7 @@
 ## Prerequisites
 
 **Required:**
+
 - ✅ Plans 1-5 must be complete
 - All model types implemented (language, embeddings, speech, transcription, reranking)
 - Provider implements ProviderV3 interface
@@ -23,6 +24,7 @@
 ## Task 1: Enhance Jest Coverage Configuration
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/jest.config.js`
 - Create: `packages/oci-genai-provider/.coveragerc`
 
@@ -88,13 +90,7 @@ module.exports = {
       statements: 80,
     },
   },
-  coverageReporters: [
-    'text',
-    'text-summary',
-    'html',
-    'lcov',
-    'json',
-  ],
+  coverageReporters: ['text', 'text-summary', 'html', 'lcov', 'json'],
   coverageDirectory: '<rootDir>/coverage',
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
@@ -152,6 +148,7 @@ git commit -m "feat(testing): enhance Jest coverage configuration with 80% thres
 ## Task 2: Create Shared Test Utilities
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/__tests__/utils/test-helpers.ts`
 - Create: `packages/oci-genai-provider/src/__tests__/utils/__tests__/test-helpers.test.ts`
 
@@ -227,17 +224,17 @@ describe('Test Helpers', () => {
   describe('waitForCondition', () => {
     it('should resolve when condition becomes true', async () => {
       let value = false;
-      setTimeout(() => { value = true; }, 100);
+      setTimeout(() => {
+        value = true;
+      }, 100);
 
-      await expect(
-        waitForCondition(() => value, 500)
-      ).resolves.toBe(undefined);
+      await expect(waitForCondition(() => value, 500)).resolves.toBe(undefined);
     });
 
     it('should timeout if condition never becomes true', async () => {
-      await expect(
-        waitForCondition(() => false, 100)
-      ).rejects.toThrow('Condition not met within 100ms');
+      await expect(waitForCondition(() => false, 100)).rejects.toThrow(
+        'Condition not met within 100ms'
+      );
     });
   });
 });
@@ -258,9 +255,7 @@ import type { OCIBaseConfig } from '../../types';
 /**
  * Create a mock OCI config for testing
  */
-export function createMockOCIConfig(
-  overrides: Partial<OCIBaseConfig> = {}
-): OCIBaseConfig {
+export function createMockOCIConfig(overrides: Partial<OCIBaseConfig> = {}): OCIBaseConfig {
   return {
     region: 'eu-frankfurt-1',
     compartmentId: 'ocid1.compartment.oc1..aaaaaaatest',
@@ -364,11 +359,12 @@ export async function waitForCondition(
  * Create a mock streaming response
  */
 export function createMockStreamChunks(texts: string[]): string[] {
-  return texts.map((text) =>
-    `data: ${JSON.stringify({
-      chatResponse: { text },
-      finishReason: null,
-    })}\n\n`
+  return texts.map(
+    (text) =>
+      `data: ${JSON.stringify({
+        chatResponse: { text },
+        finishReason: null,
+      })}\n\n`
   );
 }
 
@@ -417,6 +413,7 @@ git commit -m "feat(testing): add shared test utilities and helpers"
 ## Task 3: Create Shared Mock Providers
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/__tests__/mocks/oci-mocks.ts`
 - Create: `packages/oci-genai-provider/src/__tests__/mocks/__tests__/oci-mocks.test.ts`
 
@@ -426,11 +423,7 @@ Create: `packages/oci-genai-provider/src/__tests__/mocks/__tests__/oci-mocks.tes
 
 ```typescript
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import {
-  mockGenerativeAiInferenceClient,
-  mockAuthProvider,
-  resetAllMocks,
-} from '../oci-mocks';
+import { mockGenerativeAiInferenceClient, mockAuthProvider, resetAllMocks } from '../oci-mocks';
 
 describe('OCI Mocks', () => {
   beforeEach(() => {
@@ -501,12 +494,14 @@ import { createMockOCIResponse } from '../utils/test-helpers';
 /**
  * Mock GenerativeAiInferenceClient
  */
-export function mockGenerativeAiInferenceClient(options: {
-  chatResponse?: any;
-  embedResponse?: any;
-  shouldError?: boolean;
-  errorType?: 'RateLimit' | 'Authentication' | 'Network';
-} = {}) {
+export function mockGenerativeAiInferenceClient(
+  options: {
+    chatResponse?: any;
+    embedResponse?: any;
+    shouldError?: boolean;
+    errorType?: 'RateLimit' | 'Authentication' | 'Network';
+  } = {}
+) {
   const mock = {
     region: 'eu-frankfurt-1',
     endpoint: 'https://inference.generativeai.eu-frankfurt-1.oci.oraclecloud.com',
@@ -553,12 +548,16 @@ export function mockGenerativeAiInferenceClient(options: {
  */
 export function mockAuthProvider() {
   return {
-    getKeyId: jest.fn().mockResolvedValue('ocid1.tenancy.oc1..test/ocid1.user.oc1..test/fingerprint'),
+    getKeyId: jest
+      .fn()
+      .mockResolvedValue('ocid1.tenancy.oc1..test/ocid1.user.oc1..test/fingerprint'),
     getTenancyId: jest.fn().mockResolvedValue('ocid1.tenancy.oc1..test'),
     getUserId: jest.fn().mockResolvedValue('ocid1.user.oc1..test'),
     getFingerprint: jest.fn().mockResolvedValue('test:fingerprint'),
     getPassphrase: jest.fn().mockResolvedValue(null),
-    getPrivateKey: jest.fn().mockResolvedValue('-----BEGIN RSA PRIVATE KEY-----\ntest\n-----END RSA PRIVATE KEY-----'),
+    getPrivateKey: jest
+      .fn()
+      .mockResolvedValue('-----BEGIN RSA PRIVATE KEY-----\ntest\n-----END RSA PRIVATE KEY-----'),
   };
 }
 
@@ -591,15 +590,13 @@ export function resetAllMocks(): void {
  */
 export const mockOCIModules = () => {
   jest.mock('oci-generativeaiinference', () => ({
-    GenerativeAiInferenceClient: jest.fn().mockImplementation(() =>
-      mockGenerativeAiInferenceClient()
-    ),
+    GenerativeAiInferenceClient: jest
+      .fn()
+      .mockImplementation(() => mockGenerativeAiInferenceClient()),
   }));
 
   jest.mock('oci-common', () => ({
-    ConfigFileAuthenticationDetailsProvider: jest.fn().mockImplementation(() =>
-      mockAuthProvider()
-    ),
+    ConfigFileAuthenticationDetailsProvider: jest.fn().mockImplementation(() => mockAuthProvider()),
   }));
 };
 ```
@@ -621,6 +618,7 @@ git commit -m "feat(testing): add shared OCI mock providers"
 ## Task 4: Add Integration Tests for Each Model Type
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/__tests__/integration/language-models.integration.test.ts`
 - Create: `packages/oci-genai-provider/src/__tests__/integration/embedding-models.integration.test.ts`
 - Create: `packages/oci-genai-provider/src/__tests__/integration/speech-models.integration.test.ts`
@@ -765,9 +763,7 @@ describe('Embedding Models Integration', () => {
       const model = provider.embeddingModel('cohere.embed-multilingual-v3.0');
       const texts = Array(97).fill('test');
 
-      await expect(
-        model.doEmbed({ values: texts })
-      ).rejects.toThrow('Batch size');
+      await expect(model.doEmbed({ values: texts })).rejects.toThrow('Batch size');
     });
   });
 
@@ -952,6 +948,7 @@ git commit -m "feat(testing): add comprehensive integration tests for all model 
 ## Task 5: Create E2E Test Suite (Optional)
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/__tests__/e2e/full-workflow.e2e.test.ts`
 
 **Step 1: Write E2E test**
@@ -1044,6 +1041,7 @@ git commit -m "feat(testing): add E2E workflow tests"
 ## Task 6: Set Up GitHub Actions CI
 
 **Files:**
+
 - Create: `.github/workflows/test.yml`
 - Modify: `.github/workflows/ci.yml`
 
@@ -1175,27 +1173,27 @@ Modify `.github/workflows/ci.yml` to add test job:
 
 ```yaml
 # Add after lint job:
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    needs: lint
+test:
+  name: Test
+  runs-on: ubuntu-latest
+  needs: lint
 
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20.x
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 8
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 8
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
 
-      - name: Run tests
-        run: pnpm test:coverage:ci
-        working-directory: packages/oci-genai-provider
+    - name: Run tests
+      run: pnpm test:coverage:ci
+      working-directory: packages/oci-genai-provider
 ```
 
 **Step 3: Test CI locally (if using act)**
@@ -1215,6 +1213,7 @@ git commit -m "ci: add comprehensive test workflows with coverage reporting"
 ## Task 7: Add Pre-Commit Test Hooks
 
 **Files:**
+
 - Create: `.husky/pre-commit`
 - Modify: `package.json` (root)
 
@@ -1272,6 +1271,7 @@ Modify root `package.json`:
 **Step 5: Test pre-commit hook**
 
 Make a small change and commit:
+
 ```bash
 echo "// test" >> packages/oci-genai-provider/src/types.ts
 git add .
@@ -1299,6 +1299,7 @@ git commit -m "feat(testing): add pre-commit hooks for test enforcement"
 ## Task 8: Create Test Fixtures
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/__tests__/fixtures/language-model-responses.ts`
 - Create: `packages/oci-genai-provider/src/__tests__/fixtures/embedding-responses.ts`
 - Create: `packages/oci-genai-provider/src/__tests__/fixtures/common-scenarios.ts`
@@ -1511,11 +1512,7 @@ export const COMMON_SCENARIOS = {
         'cohere.command-r-08-2024',
         'cohere.command-r-plus-08-2024',
       ],
-      meta: [
-        'meta.llama-3.3-70b',
-        'meta.llama-3.1-405b-instruct',
-        'meta.llama-3.1-70b',
-      ],
+      meta: ['meta.llama-3.3-70b', 'meta.llama-3.1-405b-instruct', 'meta.llama-3.1-70b'],
     },
     embedding: [
       'cohere.embed-multilingual-v3.0',
@@ -1548,6 +1545,7 @@ git commit -m "feat(testing): add comprehensive test fixtures for common scenari
 ## Task 9: Document Testing Best Practices
 
 **Files:**
+
 - Create: `docs/testing-guide.md`
 - Modify: `packages/oci-genai-provider/README.md`
 
@@ -1563,51 +1561,57 @@ Create: `docs/testing-guide.md`
 This guide covers testing practices for the OCI GenAI Provider, including unit tests, integration tests, and E2E tests.
 
 ## Test Structure
+```
 
-```
 src/
-├── __tests__/
-│   ├── utils/           # Shared test utilities
-│   ├── mocks/           # Shared mock providers
-│   ├── fixtures/        # Test data fixtures
-│   ├── integration/     # Integration tests
-│   └── e2e/             # End-to-end tests
-├── provider.test.ts     # Provider tests
+├── **tests**/
+│ ├── utils/ # Shared test utilities
+│ ├── mocks/ # Shared mock providers
+│ ├── fixtures/ # Test data fixtures
+│ ├── integration/ # Integration tests
+│ └── e2e/ # End-to-end tests
+├── provider.test.ts # Provider tests
 ├── language-models/
-│   └── __tests__/       # Language model tests
+│ └── **tests**/ # Language model tests
 ├── embedding-models/
-│   └── __tests__/       # Embedding tests
+│ └── **tests**/ # Embedding tests
 └── (other model types...)
-```
+
+````
 
 ## Running Tests
 
 ### All Tests
 ```bash
 pnpm test
-```
+````
 
 ### With Coverage
+
 ```bash
 pnpm test:coverage
 ```
 
 ### Watch Mode
+
 ```bash
 pnpm test:watch
 ```
 
 ### Unit Tests Only
+
 ```bash
 pnpm test:unit
 ```
 
 ### Integration Tests Only
+
 ```bash
 pnpm test:integration
 ```
 
 ### CI Mode
+
 ```bash
 pnpm test:coverage:ci
 ```
@@ -1619,6 +1623,7 @@ pnpm test:coverage:ci
 **Location:** `src/<module>/__tests__/<file>.test.ts`
 
 **Example:**
+
 ```typescript
 import { describe, it, expect } from '@jest/globals';
 import { OCIProvider } from '../provider';
@@ -1639,6 +1644,7 @@ describe('OCIProvider', () => {
 **Location:** `src/__tests__/integration/<feature>.integration.test.ts`
 
 **Example:**
+
 ```typescript
 import { describe, it, expect, beforeAll } from '@jest/globals';
 import { OCIProvider } from '../../provider';
@@ -1684,11 +1690,7 @@ const error = mockOCIError('RateLimit', 'Too many requests');
 ### Using Fixtures
 
 ```typescript
-import {
-  LANGUAGE_MODEL_FIXTURES,
-  EMBEDDING_FIXTURES,
-  COMMON_SCENARIOS,
-} from '../fixtures';
+import { LANGUAGE_MODEL_FIXTURES, EMBEDDING_FIXTURES, COMMON_SCENARIOS } from '../fixtures';
 
 // Use predefined responses
 const response = LANGUAGE_MODEL_FIXTURES.simpleCompletion;
@@ -1732,11 +1734,13 @@ const mockClient = mockGenerativeAiInferenceClient({
 ## Best Practices
 
 ### 1. Test Isolation
+
 - Each test should be independent
 - Use `beforeEach` to reset state
 - Don't rely on test execution order
 
 ### 2. Descriptive Names
+
 ```typescript
 // ✅ Good
 it('should throw error when model ID is invalid', () => {});
@@ -1746,6 +1750,7 @@ it('test 1', () => {});
 ```
 
 ### 3. Arrange-Act-Assert
+
 ```typescript
 it('should create language model', () => {
   // Arrange
@@ -1760,6 +1765,7 @@ it('should create language model', () => {
 ```
 
 ### 4. Test Both Happy and Error Paths
+
 ```typescript
 describe('languageModel', () => {
   it('should create model with valid ID', () => {
@@ -1773,11 +1779,13 @@ describe('languageModel', () => {
 ```
 
 ### 5. Use Test Fixtures
+
 - Prefer fixtures over inline test data
 - Keep fixtures in `src/__tests__/fixtures/`
 - Update fixtures when API changes
 
 ### 6. Mock External Dependencies
+
 - Always mock OCI SDK in unit tests
 - Use real SDK only in manual integration tests
 - Mock network calls to prevent flakiness
@@ -1785,11 +1793,13 @@ describe('languageModel', () => {
 ## CI/CD Integration
 
 Tests run automatically on:
+
 - Every push to main
 - Every pull request
 - Pre-commit (unit tests only)
 
 ### Pre-Commit Hook
+
 ```bash
 # Runs automatically before commit
 # - Type checking
@@ -1798,6 +1808,7 @@ Tests run automatically on:
 ```
 
 ### CI Pipeline
+
 ```bash
 # Full test suite on PR/push
 # - Type checking
@@ -1811,11 +1822,13 @@ Tests run automatically on:
 ## Troubleshooting
 
 ### Tests Timeout
+
 - Increase timeout: `jest.setTimeout(30000)`
 - Check for unresolved promises
 - Ensure mocks are properly configured
 
 ### Coverage Below Threshold
+
 ```bash
 # Find uncovered lines
 pnpm test:coverage
@@ -1823,6 +1836,7 @@ open coverage/lcov-report/index.html
 ```
 
 ### Open Handles Warning
+
 - OCI SDK clients may not close properly
 - Use `forceExit: true` in jest.config.js
 - Or manually close clients in `afterAll`
@@ -1832,7 +1846,8 @@ open coverage/lcov-report/index.html
 - [Jest Documentation](https://jestjs.io/)
 - [Testing Best Practices](https://testingjavascript.com/)
 - [AI SDK Testing Guide](https://sdk.vercel.ai/docs/testing)
-```
+
+````
 
 **Step 2: Add testing section to README**
 
@@ -1882,7 +1897,7 @@ See [Testing Guide](../../docs/testing-guide.md) for detailed information on:
 - Writing integration tests
 - Using test helpers and mocks
 - Test fixtures and best practices
-```
+````
 
 **Step 3: Commit**
 
@@ -1922,6 +1937,7 @@ After completing all tasks:
 ### Coverage Metrics Verification
 
 Run coverage and verify:
+
 ```bash
 pnpm test:coverage
 
@@ -1936,11 +1952,13 @@ pnpm test:coverage
 ### CI Verification
 
 Push branch and verify:
+
 ```bash
 git push origin testing-infrastructure
 ```
 
 Check GitHub Actions:
+
 - [ ] Test workflow runs
 - [ ] All jobs pass
 - [ ] Coverage report generated
@@ -1953,6 +1971,7 @@ Check GitHub Actions:
 **Plan 7 Complete!** 🎉
 
 Testing infrastructure is now comprehensive with:
+
 - ✅ 80%+ coverage across all model types
 - ✅ Shared test utilities and mocks
 - ✅ Integration and E2E tests
@@ -1961,6 +1980,7 @@ Testing infrastructure is now comprehensive with:
 - ✅ Comprehensive documentation
 
 You can now confidently:
+
 - **Merge to main** - All quality gates enforced
 - **Plan 8**: Documentation & Examples - Comprehensive guides
 - **Plan 9**: Performance Optimization - Benchmarks and tuning

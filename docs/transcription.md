@@ -7,18 +7,18 @@ OCI Speech service converts audio files to text with support for 21+ languages (
 ## Quick Start
 
 ```typescript
-import { oci } from "@acedergren/oci-genai-provider";
-import { transcribe } from "ai";
-import { readFileSync } from "fs";
+import { oci } from '@acedergren/oci-genai-provider';
+import { transcribe } from 'ai';
+import { readFileSync } from 'fs';
 
-const audioData = readFileSync("recording.wav");
+const audioData = readFileSync('recording.wav');
 
 const { text, language } = await transcribe({
-  model: oci.transcriptionModel("oci.speech.standard"),
+  model: oci.transcriptionModel('oci.speech.standard'),
   audioData,
 });
 
-console.log("Transcript:", text);
+console.log('Transcript:', text);
 ```
 
 ## Models
@@ -44,8 +44,8 @@ console.log("Transcript:", text);
 ### Language Selection
 
 ```typescript
-const model = oci.transcriptionModel("oci.speech.standard", {
-  language: "en-US", // Default: "en-US"
+const model = oci.transcriptionModel('oci.speech.standard', {
+  language: 'en-US', // Default: "en-US"
 });
 ```
 
@@ -54,8 +54,8 @@ const model = oci.transcriptionModel("oci.speech.standard", {
 Improve accuracy for domain-specific terms (standard model only):
 
 ```typescript
-const model = oci.transcriptionModel("oci.speech.standard", {
-  vocabulary: ["OpenCode", "GenAI", "Kubernetes", "PostgreSQL"],
+const model = oci.transcriptionModel('oci.speech.standard', {
+  vocabulary: ['OpenCode', 'GenAI', 'Kubernetes', 'PostgreSQL'],
 });
 ```
 
@@ -93,17 +93,17 @@ The SDK handles all polling automatically.
 ```typescript
 try {
   const { text } = await transcribe({
-    model: oci.transcriptionModel("oci.speech.standard"),
+    model: oci.transcriptionModel('oci.speech.standard'),
     audioData,
   });
 } catch (error) {
-  console.error("Transcription failed:", error.message);
+  console.error('Transcription failed:', error.message);
 }
 ```
 
 ## Examples
 
 See `examples/stt-demo/` for:
+
 - Basic transcription example
 - Multilingual transcription
-

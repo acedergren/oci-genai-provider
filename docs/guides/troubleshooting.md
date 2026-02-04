@@ -7,17 +7,20 @@ Solutions for common issues with the OCI GenAI Provider.
 ### "NotAuthenticated" or 401
 
 **Symptoms:**
+
 - Requests fail immediately
 - Error contains "NotAuthenticated" or status 401
 
 **Solutions:**
 
 1. **Verify your OCI config exists and is formatted correctly:**
+
    ```bash
    cat ~/.oci/config
    ```
 
    Should look like:
+
    ```ini
    [DEFAULT]
    user=ocid1.user.oc1..aaaa...
@@ -33,11 +36,13 @@ Solutions for common issues with the OCI GenAI Provider.
    - Check file permissions: `chmod 600 ~/.oci/oci_api_key.pem`
 
 3. **Verify profile being used:**
+
    ```bash
    export OCI_CONFIG_PROFILE=DEFAULT
    ```
 
 4. **Test with OCI CLI:**
+
    ```bash
    oci iam region list
    ```
@@ -47,6 +52,7 @@ Solutions for common issues with the OCI GenAI Provider.
 ### "NotAuthorizedOrNotFound" or 403
 
 **Symptoms:**
+
 - Error with status 403
 - "User does not have permission" message
 
@@ -67,20 +73,22 @@ See [IAM Policies Guide](./iam-policies/README.md) for complete policy requireme
 ### Model Not Found
 
 **Symptoms:**
+
 - Error indicates model ID not found
 - Request returns 404
 
 **Solutions:**
 
 1. **Verify model ID spelling (case-sensitive):**
+
    ```typescript
    // Correct
-   'cohere.command-r-plus'
-   'meta.llama-3.3-70b-instruct'
+   'cohere.command-r-plus';
+   'meta.llama-3.3-70b-instruct';
 
    // Wrong
-   'cohere.Command-R-Plus'
-   'meta.llama-3.3'
+   'cohere.Command-R-Plus';
+   'meta.llama-3.3';
    ```
 
 2. **Check regional availability:**
@@ -94,6 +102,7 @@ See [IAM Policies Guide](./iam-policies/README.md) for complete policy requireme
 ### Model Capacity Exceeded
 
 **Solutions:**
+
 - The provider automatically retries (3 attempts with exponential backoff)
 - For persistent issues, contact OCI support to increase quotas
 - Consider using a different model as fallback
@@ -105,6 +114,7 @@ See [IAM Policies Guide](./iam-policies/README.md) for complete policy requireme
 ### Connection Reset or Socket Hang Up
 
 **Symptoms:**
+
 - Intermittent connection failures
 - "ECONNRESET" or "socket hang up" errors
 
@@ -113,6 +123,7 @@ See [IAM Policies Guide](./iam-policies/README.md) for complete policy requireme
 1. **Built-in retry handles most cases** — The provider automatically retries network errors.
 
 2. **Increase timeout for slow networks:**
+
    ```typescript
    const model = oci('cohere.command-r-plus', {
      compartmentId: process.env.OCI_COMPARTMENT_ID!,
@@ -131,6 +142,7 @@ See [IAM Policies Guide](./iam-policies/README.md) for complete policy requireme
 **Solutions:**
 
 1. **Increase timeout:**
+
    ```typescript
    requestOptions: {
      timeoutMs: 120000, // 2 minutes for long generations
@@ -147,6 +159,7 @@ See [IAM Policies Guide](./iam-policies/README.md) for complete policy requireme
 ### 429 Too Many Requests
 
 **Symptoms:**
+
 - Error with status code 429
 - "Too many requests" message
 
@@ -155,8 +168,9 @@ See [IAM Policies Guide](./iam-policies/README.md) for complete policy requireme
 1. **Automatic retry** — The provider retries 429 errors and respects `Retry-After` headers.
 
 2. **Reduce request frequency:**
+
    ```typescript
-   await new Promise(r => setTimeout(r, 1000));
+   await new Promise((r) => setTimeout(r, 1000));
    ```
 
 3. **Request quota increase** — Contact OCI support for higher limits.
@@ -172,6 +186,7 @@ See [IAM Policies Guide](./iam-policies/README.md) for complete policy requireme
 1. **Network interruption** — Check stability; provider will throw error that can be caught.
 
 2. **Token limit reached:**
+
    ```typescript
    const result = await streamText({ model, prompt });
    for await (const chunk of result.textStream) {
@@ -188,6 +203,7 @@ See [IAM Policies Guide](./iam-policies/README.md) for complete policy requireme
 **Solutions:**
 
 1. **Verify async iteration:**
+
    ```typescript
    // Correct
    for await (const chunk of result.textStream) {
@@ -195,7 +211,8 @@ See [IAM Policies Guide](./iam-policies/README.md) for complete policy requireme
    }
 
    // Wrong - missing await
-   for (const chunk of result.textStream) { }
+   for (const chunk of result.textStream) {
+   }
    ```
 
 2. **Ensure response is consumed:**
@@ -209,6 +226,7 @@ See [IAM Policies Guide](./iam-policies/README.md) for complete policy requireme
 ### "OCI_COMPARTMENT_ID is required"
 
 **Solution:**
+
 ```bash
 # Find your compartment ID
 oci iam compartment list --all
@@ -220,10 +238,12 @@ export OCI_COMPARTMENT_ID=ocid1.compartment.oc1..aaaa...
 ### Wrong Region
 
 **Symptoms:**
+
 - "Service not available in region"
 - Unexpected latency
 
 **Solution:**
+
 ```bash
 # Regions with GenAI service
 export OCI_REGION=us-ashburn-1   # US
@@ -240,6 +260,7 @@ export OCI_REGION=uk-london-1    # UK
 **Problem:** Version mismatch between provider and AI SDK
 
 **Solution:**
+
 ```json
 {
   "dependencies": {
@@ -254,6 +275,7 @@ export OCI_REGION=uk-london-1    # UK
 **Solutions:**
 
 1. **Check installation:**
+
    ```bash
    pnpm install @acedergren/oci-genai-provider
    ```
@@ -275,6 +297,7 @@ DEBUG=oci-genai:* node your-script.js
 ```
 
 For specific modules:
+
 ```bash
 DEBUG=oci-genai:auth node your-script.js
 DEBUG=oci-genai:streaming node your-script.js

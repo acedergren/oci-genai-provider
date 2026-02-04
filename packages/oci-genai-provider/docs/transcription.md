@@ -49,7 +49,7 @@ import { createReadStream } from 'fs';
 const audioStream = createReadStream('./meeting.wav');
 const audioBuffer = await new Promise<Buffer>((resolve, reject) => {
   const chunks: Buffer[] = [];
-  audioStream.on('data', chunk => chunks.push(chunk));
+  audioStream.on('data', (chunk) => chunks.push(chunk));
   audioStream.on('end', () => resolve(Buffer.concat(chunks)));
   audioStream.on('error', reject);
 });

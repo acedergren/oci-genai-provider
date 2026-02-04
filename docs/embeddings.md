@@ -40,17 +40,17 @@ const customModel = oci.embeddingModel('cohere.embed-english-v3.0', {
 ```typescript
 interface OCIEmbeddingSettings {
   // OCI Configuration
-  region?: string;                  // Default: 'eu-frankfurt-1'
-  profile?: string;                 // Default: 'DEFAULT'
+  region?: string; // Default: 'eu-frankfurt-1'
+  profile?: string; // Default: 'DEFAULT'
   auth?: 'config_file' | 'instance_principal' | 'resource_principal';
-  configPath?: string;              // Default: '~/.oci/config'
-  compartmentId?: string;           // Required or via environment
-  endpoint?: string;                // Custom endpoint for testing
-  
+  configPath?: string; // Default: '~/.oci/config'
+  compartmentId?: string; // Required or via environment
+  endpoint?: string; // Custom endpoint for testing
+
   // Embedding-specific options
-  truncate?: 'START' | 'END' | 'NONE';  // Default: 'END'
-  inputType?: 'QUERY' | 'DOCUMENT';     // Default: 'DOCUMENT'
-  dimensions?: 384 | 1024;               // Model dependent
+  truncate?: 'START' | 'END' | 'NONE'; // Default: 'END'
+  inputType?: 'QUERY' | 'DOCUMENT'; // Default: 'DOCUMENT'
+  dimensions?: 384 | 1024; // Model dependent
 }
 ```
 
@@ -64,13 +64,13 @@ const model = oci.embeddingModel('cohere.embed-multilingual-v3.0');
 
 **Best for:** Multilingual applications, cross-language search
 
-| Property | Value |
-|----------|-------|
-| Dimensions | 1024 |
+| Property       | Value      |
+| -------------- | ---------- |
+| Dimensions     | 1024       |
 | Context Length | 512 tokens |
-| Max Batch | 96 texts |
-| Languages | 100+ |
-| Speed | Medium |
+| Max Batch      | 96 texts   |
+| Languages      | 100+       |
+| Speed          | Medium     |
 
 ### Cohere Embed English v3.0
 
@@ -80,13 +80,13 @@ const model = oci.embeddingModel('cohere.embed-english-v3.0');
 
 **Best for:** English-only applications requiring highest accuracy
 
-| Property | Value |
-|----------|-------|
-| Dimensions | 1024 |
+| Property       | Value      |
+| -------------- | ---------- |
+| Dimensions     | 1024       |
 | Context Length | 512 tokens |
-| Max Batch | 96 texts |
-| Languages | English |
-| Speed | Medium |
+| Max Batch      | 96 texts   |
+| Languages      | English    |
+| Speed          | Medium     |
 
 ### Cohere Embed English Light v3.0
 
@@ -96,13 +96,13 @@ const model = oci.embeddingModel('cohere.embed-english-light-v3.0');
 
 **Best for:** Fast embeddings when speed is priority over accuracy
 
-| Property | Value |
-|----------|-------|
-| Dimensions | 384 |
+| Property       | Value      |
+| -------------- | ---------- |
+| Dimensions     | 384        |
 | Context Length | 512 tokens |
-| Max Batch | 96 texts |
-| Languages | English |
-| Speed | Fast |
+| Max Batch      | 96 texts   |
+| Languages      | English    |
+| Speed          | Fast       |
 
 ## API Usage
 
@@ -261,11 +261,7 @@ import { oci } from '@acedergren/oci-genai-provider';
 import { embedMany, embed } from 'ai';
 
 // 1. Index your documents
-const documents = [
-  'The sky is blue.',
-  'Grass is green.',
-  'The sea is also blue.',
-];
+const documents = ['The sky is blue.', 'Grass is green.', 'The sea is also blue.'];
 
 const { embeddings: docEmbeddings } = await embedMany({
   model: oci.embeddingModel('cohere.embed-multilingual-v3.0'),
@@ -287,9 +283,7 @@ function cosineSimilarity(a: number[], b: number[]): number {
   return dotProduct / (magnitudeA * magnitudeB);
 }
 
-const similarities = docEmbeddings.map((docEmb) =>
-  cosineSimilarity(queryEmbedding, docEmb)
-);
+const similarities = docEmbeddings.map((docEmb) => cosineSimilarity(queryEmbedding, docEmb));
 
 const results = documents
   .map((doc, i) => ({ doc, similarity: similarities[i] }))
@@ -375,11 +369,7 @@ const { embeddings } = await embedMany({
 });
 
 // Simple clustering: group by similarity
-function clusterDocuments(
-  docs: string[],
-  embeddings: number[][],
-  threshold: number
-) {
+function clusterDocuments(docs: string[], embeddings: number[][], threshold: number) {
   const clusters: string[][] = [];
 
   for (let i = 0; i < docs.length; i++) {
@@ -413,11 +403,7 @@ clusters.forEach((cluster, i) => {
 ## Error Handling
 
 ```typescript
-import {
-  OCIGenAIError,
-  NetworkError,
-  AuthenticationError,
-} from '@acedergren/oci-genai-provider';
+import { OCIGenAIError, NetworkError, AuthenticationError } from '@acedergren/oci-genai-provider';
 
 try {
   const { embedding } = await embed({
@@ -470,6 +456,7 @@ try {
 ## Examples
 
 See [RAG Demo Example](../examples/rag-demo) for a complete working example demonstrating:
+
 - Embedding documents
 - Searching with semantic similarity
 - Finding most relevant results

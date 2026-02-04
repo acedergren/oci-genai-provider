@@ -7,36 +7,43 @@ This document provides a comprehensive overview of AI SDK v6 features and their 
 ### Core Text Generation
 
 ✅ **Streaming and Non-Streaming Generation**
+
 - Both `streamText()` and `generateText()` are fully supported
 - Streaming uses Server-Sent Events (SSE) for real-time token delivery
 - Non-streaming returns complete responses in a single API call
 
 ✅ **Temperature Control**
+
 - Range: 0.0 to 1.0
 - Controls randomness in output generation
 - Lower values = more deterministic, higher values = more creative
 
 ✅ **Max Tokens**
+
 - Controls maximum length of generated response
 - Supported across all model families
 - Default and maximum values vary by model
 
 ✅ **Top-P (Nucleus Sampling)**
+
 - Range: 0.0 to 1.0
 - Cumulative probability threshold for token selection
 - Alternative to temperature for controlling randomness
 
 ✅ **Top-K Sampling**
+
 - Integer value limiting candidate tokens
 - Not all models support this parameter
 - Works with COHERE-formatted models
 
 ✅ **Presence Penalty**
+
 - Range: -2.0 to 2.0
 - Reduces likelihood of repeating any tokens
 - Encourages topic diversity
 
 ✅ **Frequency Penalty**
+
 - Range: -2.0 to 2.0
 - Reduces likelihood based on token frequency
 - Discourages repetition of common phrases
@@ -44,6 +51,7 @@ This document provides a comprehensive overview of AI SDK v6 features and their 
 ### Advanced Parameters
 
 ✅ **Seed Parameter (Best-Effort Determinism)**
+
 - Supported as of v0.7.0
 - Enables reproducible outputs with same inputs
 - ⚠️ **Important**: OCI provides **best-effort** determinism only
@@ -55,6 +63,7 @@ This document provides a comprehensive overview of AI SDK v6 features and their 
 - **Not recommended** for production workflows requiring strict reproducibility
 
 ✅ **Stop Sequences**
+
 - Custom sequences to halt generation
 - Multiple stop sequences supported
 - Useful for structured output formats
@@ -62,21 +71,25 @@ This document provides a comprehensive overview of AI SDK v6 features and their 
 ### Message Formats
 
 ✅ **System Messages**
+
 - Set behavior and context for the model
 - Properly formatted in API requests
 - Can be combined with user/assistant messages
 
 ✅ **User Messages**
+
 - Standard user input messages
 - Support for multi-turn conversations
 - Text content fully supported
 
 ✅ **Assistant Messages**
+
 - Model's previous responses in conversation
 - Required for multi-turn dialogue
 - Maintains conversation context
 
 ✅ **Multi-Turn Conversations**
+
 - Full conversation history supported
 - Proper message ordering maintained
 - Context window limitations apply per model
@@ -84,21 +97,25 @@ This document provides a comprehensive overview of AI SDK v6 features and their 
 ### Model Families
 
 ✅ **Meta Llama Models**
+
 - Llama 3.3, 3.2, 3.1, 3
 - GENERIC format (OpenAI-compatible)
 - Available in Frankfurt region
 
 ✅ **Google Gemini Models**
+
 - Gemini 2.0 Flash
 - GENERIC format (OpenAI-compatible)
 - Available in Frankfurt region
 
 ✅ **Cohere Command Models**
+
 - Command R, Command R+, Command R7B
 - COHERE format (native Cohere API)
 - Available in Frankfurt, Ashburn, Phoenix regions
 
 ✅ **xAI Grok Models**
+
 - Grok 2.0
 - GENERIC format (OpenAI-compatible)
 - Available in Frankfurt region
@@ -106,21 +123,25 @@ This document provides a comprehensive overview of AI SDK v6 features and their 
 ### Provider Features
 
 ✅ **Error Handling**
+
 - Structured error responses
 - HTTP status code mapping
 - Detailed error messages from OCI
 
 ✅ **Retry Logic**
+
 - Configurable maximum retries
 - Exponential backoff (2x multiplier)
 - Initial delay of 2 seconds
 
 ✅ **Request Timeout**
+
 - Default: 60 seconds
 - Configurable per request
 - Applies to both streaming and non-streaming
 
 ✅ **Usage Tracking**
+
 - Prompt tokens counted
 - Completion tokens counted
 - Total tokens reported
@@ -131,6 +152,7 @@ This document provides a comprehensive overview of AI SDK v6 features and their 
 ### Tool Calling / Function Calling
 
 ❌ **Not Supported**
+
 - OCI GenAI does not support function calling
 - No native tool use capabilities
 - Workarounds:
@@ -141,16 +163,19 @@ This document provides a comprehensive overview of AI SDK v6 features and their 
 ### Multi-Modal Capabilities
 
 ❌ **Vision / Image Understanding**
+
 - OCI GenAI is text-only
 - No support for image inputs
 - No vision model variants available
 
 ❌ **Audio Processing**
+
 - No audio input support
 - No audio output generation
 - For speech: Use separate Speech service (see `stt-demo` example)
 
 ❌ **Document Understanding**
+
 - No native PDF/document parsing
 - Text must be extracted before sending to model
 - Consider pre-processing pipeline for documents
@@ -158,16 +183,19 @@ This document provides a comprehensive overview of AI SDK v6 features and their 
 ### Advanced Content Types
 
 ❌ **Reasoning / Chain-of-Thought Modes**
+
 - No special reasoning modes
 - Can be achieved through prompt engineering
 - No dedicated CoT model variants
 
 ❌ **Citations / Source Attribution**
+
 - No native citation support
 - RAG implementations can add citations manually
 - See `rag-demo` and `rag-reranking-demo` for patterns
 
 ❌ **Structured Output Guarantees**
+
 - No schema-enforced JSON output
 - JSON mode is under investigation (see Partial Support section)
 - Use prompt engineering + parsing for structured data
@@ -177,6 +205,7 @@ This document provides a comprehensive overview of AI SDK v6 features and their 
 ### Response Format (JSON Mode)
 
 ⚠️ **Status: Blocked by AI SDK**
+
 - OCI API supports response format hints
 - AI SDK v6 doesn't expose `responseFormat` parameter to providers
 - Waiting for AI SDK enhancement
@@ -186,6 +215,7 @@ This document provides a comprehensive overview of AI SDK v6 features and their 
 ### Abort Signal
 
 ⚠️ **Status: Unclear Functionality**
+
 - AI SDK passes `AbortSignal` to providers
 - OCI SDK does not document abort behavior
 - Signal is passed through but effect is uncertain
@@ -195,6 +225,7 @@ This document provides a comprehensive overview of AI SDK v6 features and their 
 ### Custom HTTP Headers
 
 ⚠️ **Status: Limited Applicability**
+
 - OCI SDK handles authentication headers internally
 - Custom headers may not be needed for most use cases
 - Could be relevant for:
@@ -208,6 +239,7 @@ This document provides a comprehensive overview of AI SDK v6 features and their 
 ### Frankfurt (`eu-frankfurt-1`)
 
 **GENERIC Format:**
+
 - Meta Llama 3.3 70B Instruct
 - Meta Llama 3.2 3B Instruct
 - Meta Llama 3.1 405B Instruct
@@ -217,6 +249,7 @@ This document provides a comprehensive overview of AI SDK v6 features and their 
 - xAI Grok 2.0
 
 **COHERE Format:**
+
 - Cohere Command R
 - Cohere Command R+
 - Cohere Command R7B
@@ -224,12 +257,14 @@ This document provides a comprehensive overview of AI SDK v6 features and their 
 ### Ashburn (`us-ashburn-1`)
 
 **COHERE Format:**
+
 - Cohere Command R
 - Cohere Command R+
 
 ### Phoenix (`us-phoenix-1`)
 
 **COHERE Format:**
+
 - Cohere Command R
 - Cohere Command R+
 
@@ -311,10 +346,10 @@ const result = await streamText({
   model: oci('meta.llama-3.3-70b-instruct'),
   messages: [
     { role: 'system', content: 'You are a helpful assistant.' },
-    { role: 'user', content: 'Count from 1 to 5.' }
+    { role: 'user', content: 'Count from 1 to 5.' },
   ],
-  seed: 42,  // Best-effort determinism
-  temperature: 0.3,  // Lower temperature helps consistency
+  seed: 42, // Best-effort determinism
+  temperature: 0.3, // Lower temperature helps consistency
 });
 
 for await (const chunk of result.textStream) {
@@ -329,7 +364,7 @@ import { streamText } from 'ai';
 
 const result = await streamText({
   model: oci('cohere.command-r-plus', {
-    timeout: 30000,  // 30 second timeout
+    timeout: 30000, // 30 second timeout
   }),
   prompt: 'Write a short story about a robot.',
   temperature: 0.8,
@@ -360,16 +395,19 @@ pnpm test:integration       # Integration tests (requires OCI config)
 ## Roadmap
 
 ### Short Term
+
 - ✅ Seed parameter support (completed v0.7.0)
 - 🔄 Investigate JSON mode via system prompts
 - 🔄 Clarify abort signal behavior with OCI SDK team
 
 ### Medium Term
+
 - Monitor AI SDK for `responseFormat` parameter support
 - Explore custom header use cases
 - Add examples for advanced parameter combinations
 
 ### Long Term
+
 - Track OCI GenAI service for new capabilities
 - Evaluate multi-modal support if/when available
 - Consider tool calling emulation patterns

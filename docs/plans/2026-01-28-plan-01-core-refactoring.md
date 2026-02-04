@@ -13,11 +13,13 @@
 ## Dependencies
 
 **Required:**
+
 - `@ai-sdk/provider`: ^3.0.5
 - `oci-common`: ^2.94.0
 - `oci-generativeaiinference`: ^2.94.0
 
 **Update package.json:**
+
 ```json
 {
   "dependencies": {
@@ -32,6 +34,7 @@
 ## Task 1: Update Dependencies
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/package.json`
 
 **Step 1: Update @ai-sdk/provider to latest**
@@ -58,6 +61,7 @@ git commit -m "chore: update @ai-sdk/provider to 3.0.5"
 ## Task 2: Create Provider Types
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/types.ts`
 
 **Step 1: Write test for OCIBaseConfig**
@@ -208,6 +212,7 @@ git commit -m "feat: add model-specific settings types for ProviderV3"
 ## Task 3: Create OCIProvider Class
 
 **Files:**
+
 - Create: `packages/oci-genai-provider/src/provider.ts`
 - Create: `packages/oci-genai-provider/src/__tests__/provider.test.ts`
 
@@ -305,10 +310,7 @@ export class OCIProvider implements ProviderV3 {
   /**
    * Create a language model instance
    */
-  languageModel(
-    modelId: string,
-    settings?: OCILanguageModelSettings
-  ): LanguageModelV3 {
+  languageModel(modelId: string, settings?: OCILanguageModelSettings): LanguageModelV3 {
     const mergedConfig = { ...this.config, ...settings };
     return new OCILanguageModel(modelId, mergedConfig);
   }
@@ -317,10 +319,7 @@ export class OCIProvider implements ProviderV3 {
    * Create an embedding model instance
    * @throws {NoSuchModelError} Not yet implemented
    */
-  embeddingModel(
-    modelId: string,
-    settings?: OCIEmbeddingSettings
-  ): EmbeddingModelV3 {
+  embeddingModel(modelId: string, settings?: OCIEmbeddingSettings): EmbeddingModelV3 {
     throw new NoSuchModelError({
       modelId,
       modelType: 'embeddingModel',
@@ -344,10 +343,7 @@ export class OCIProvider implements ProviderV3 {
    * Create a transcription model instance (STT)
    * @throws {NoSuchModelError} Not yet implemented
    */
-  transcriptionModel(
-    modelId: string,
-    settings?: OCITranscriptionSettings
-  ): TranscriptionModelV3 {
+  transcriptionModel(modelId: string, settings?: OCITranscriptionSettings): TranscriptionModelV3 {
     throw new NoSuchModelError({
       modelId,
       modelType: 'transcriptionModel',
@@ -359,10 +355,7 @@ export class OCIProvider implements ProviderV3 {
    * Create a speech model instance (TTS)
    * @throws {NoSuchModelError} Not yet implemented
    */
-  speechModel(
-    modelId: string,
-    settings?: OCISpeechSettings
-  ): SpeechModelV3 {
+  speechModel(modelId: string, settings?: OCISpeechSettings): SpeechModelV3 {
     throw new NoSuchModelError({
       modelId,
       modelType: 'speechModel',
@@ -374,10 +367,7 @@ export class OCIProvider implements ProviderV3 {
    * Create a reranking model instance
    * @throws {NoSuchModelError} Not yet implemented
    */
-  rerankingModel(
-    modelId: string,
-    settings?: OCIRerankingSettings
-  ): RerankingModelV3 {
+  rerankingModel(modelId: string, settings?: OCIRerankingSettings): RerankingModelV3 {
     throw new NoSuchModelError({
       modelId,
       modelType: 'rerankingModel',
@@ -404,6 +394,7 @@ git commit -m "feat: implement OCIProvider class with ProviderV3 interface"
 ## Task 4: Reorganize Language Models
 
 **Files:**
+
 - Rename: `src/models/` → `src/language-models/`
 - Update: All import paths
 
@@ -421,6 +412,7 @@ rmdir src/models
 Modify: `packages/oci-genai-provider/src/language-models/OCILanguageModel.ts`
 
 Find and replace:
+
 - `from '../converters/` → `from './converters/`
 - `from '../streaming/` → `from '../shared/streaming/`
 - `from '../errors/` → `from '../shared/errors/`
@@ -476,6 +468,7 @@ git commit -m "refactor: reorganize into language-models/ and shared/ folders"
 ## Task 5: Update Provider Factory and Exports
 
 **Files:**
+
 - Modify: `packages/oci-genai-provider/src/index.ts`
 
 **Step 1: Write test for new factory pattern**
@@ -524,7 +517,7 @@ Expected: FAIL - "createOCI is not exported"
 
 Replace `packages/oci-genai-provider/src/index.ts`:
 
-```typescript
+````typescript
 /**
  * OCI Generative AI Provider for Vercel AI SDK
  *
@@ -597,7 +590,7 @@ export function createOCI(config: OCIBaseConfig = {}): OCIProvider {
  * ```
  */
 export const oci = createOCI();
-```
+````
 
 **Step 4: Run tests to verify they pass**
 
@@ -621,6 +614,7 @@ git commit -m "feat: add createOCI factory and oci default instance"
 ## Task 6: Update Existing Examples
 
 **Files:**
+
 - Modify: `examples/chatbot-demo/src/routes/api/chat/+server.ts`
 - Modify: `examples/nextjs-chatbot/app/api/chat/route.ts`
 
@@ -667,6 +661,7 @@ export async function POST(req: Request) {
 **Step 3: Test examples still work**
 
 Run SvelteKit demo:
+
 ```bash
 cd examples/chatbot-demo
 pnpm dev

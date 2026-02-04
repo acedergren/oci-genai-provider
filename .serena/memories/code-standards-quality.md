@@ -12,15 +12,15 @@ These standards are codified from the existing codebase and are **mandatory** fo
 
 ### Files
 
-| Type | Convention | Example |
-|------|-----------|---------|
-| Model classes | PascalCase | `OCISpeechModel.ts` |
-| Utilities | kebab-case | `sse-parser.ts`, `retry.ts` |
-| Barrel exports | `index.ts` | `shared/utils/index.ts` |
-| Type definitions | `types.ts` | `src/types.ts` |
-| Tests | `{Source}.test.ts` | `OCISpeechModel.test.ts` |
+| Type              | Convention                      | Example                             |
+| ----------------- | ------------------------------- | ----------------------------------- |
+| Model classes     | PascalCase                      | `OCISpeechModel.ts`                 |
+| Utilities         | kebab-case                      | `sse-parser.ts`, `retry.ts`         |
+| Barrel exports    | `index.ts`                      | `shared/utils/index.ts`             |
+| Type definitions  | `types.ts`                      | `src/types.ts`                      |
+| Tests             | `{Source}.test.ts`              | `OCISpeechModel.test.ts`            |
 | Integration tests | `{feature}.integration.test.ts` | `speech-models.integration.test.ts` |
-| E2E tests | `{scenario}.e2e.test.ts` | `full-workflow.e2e.test.ts` |
+| E2E tests         | `{scenario}.e2e.test.ts`        | `full-workflow.e2e.test.ts`         |
 
 **Note**: Legacy files (`oci-language-model.ts`, `oci-embedding-model.ts`) use kebab-case but new model files must use PascalCase.
 
@@ -28,27 +28,27 @@ These standards are codified from the existing codebase and are **mandatory** fo
 
 ```typescript
 // PascalCase, OCI prefix for provider-facing classes
-class OCILanguageModel { }
-class OCISpeechModel { }
-class OCIGenAIProvider { }
+class OCILanguageModel {}
+class OCISpeechModel {}
+class OCIGenAIProvider {}
 
 // Error classes: PascalCase, Error suffix
-class OCIGenAIError extends Error { }
-class NetworkError extends OCIGenAIError { }
-class RateLimitError extends OCIGenAIError { }
+class OCIGenAIError extends Error {}
+class NetworkError extends OCIGenAIError {}
+class RateLimitError extends OCIGenAIError {}
 ```
 
 ### Interfaces & Types
 
 ```typescript
 // PascalCase, NO I- prefix, descriptive suffix
-interface OCIConfig { }
-interface OCILanguageModelSettings extends OCIConfig { }
-interface ModelMetadata { }
+interface OCIConfig {}
+interface OCILanguageModelSettings extends OCIConfig {}
+interface ModelMetadata {}
 
 // Metadata interfaces scoped by domain
-interface EmbeddingModelMetadata { }
-interface SpeechModelMetadata { }
+interface EmbeddingModelMetadata {}
+interface SpeechModelMetadata {}
 
 // Union types: PascalCase name, snake_case values
 type OCIAuthMethod = 'config_file' | 'instance_principal' | 'resource_principal';
@@ -58,8 +58,8 @@ type OCIAuthMethod = 'config_file' | 'instance_principal' | 'resource_principal'
 
 ```typescript
 // camelCase, verb-first
-function isValidModelId(modelId: string): boolean { }
-function getModelMetadata(modelId: string): ModelMetadata | undefined { }
+function isValidModelId(modelId: string): boolean {}
+function getModelMetadata(modelId: string): ModelMetadata | undefined {}
 
 // Prefix patterns:
 // is-     : Predicates returning boolean
@@ -70,36 +70,42 @@ function getModelMetadata(modelId: string): ModelMetadata | undefined { }
 // handle- : Error handlers
 // with-   : Utility wrappers
 
-function isRetryableError(error: unknown): boolean { }
-function getModelsByFamily(family: string): ModelMetadata[] { }
-function createAuthProvider(config: OCIConfig): Promise<AuthProvider> { }
-function convertToOCIMessages(prompt: Prompt): OCIMessage[] { }
-function mapFinishReason(reason: string): FinishReason { }
-function handleOCIError(error: unknown): OCIGenAIError { }
-function withRetry<T>(fn: () => Promise<T>): Promise<T> { }
+function isRetryableError(error: unknown): boolean {}
+function getModelsByFamily(family: string): ModelMetadata[] {}
+function createAuthProvider(config: OCIConfig): Promise<AuthProvider> {}
+function convertToOCIMessages(prompt: Prompt): OCIMessage[] {}
+function mapFinishReason(reason: string): FinishReason {}
+function handleOCIError(error: unknown): OCIGenAIError {}
+function withRetry<T>(fn: () => Promise<T>): Promise<T> {}
 ```
 
 ### Constants
 
 ```typescript
 // UPPER_SNAKE_CASE for module-level constants
-const DEFAULT_REQUEST_OPTIONS: Required<RequestOptions> = { /* ... */ };
+const DEFAULT_REQUEST_OPTIONS: Required<RequestOptions> = {
+  /* ... */
+};
 const RETRYABLE_ERROR_CODES = ['ECONNRESET', 'ETIMEDOUT'];
 const ROLE_MAP: Record<string, string> = { user: 'USER' };
 
 // Model catalogs: UPPER_SNAKE_CASE plural
-const MODEL_CATALOG: ModelMetadata[] = [ /* ... */ ];
-const EMBEDDING_MODELS: EmbeddingModelMetadata[] = [ /* ... */ ];
+const MODEL_CATALOG: ModelMetadata[] = [
+  /* ... */
+];
+const EMBEDDING_MODELS: EmbeddingModelMetadata[] = [
+  /* ... */
+];
 ```
 
 ### Private Members
 
 ```typescript
 class OCISpeechModel {
-  private _client?: AIServiceSpeechClient;  // underscore prefix for lazy-init
-  private _config: OCISpeechSettings;       // underscore prefix for state
-  
-  private async getClient() { }              // NO underscore on methods
+  private _client?: AIServiceSpeechClient; // underscore prefix for lazy-init
+  private _config: OCISpeechSettings; // underscore prefix for state
+
+  private async getClient() {} // NO underscore on methods
 }
 ```
 
@@ -132,6 +138,7 @@ src/
 ```
 
 **Rules**:
+
 - Each model domain → own `{domain}-models/` directory
 - Tests co-located in `__tests__/` subdirectories
 - Shared code in `shared/` with max one level of nesting
@@ -151,15 +158,17 @@ export interface DomainModelMetadata {
 }
 
 // 2. Model catalog constant
-export const DOMAIN_MODELS: DomainModelMetadata[] = [ /* ... */ ];
+export const DOMAIN_MODELS: DomainModelMetadata[] = [
+  /* ... */
+];
 
 // 3. Standard lookup functions (consistent naming across domains)
 export function isValidDomainModelId(modelId: string): boolean {
-  return DOMAIN_MODELS.some(model => model.id === modelId);
+  return DOMAIN_MODELS.some((model) => model.id === modelId);
 }
 
 export function getDomainModelMetadata(modelId: string): DomainModelMetadata | undefined {
-  return DOMAIN_MODELS.find(model => model.id === modelId);
+  return DOMAIN_MODELS.find((model) => model.id === modelId);
 }
 
 export function getAllDomainModels(): DomainModelMetadata[] {
@@ -186,6 +195,7 @@ import type { OCIConfig } from '../types.js';
 ```
 
 **Rules**:
+
 - Never use path aliases; always relative paths
 - Use `import type` for type-only imports
 - Include `.js` extension on relative imports for ESM compatibility
@@ -201,7 +211,7 @@ Organize `index.ts` exports with labeled sections:
 // ============================================================================
 
 export { OCIGenAIProvider } from './provider.js';
-export function createOCI(config?: OCIConfig): OCIGenAIProvider { }
+export function createOCI(config?: OCIConfig): OCIGenAIProvider {}
 
 // ============================================================================
 // Type Exports
@@ -211,6 +221,7 @@ export type { OCIConfig, ModelMetadata } from './types.js';
 ```
 
 **Rules**:
+
 - Group by feature domain
 - Use `export type` for type-only exports
 - Re-export everything consumers need
@@ -229,6 +240,7 @@ OCIGenAIError (base)
 ```
 
 **Rules**:
+
 - All custom errors extend `OCIGenAIError`
 - Every error sets `retryable: boolean` explicitly
 - Include contextual remediation hints in messages
@@ -239,9 +251,7 @@ OCIGenAIError (base)
 
 ```typescript
 // ✅ Good - includes context and remediation
-throw new AuthenticationError(
-  'OCI authentication failed. Check credentials in ~/.oci/config'
-);
+throw new AuthenticationError('OCI authentication failed. Check credentials in ~/.oci/config');
 
 // ❌ Bad - generic, no actionable guidance
 throw new Error('Authentication failed');
@@ -259,8 +269,8 @@ private _client?: SomeOCIClient;
 private async getClient(): Promise<SomeOCIClient> {
   if (!this._client) {
     const authProvider = await createAuthProvider(this.config);
-    this._client = new SomeOCIClient({ 
-      authenticationDetailsProvider: authProvider 
+    this._client = new SomeOCIClient({
+      authenticationDetailsProvider: authProvider
     });
     this._client.region = getRegion(this.config);
   }
@@ -275,10 +285,11 @@ private async getClient(): Promise<SomeOCIClient> {
 Use `withRetry()` wrapper for retryable operations:
 
 ```typescript
-const result = await withRetry(
-  () => client.chat(request),
-  { maxRetries: 3, baseDelayMs: 100, maxDelayMs: 10000 }
-);
+const result = await withRetry(() => client.chat(request), {
+  maxRetries: 3,
+  baseDelayMs: 100,
+  maxDelayMs: 10000,
+});
 ```
 
 ### 3. Config Merging Pattern
@@ -326,23 +337,23 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
 describe('ClassName', () => {
   const mockConfig = { region: 'eu-frankfurt-1' };
-  
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
-  
+
   describe('methodName', () => {
     it('should return X when given Y', () => {
       // Arrange
       const input = /* ... */;
-      
+
       // Act
       const result = fn(input);
-      
+
       // Assert
       expect(result).toBe(expected);
     });
-    
+
     it('should throw NetworkError on connection failure', async () => {
       await expect(fn()).rejects.toThrow(NetworkError);
     });
@@ -367,6 +378,7 @@ it('calls getModelMetadata', () => {});
 **Minimum**: 80% coverage (branches, functions, lines, statements)
 
 **Excluded from coverage**:
+
 - `index.ts` (barrel exports)
 - `types.ts` (type definitions)
 - `__tests__/` (test files)
@@ -374,17 +386,17 @@ it('calls getModelMetadata', () => {});
 
 ### Test Categories
 
-| Suffix | Location | Purpose |
-|--------|----------|---------|
-| `.test.ts` | `{module}/__tests__/` | Unit tests |
-| `.integration.test.ts` | `__tests__/integration/` | OCI service integration |
-| `.e2e.test.ts` | `__tests__/e2e/` | Full workflow validation |
+| Suffix                 | Location                 | Purpose                  |
+| ---------------------- | ------------------------ | ------------------------ |
+| `.test.ts`             | `{module}/__tests__/`    | Unit tests               |
+| `.integration.test.ts` | `__tests__/integration/` | OCI service integration  |
+| `.e2e.test.ts`         | `__tests__/e2e/`         | Full workflow validation |
 
 ## Documentation Requirements
 
 ### JSDoc Standards
 
-```typescript
+````typescript
 /**
  * Creates an OCI GenAI provider instance.
  *
@@ -403,9 +415,10 @@ it('calls getModelMetadata', () => {});
 export function createOCI(config?: OCIConfig): OCIGenAIProvider {
   // implementation
 }
-```
+````
 
 **Requirements**:
+
 - JSDoc on all public exports (classes, functions, types)
 - `@example` blocks with runnable TypeScript
 - `@default` tags for optional parameters with defaults
@@ -416,13 +429,13 @@ export function createOCI(config?: OCIConfig): OCIGenAIProvider {
 
 Model classes implement ProviderV3 method contracts:
 
-| Provider Method | Model Class Method | Returns |
-|----------------|-------------------|---------|
-| `languageModel()` | `doGenerate()`, `doStream()` | `LanguageModelV3` |
-| `embeddingModel()` | `doEmbed()` | `EmbeddingModelV3` |
-| `speechModel()` | `doGenerate()` | `SpeechModelV3` |
-| `transcriptionModel()` | `doTranscribe()` | `TranscriptionModelV3` |
-| `rerankingModel()` | `doRerank()` | `RerankingModelV3` |
+| Provider Method        | Model Class Method           | Returns                |
+| ---------------------- | ---------------------------- | ---------------------- |
+| `languageModel()`      | `doGenerate()`, `doStream()` | `LanguageModelV3`      |
+| `embeddingModel()`     | `doEmbed()`                  | `EmbeddingModelV3`     |
+| `speechModel()`        | `doGenerate()`               | `SpeechModelV3`        |
+| `transcriptionModel()` | `doTranscribe()`             | `TranscriptionModelV3` |
+| `rerankingModel()`     | `doRerank()`                 | `RerankingModelV3`     |
 
 ## Quality Checklist
 

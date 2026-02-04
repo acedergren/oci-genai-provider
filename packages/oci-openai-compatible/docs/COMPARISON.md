@@ -4,26 +4,28 @@ This document helps you choose between `@acedergren/oci-openai-compatible` and `
 
 ## Quick Decision Matrix
 
-| Scenario | Recommended Package |
-|----------|---------------------|
-| Migrating from OpenAI | ✅ oci-openai-compatible |
-| Building OCI-native app | ✅ oci-genai-provider |
-| Need instance principal auth | ✅ oci-genai-provider |
-| Want minimal bundle size | ✅ oci-openai-compatible |
-| Need embeddings support | ✅ oci-genai-provider |
-| Need all OCI regions | ✅ oci-genai-provider |
-| Familiar with OpenAI SDK | ✅ oci-openai-compatible |
-| Team has OCI expertise | ✅ oci-genai-provider |
+| Scenario                     | Recommended Package      |
+| ---------------------------- | ------------------------ |
+| Migrating from OpenAI        | ✅ oci-openai-compatible |
+| Building OCI-native app      | ✅ oci-genai-provider    |
+| Need instance principal auth | ✅ oci-genai-provider    |
+| Want minimal bundle size     | ✅ oci-openai-compatible |
+| Need embeddings support      | ✅ oci-genai-provider    |
+| Need all OCI regions         | ✅ oci-genai-provider    |
+| Familiar with OpenAI SDK     | ✅ oci-openai-compatible |
+| Team has OCI expertise       | ✅ oci-genai-provider    |
 
 ## Detailed Comparison
 
 ### Bundle Size
 
 **oci-openai-compatible:**
+
 - Dependencies: `openai` (~100 KB), `oci-common` (~50 KB)
 - Total: ~150 KB
 
 **oci-genai-provider:**
+
 - Dependencies: `oci-sdk` (~2.94 MB), `@ai-sdk/provider` (~50 KB)
 - Total: ~3 MB
 
@@ -32,11 +34,13 @@ This document helps you choose between `@acedergren/oci-openai-compatible` and `
 ### Authentication
 
 **oci-openai-compatible:**
+
 - ✅ API key (Bearer token)
 - ❌ Instance principal
 - ❌ Resource principal
 
 **oci-genai-provider:**
+
 - ✅ API key (OCI config file)
 - ✅ Instance principal
 - ✅ Resource principal
@@ -46,10 +50,12 @@ This document helps you choose between `@acedergren/oci-openai-compatible` and `
 ### Regional Support
 
 **oci-openai-compatible:**
+
 - Supports: 6 regions
 - Ashburn, Chicago, Phoenix, Frankfurt, Hyderabad, Osaka
 
 **oci-genai-provider:**
+
 - Supports: All OCI regions
 - Any region with Generative AI service
 
@@ -58,12 +64,14 @@ This document helps you choose between `@acedergren/oci-openai-compatible` and `
 ### Model Support
 
 **oci-openai-compatible:**
+
 - Language models: 7 models
 - Embeddings: ❌ (not via OpenAI API)
 - Speech: ❌
 - Transcription: ❌
 
 **oci-genai-provider:**
+
 - Language models: 16+ models
 - Embeddings: ✅ (v0.2)
 - Speech: ✅ (v0.3)
@@ -74,6 +82,7 @@ This document helps you choose between `@acedergren/oci-openai-compatible` and `
 ### Developer Experience
 
 **oci-openai-compatible:**
+
 ```typescript
 import { createOCIOpenAI } from '@acedergren/oci-openai-compatible';
 
@@ -90,6 +99,7 @@ const response = await client.chat.completions.create({
 ```
 
 **oci-genai-provider:**
+
 ```typescript
 import { oci } from '@acedergren/oci-genai-provider';
 
@@ -105,6 +115,7 @@ const response = await streamText({
 ### Setup Complexity
 
 **oci-openai-compatible:**
+
 1. Set environment variables:
    ```bash
    export OCI_API_KEY="..."
@@ -113,6 +124,7 @@ const response = await streamText({
 2. Import and use
 
 **oci-genai-provider:**
+
 1. Configure `~/.oci/config` file
 2. Set compartment ID
 3. Import and use
@@ -122,10 +134,12 @@ const response = await streamText({
 ### Error Handling
 
 **oci-openai-compatible:**
+
 - Generic OpenAI errors
 - Less context about OCI-specific issues
 
 **oci-genai-provider:**
+
 - OCI-specific error types
 - Detailed error messages
 - Retry strategies
@@ -135,6 +149,7 @@ const response = await streamText({
 ### Streaming
 
 **oci-openai-compatible:**
+
 ```typescript
 const stream = await client.chat.completions.create({
   model: '...',
@@ -148,6 +163,7 @@ for await (const chunk of stream) {
 ```
 
 **oci-genai-provider:**
+
 ```typescript
 const { textStream } = streamText({
   model: oci.languageModel('...'),
@@ -166,6 +182,7 @@ for await (const text of textStream) {
 ### From OpenAI → OCI
 
 **Step 1: Use oci-openai-compatible**
+
 ```typescript
 // Minimal code changes
 - import OpenAI from 'openai';
@@ -176,6 +193,7 @@ for await (const text of textStream) {
 ```
 
 **Step 2 (optional): Migrate to native provider**
+
 ```typescript
 import { oci } from '@acedergren/oci-genai-provider';
 
@@ -188,11 +206,13 @@ const model = oci.languageModel('meta.llama-3.3-70b-instruct', {
 ### From Native Provider → OpenAI-Compatible
 
 **Why migrate down?**
+
 - Reduce bundle size for serverless
 - Simplify auth for edge deployments
 - Standardize on OpenAI SDK patterns
 
 **Migration:**
+
 ```typescript
 - import { oci } from '@acedergren/oci-genai-provider';
 + import { createOCIOpenAI } from '@acedergren/oci-openai-compatible';
@@ -212,6 +232,7 @@ const model = oci.languageModel('meta.llama-3.3-70b-instruct', {
 ## Recommendations
 
 ### Use oci-openai-compatible if:
+
 - ✅ You're coming from OpenAI
 - ✅ Bundle size is critical
 - ✅ You only need chat completions
@@ -219,6 +240,7 @@ const model = oci.languageModel('meta.llama-3.3-70b-instruct', {
 - ✅ Your regions: US, EU, or Asia Pacific (6 regions)
 
 ### Use oci-genai-provider if:
+
 - ✅ You're building OCI-native apps
 - ✅ You need instance/resource principal auth
 - ✅ You want embeddings, speech, transcription
@@ -226,6 +248,7 @@ const model = oci.languageModel('meta.llama-3.3-70b-instruct', {
 - ✅ You want sophisticated error handling
 
 ### Use both if:
+
 - ✅ Different teams with different expertise
 - ✅ Migration path from OpenAI → OCI native
 - ✅ Some services need lightweight (edge), others need full features (backend)
@@ -237,6 +260,7 @@ const model = oci.languageModel('meta.llama-3.3-70b-instruct', {
 **Throughput:** Identical (OCI service handles both)
 
 **Bundle size impact:**
+
 - oci-openai-compatible: Faster initial load (smaller bundle)
 - oci-genai-provider: More features but larger bundle
 

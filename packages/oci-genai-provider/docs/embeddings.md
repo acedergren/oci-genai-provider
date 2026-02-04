@@ -4,11 +4,11 @@ Complete reference for OCI embedding models.
 
 ## Available Models
 
-| Model | Dimensions | Max Batch | Language | Best For |
-|-------|-----------|-----------|----------|----------|
-| `cohere.embed-multilingual-v3.0` | 1024 | 96 | Multiple | Multilingual semantic search |
-| `cohere.embed-english-v3.0` | 1024 | 96 | English | English semantic search |
-| `cohere.embed-english-light-v3.0` | 384 | 96 | English | Fast, lightweight embeddings |
+| Model                             | Dimensions | Max Batch | Language | Best For                     |
+| --------------------------------- | ---------- | --------- | -------- | ---------------------------- |
+| `cohere.embed-multilingual-v3.0`  | 1024       | 96        | Multiple | Multilingual semantic search |
+| `cohere.embed-english-v3.0`       | 1024       | 96        | English  | English semantic search      |
+| `cohere.embed-english-light-v3.0` | 384        | 96        | English  | Fast, lightweight embeddings |
 
 ## Usage Examples
 
@@ -77,7 +77,7 @@ function cosineSimilarity(a: number[], b: number[]): number {
   return dotProduct / (magA * magB);
 }
 
-const similarities = docEmbeddings.map(doc => cosineSimilarity(queryEmbedding, doc));
+const similarities = docEmbeddings.map((doc) => cosineSimilarity(queryEmbedding, doc));
 const bestMatch = Math.max(...similarities);
 ```
 

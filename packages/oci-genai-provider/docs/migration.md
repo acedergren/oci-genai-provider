@@ -16,6 +16,7 @@ v2.0 introduces breaking changes to align with Vercel AI SDK v4+ and ProviderV3 
 ### 1. Language Model Creation
 
 **v1.x (deprecated):**
+
 ```typescript
 import { oci } from '@acedergren/oci-genai-provider';
 
@@ -23,6 +24,7 @@ const model = oci('cohere.command-r-plus'); // ❌ No longer supported
 ```
 
 **v2.0 (ProviderV3):**
+
 ```typescript
 import { oci } from '@acedergren/oci-genai-provider';
 
@@ -32,6 +34,7 @@ const model = oci.languageModel('cohere.command-r-plus'); // ✅ Required
 ### 2. Provider Factory
 
 **v1.x (deprecated):**
+
 ```typescript
 import { createOCI } from '@acedergren/oci-genai-provider';
 
@@ -40,6 +43,7 @@ const model = provider(modelId); // ❌ No longer supported
 ```
 
 **v2.0 (ProviderV3):**
+
 ```typescript
 import { createOCI } from '@acedergren/oci-genai-provider';
 
@@ -50,6 +54,7 @@ const model = provider.languageModel(modelId); // ✅ Required
 ### 3. Configuration Structure
 
 **v1.x:**
+
 ```typescript
 const provider = createOCI({
   region: 'us-phoenix-1',
@@ -59,6 +64,7 @@ const provider = createOCI({
 ```
 
 **v2.0:**
+
 ```typescript
 const provider = createOCI({
   region: 'us-phoenix-1',
@@ -75,6 +81,7 @@ const model = provider.languageModel('model-id', {
 ### 4. Error Handling
 
 **v1.x:**
+
 ```typescript
 try {
   await generateText({ model, prompt });
@@ -84,12 +91,9 @@ try {
 ```
 
 **v2.0:**
+
 ```typescript
-import {
-  NetworkError,
-  RateLimitError,
-  AuthenticationError,
-} from '@acedergren/oci-genai-provider';
+import { NetworkError, RateLimitError, AuthenticationError } from '@acedergren/oci-genai-provider';
 
 try {
   await generateText({ model, prompt });
@@ -135,6 +139,7 @@ const model = provider.languageModel('model-id'); // ✅ Use
 Move model-specific settings from provider config to model config:
 
 **Before:**
+
 ```typescript
 const provider = createOCI({
   region: 'us-phoenix-1',
@@ -144,6 +149,7 @@ const provider = createOCI({
 ```
 
 **After:**
+
 ```typescript
 const provider = createOCI({
   region: 'us-phoenix-1',

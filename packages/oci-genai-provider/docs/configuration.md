@@ -47,11 +47,13 @@ const model = oci.languageModel('cohere.command-r-plus');
 Uses `~/.oci/config` file for authentication.
 
 **Pros:**
+
 - Simple to set up
 - Secure (key file permissions)
 - Works with multiple profiles
 
 **Cons:**
+
 - Requires file system access
 - Not suitable for serverless functions
 
@@ -71,11 +73,13 @@ const provider = createOCI({
 For applications running on OCI Compute instances.
 
 **Pros:**
+
 - No credentials in code
 - Automatic credential rotation
 - Secure by default
 
 **Cons:**
+
 - Only works on OCI compute
 - Requires instance to have correct policies
 
@@ -92,11 +96,13 @@ const provider = createOCI({
 For applications running in OCI Functions or other OCI resources.
 
 **Pros:**
+
 - Fine-grained permissions
 - Automatic credential rotation
 - No credentials in code
 
 **Cons:**
+
 - Only works in OCI Functions/Kubernetes
 - Requires correct policies
 
@@ -129,15 +135,15 @@ OCI_CLI_AUTH=api_key
 
 OCI services are available in multiple regions. Choose the region closest to your users.
 
-| Region Code | Location |
-|-------------|----------|
-| `us-phoenix-1` | Phoenix, AZ (USA) |
-| `us-ashburn-1` | Ashburn, VA (USA) |
+| Region Code      | Location            |
+| ---------------- | ------------------- |
+| `us-phoenix-1`   | Phoenix, AZ (USA)   |
+| `us-ashburn-1`   | Ashburn, VA (USA)   |
 | `eu-frankfurt-1` | Frankfurt (Germany) |
-| `eu-stockholm-1` | Stockholm (Sweden) |
-| `uk-london-1` | London (UK) |
-| `ap-tokyo-1` | Tokyo (Japan) |
-| `ap-mumbai-1` | Mumbai (India) |
+| `eu-stockholm-1` | Stockholm (Sweden)  |
+| `uk-london-1`    | London (UK)         |
+| `ap-tokyo-1`     | Tokyo (Japan)       |
+| `ap-mumbai-1`    | Mumbai (India)      |
 
 ### Regional Service Availability
 

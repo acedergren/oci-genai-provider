@@ -5,7 +5,14 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".svelte-kit/**", ".next/**", "build/**", "!.next/cache/**"],
-      "inputs": ["src/**", "package.json", "tsconfig.json", "tsup.config.ts", "vite.config.ts", "svelte.config.js"],
+      "inputs": [
+        "src/**",
+        "package.json",
+        "tsconfig.json",
+        "tsup.config.ts",
+        "vite.config.ts",
+        "svelte.config.js"
+      ],
       "cache": true
     },
     "test": {
@@ -62,18 +69,6 @@
       "persistent": true
     }
   },
-  "globalDependencies": [
-    ".env",
-    "tsconfig.json",
-    "turbo.json",
-    "package.json",
-    ".npmrc"
-  ],
-  "globalEnv": [
-    "CI",
-    "NODE_ENV",
-    "OCI_COMPARTMENT_ID",
-    "OCI_REGION",
-    "OCI_CONFIG_PROFILE"
-  ]
+  "globalDependencies": [".env", "tsconfig.json", "turbo.json", "package.json", ".npmrc"],
+  "globalEnv": ["CI", "NODE_ENV", "OCI_COMPARTMENT_ID", "OCI_REGION", "OCI_CONFIG_PROFILE"]
 }

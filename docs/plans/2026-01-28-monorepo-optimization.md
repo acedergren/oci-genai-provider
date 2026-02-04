@@ -13,6 +13,7 @@
 ## Prerequisites
 
 **Required:**
+
 - ✅ All 7 implementation plans complete (Plans 1-7)
 - ✅ All tests passing
 - ✅ Current pnpm version: 8.15.0
@@ -23,6 +24,7 @@
 ## Task 1: Clean Up Technical Debt
 
 **Files:**
+
 - Remove: `packages/oci-genai-provider/src/provider.ts.provider.bak`
 - Remove: `packages/oci-genai-provider/src/provider.ts.provider.bak2`
 - Remove: `packages/oci-genai-provider/src/speech-models/OCISpeechModel.ts.bak`
@@ -47,6 +49,7 @@ git rm packages/oci-genai-provider/src/speech-models/OCISpeechModel.ts.bak2
 Update: `.gitignore`
 
 Add these entries:
+
 ```gitignore
 # Backup files
 **/*.bak
@@ -87,6 +90,7 @@ git commit -m "chore: remove backup files and update .gitignore
 ## Task 2: Upgrade pnpm to v10
 
 **Files:**
+
 - Modify: `package.json`
 - Will update: `pnpm-lock.yaml` (automatic)
 
@@ -155,6 +159,7 @@ Benefits:
 ## Task 3: Optimize .npmrc Configuration
 
 **Files:**
+
 - Modify: `.npmrc`
 
 **Step 1: Enhance .npmrc with performance settings**
@@ -207,6 +212,7 @@ Expected impact: ~20% faster installs"
 ## Task 4: Optimize Turborepo Configuration
 
 **Files:**
+
 - Modify: `turbo.json`
 
 **Step 1: Update turbo.json with optimized configuration**
@@ -221,13 +227,7 @@ Replace content of `turbo.json`:
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".svelte-kit/**", ".next/**", "build/**"],
-      "inputs": [
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "package.json",
-        "tsconfig.json",
-        "tsup.config.ts"
-      ],
+      "inputs": ["src/**/*.ts", "src/**/*.tsx", "package.json", "tsconfig.json", "tsup.config.ts"],
       "cache": true
     },
     "test": {
@@ -301,18 +301,8 @@ Replace content of `turbo.json`:
       "dependsOn": ["^build"]
     }
   },
-  "globalDependencies": [
-    ".env",
-    ".env.local",
-    "tsconfig.json",
-    "turbo.json"
-  ],
-  "globalEnv": [
-    "NODE_ENV",
-    "OCI_COMPARTMENT_ID",
-    "OCI_REGION",
-    "OCI_CONFIG_PROFILE"
-  ]
+  "globalDependencies": [".env", ".env.local", "tsconfig.json", "turbo.json"],
+  "globalEnv": ["NODE_ENV", "OCI_COMPARTMENT_ID", "OCI_REGION", "OCI_CONFIG_PROFILE"]
 }
 ```
 
@@ -355,6 +345,7 @@ Expected impact:
 ## Task 5: Add Example Workspace Scripts
 
 **Files:**
+
 - Modify: `package.json` (root)
 
 **Step 1: Add example-specific scripts to root package.json**
@@ -412,6 +403,7 @@ Improves developer experience for working with specific workspace subsets"
 ## Task 6: Enhance GitHub Actions CI
 
 **Files:**
+
 - Modify: `.github/workflows/test.yml`
 - Create: `.github/workflows/validate-examples.yml`
 
@@ -437,7 +429,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2  # For Turbo affected detection
+          fetch-depth: 2 # For Turbo affected detection
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -575,6 +567,7 @@ Expected impact: 50% faster CI with better coverage"
 ## Task 7: Verify All Optimizations
 
 **Files:**
+
 - None (verification only)
 
 **Step 1: Clean build from scratch**
@@ -629,40 +622,47 @@ Create: `docs/MONOREPO-OPTIMIZATION-SUMMARY.md`
 ## Completed Optimizations
 
 ### 1. Technical Debt Cleanup ✅
+
 - Removed 4 backup files (.bak, .bak2)
 - Updated .gitignore with comprehensive patterns
 - Clean repository ready for release
 
 ### 2. pnpm Upgrade ✅
+
 - Upgraded from 8.15.0 → 10.28.2
 - ~25% faster installs
 - Better workspace handling
 - Improved lockfile conflict resolution
 
 ### 3. pnpm Configuration ✅
+
 - Optimized .npmrc for performance
 - Added network concurrency settings
 - Enabled Turborepo integration
 - ~20% faster install times
 
 ### 4. Turborepo Optimization ✅
+
 - Removed unnecessary build dependencies
 - Added explicit inputs for better caching
 - Separated unit and integration test caching
 - 40% faster test iteration
 
 ### 5. Workspace Scripts ✅
+
 - Added example-specific scripts
 - Added package-specific scripts
 - Better developer experience
 
 ### 6. CI/CD Enhancements ✅
+
 - Added Turborepo caching (~50% faster CI)
 - Created parallel example validation
 - Updated to pnpm 10
 - Added Codecov integration
 
 ### 7. Verification ✅
+
 - All builds passing
 - 271+ tests passing
 - Turborepo cache working
@@ -670,12 +670,12 @@ Create: `docs/MONOREPO-OPTIMIZATION-SUMMARY.md`
 
 ## Performance Improvements
 
-| Area | Before | After | Improvement |
-|------|--------|-------|-------------|
-| pnpm install | ~45s | ~34s | 25% faster |
-| Test runs | ~12s | ~7s | 40% faster |
-| CI pipeline | ~3m | ~1.5m | 50% faster |
-| Cache hits | ~60% | ~85% | 25% better |
+| Area         | Before | After | Improvement |
+| ------------ | ------ | ----- | ----------- |
+| pnpm install | ~45s   | ~34s  | 25% faster  |
+| Test runs    | ~12s   | ~7s   | 40% faster  |
+| CI pipeline  | ~3m    | ~1.5m | 50% faster  |
+| Cache hits   | ~60%   | ~85%  | 25% better  |
 
 ## Impact
 
@@ -687,6 +687,7 @@ Create: `docs/MONOREPO-OPTIMIZATION-SUMMARY.md`
 ## Next Steps
 
 Ready for production release:
+
 - ✅ Clean codebase
 - ✅ Optimized builds
 - ✅ Fast CI/CD
@@ -737,6 +738,7 @@ After completing all tasks:
 If issues arise:
 
 1. **pnpm upgrade issues:**
+
    ```bash
    cp pnpm-lock.yaml.backup pnpm-lock.yaml
    corepack prepare pnpm@8.15.0 --activate
@@ -744,6 +746,7 @@ If issues arise:
    ```
 
 2. **Turborepo config issues:**
+
    ```bash
    git checkout HEAD~1 turbo.json
    pnpm turbo run build
