@@ -1,4 +1,5 @@
 #!/usr/bin/env npx tsx
+/* eslint-disable no-console, @typescript-eslint/require-await, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
 /**
  * OCI GenAI SDK API Alignment Verification Script
  *
@@ -64,10 +65,7 @@ interface SDKGenericTool {
 interface SDKCohereTool {
   name: string;
   description: string;
-  parameterDefinitions: Record<
-    string,
-    { type: string; description?: string; required?: boolean }
-  >;
+  parameterDefinitions: Record<string, { type: string; description?: string; required?: boolean }>;
 }
 
 // Verification Tests
@@ -331,7 +329,9 @@ function verifyResponseParsing(): boolean {
 
   // Verify finish reason values
   const validFinishReasons = ['STOP', 'LENGTH', 'CONTENT_FILTER', 'TOOL_CALLS', 'ERROR'];
-  if (validFinishReasons.includes(genericResponse.chatResult.chatResponse.choices[0].finishReason)) {
+  if (
+    validFinishReasons.includes(genericResponse.chatResult.chatResponse.choices[0].finishReason)
+  ) {
     pass('Finish reason is valid OCI format');
   } else {
     fail('Finish reason not recognized');
