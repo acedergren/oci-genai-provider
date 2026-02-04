@@ -18,19 +18,21 @@ env:
 jobs:
   quality-checks:
     name: Lint & Type Check
-    runs-on: self-hosted
-    timeout-minutes: 5
-    container:
-      image: node:22-bookworm
-      options: --user root
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure git
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
-      - name: Enable Corepack and activate pnpm
-        run: corepack enable && corepack prepare pnpm@latest --activate
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -54,19 +56,21 @@ jobs:
 
   test:
     name: Test
-    runs-on: self-hosted
-    timeout-minutes: 5
-    container:
-      image: node:22-bookworm
-      options: --user root
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure git
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
-      - name: Enable Corepack and activate pnpm
-        run: corepack enable && corepack prepare pnpm@latest --activate
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -93,20 +97,22 @@ jobs:
 
   build:
     name: Build
-    runs-on: self-hosted
-    timeout-minutes: 5
-    container:
-      image: node:22-bookworm
-      options: --user root
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [quality-checks, test]
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure git
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
-      - name: Enable Corepack and activate pnpm
-        run: corepack enable && corepack prepare pnpm@latest --activate
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
