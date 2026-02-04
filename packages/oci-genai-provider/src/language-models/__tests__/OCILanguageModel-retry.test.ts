@@ -87,7 +87,7 @@ describe('OCILanguageModel Retry and Timeout Integration', () => {
     mockGetRegion.mockReturnValue('eu-frankfurt-1');
     mockGetCompartmentId.mockReturnValue('ocid1.compartment.oc1..test');
     mockFromRegionId.mockReturnValue({ regionId: 'eu-frankfurt-1' });
-    mockChat.mockImplementation(async () => ({
+    mockChat.mockImplementation(() => ({
       body: createReadableStream([
         ...createMockStreamChunks(['Generated response']),
         `data: ${JSON.stringify({
@@ -113,7 +113,7 @@ describe('OCILanguageModel Retry and Timeout Integration', () => {
         .mockRejectedValueOnce(
           Object.assign(new Error('Internal Server Error'), { statusCode: 500 })
         )
-        .mockImplementationOnce(async () => createMockSuccessResponse());
+        .mockImplementationOnce(() => createMockSuccessResponse());
 
       const model = new OCILanguageModel('cohere.command-r-plus', {
         ...mockConfig,
@@ -132,7 +132,7 @@ describe('OCILanguageModel Retry and Timeout Integration', () => {
       // Fail once with 429, then succeed
       mockChat
         .mockRejectedValueOnce(Object.assign(new Error('Rate Limited'), { statusCode: 429 }))
-        .mockImplementationOnce(async () => createMockSuccessResponse());
+        .mockImplementationOnce(() => createMockSuccessResponse());
 
       const model = new OCILanguageModel('cohere.command-r-plus', {
         ...mockConfig,
@@ -151,7 +151,7 @@ describe('OCILanguageModel Retry and Timeout Integration', () => {
       // Fail with network error, then succeed
       mockChat
         .mockRejectedValueOnce(Object.assign(new Error('Connection reset'), { code: 'ECONNRESET' }))
-        .mockImplementationOnce(async () => createMockSuccessResponse());
+        .mockImplementationOnce(() => createMockSuccessResponse());
 
       const model = new OCILanguageModel('cohere.command-r-plus', {
         ...mockConfig,
@@ -248,7 +248,7 @@ describe('OCILanguageModel Retry and Timeout Integration', () => {
 
     it('should succeed if request completes within timeout', async () => {
       // Mock a fast request
-      mockChat.mockImplementation(async () => createMockSuccessResponse());
+      mockChat.mockImplementation(() => createMockSuccessResponse());
 
       const model = new OCILanguageModel('cohere.command-r-plus', {
         ...mockConfig,
@@ -265,7 +265,7 @@ describe('OCILanguageModel Retry and Timeout Integration', () => {
 
   describe('Configuration options', () => {
     it('should use default options when none provided', async () => {
-      mockChat.mockImplementation(async () => createMockSuccessResponse());
+      mockChat.mockImplementation(() => createMockSuccessResponse());
 
       const model = new OCILanguageModel('cohere.command-r-plus', mockConfig);
       await model.doGenerate(callOptions);
@@ -275,7 +275,7 @@ describe('OCILanguageModel Retry and Timeout Integration', () => {
     });
 
     it('should merge config options with defaults', async () => {
-      mockChat.mockImplementation(async () => createMockSuccessResponse());
+      mockChat.mockImplementation(() => createMockSuccessResponse());
 
       const model = new OCILanguageModel('cohere.command-r-plus', {
         ...mockConfig,
@@ -287,7 +287,7 @@ describe('OCILanguageModel Retry and Timeout Integration', () => {
     });
 
     it('should allow custom timeout values', async () => {
-      mockChat.mockImplementation(async () => createMockSuccessResponse());
+      mockChat.mockImplementation(() => createMockSuccessResponse());
 
       const model = new OCILanguageModel('cohere.command-r-plus', mockConfig);
       await model.doGenerate({
