@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ObjectStorageClient } from 'oci-objectstorage';
 import { Region } from 'oci-common';
 import type { OCIConfig } from '../../types';

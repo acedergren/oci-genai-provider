@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
 // Mock OCI SDK before imports

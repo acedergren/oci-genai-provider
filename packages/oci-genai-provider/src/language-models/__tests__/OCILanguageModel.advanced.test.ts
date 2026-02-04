@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/require-await */
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { OCILanguageModel } from '../OCILanguageModel';
 import type { AuthenticationDetailsProvider } from 'oci-common';

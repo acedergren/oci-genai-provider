@@ -213,7 +213,6 @@ export async function* parseSSEStream(
 
     if (result.done) break;
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     parser.feed(decoder.decode(result.value, { stream: true }));
 
     // Yield any parts that were parsed

@@ -5,10 +5,6 @@
  * Set OCI_COMPARTMENT_ID environment variable to run these tests.
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/await-thenable */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 import { describe, it, expect } from '@jest/globals';
 import { streamText } from 'ai';
 import { createOCI } from '../../index';

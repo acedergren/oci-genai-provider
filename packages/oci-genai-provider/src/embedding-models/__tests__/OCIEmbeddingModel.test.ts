@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { NoSuchModelError, TooManyEmbeddingValuesForCallError } from '@ai-sdk/provider';
 import { OCIEmbeddingModel } from '../OCIEmbeddingModel';
 import type { EmbeddingModelV3CallOptions } from '@ai-sdk/provider';
 
 // Mockable embedText function - use any to avoid complex Jest typing issues
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const mockEmbedText = jest.fn() as jest.Mock<any>;
 
 // Mock OCI SDK

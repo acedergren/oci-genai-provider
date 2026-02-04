@@ -73,6 +73,101 @@ export default [
     },
   },
 
+  // Test files: relax type-checking rules for mocking and assertions
+  {
+    files: ['**/__tests__/**/*.ts', '**/*.test.ts', '**/*.spec.ts'],
+    rules: {
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/await-thenable': 'off',
+      '@typescript-eslint/no-floating-promises': 'off',
+      '@typescript-eslint/explicit-function-return-type': 'off',
+    },
+  },
+
+  // Realtime client: relax rules for WebSocket and OCI SDK interactions
+  {
+    files: ['**/realtime/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-this-alias': 'off',
+      '@typescript-eslint/await-thenable': 'off',
+      '@typescript-eslint/no-floating-promises': 'off',
+      '@typescript-eslint/no-misused-promises': 'off',
+      'no-redeclare': 'off',
+    },
+  },
+
+  // Reranking models: relax rules for OCI SDK response handling
+  {
+    files: ['**/reranking-models/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+    },
+  },
+
+  // Auth module: relax rules for OCI SDK auth provider patterns
+  {
+    files: ['**/auth/**/*.ts'],
+    rules: {
+      '@typescript-eslint/await-thenable': 'off',
+      '@typescript-eslint/no-redundant-type-constituents': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_|OCID_TYPES' }],
+    },
+  },
+
+  // Config module: relax rules for OCI SDK provider patterns and type unions
+  {
+    files: ['**/config/**/*.ts'],
+    rules: {
+      '@typescript-eslint/await-thenable': 'off',
+      '@typescript-eslint/no-redundant-type-constituents': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_|OCID_TYPES' }],
+    },
+  },
+
+  // Shared utilities: relax rules for stream handling and OCI SDK types
+  {
+    files: ['**/src/shared/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-explicit-any': 'warn',
+    },
+  },
+
+  // Language models: relax no-misused-promises for streaming callbacks
+  {
+    files: ['**/language-models/*.ts', '**/language-models/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-misused-promises': 'off',
+    },
+  },
+
+  // Speech models: relax type rules for OCI SDK response handling
+  {
+    files: ['**/speech-models/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-explicit-any': 'warn',
+    },
+  },
+
   // Anthropic-compatible package: disable no-misused-promises for Bun.serve
   {
     files: ['packages/oci-anthropic-compatible/**/*.ts'],

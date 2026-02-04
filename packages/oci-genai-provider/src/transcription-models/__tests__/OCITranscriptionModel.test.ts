@@ -1,7 +1,5 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 // Mock oci-aispeech - needs to be at top level
 const mockCreateTranscriptionJob = jest.fn<any>();
 const mockGetTranscriptionJob = jest.fn<any>();

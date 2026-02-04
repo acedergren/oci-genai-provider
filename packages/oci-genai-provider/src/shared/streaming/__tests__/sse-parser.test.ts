@@ -314,7 +314,6 @@ data: {"message":{"content":[{"text":"test"}]}}
       const response = new Response(null);
 
       await expect(async () => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         for await (const _part of parseSSEStream(response)) {
           // consume the stream
         }

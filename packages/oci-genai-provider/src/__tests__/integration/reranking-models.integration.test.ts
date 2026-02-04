@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
 import { describe, it, expect } from '@jest/globals';
 import { createMockOCIConfig, createMockOCIResponse } from '../utils/test-helpers';
 

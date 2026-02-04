@@ -43,12 +43,10 @@ class MockWebSocket {
 // Install mock
 const originalWebSocket = globalThis.WebSocket;
 beforeEach(() => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (globalThis as any).WebSocket = MockWebSocket;
 });
 
 afterEach(() => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (globalThis as any).WebSocket = originalWebSocket;
 });
 

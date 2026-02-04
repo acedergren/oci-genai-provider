@@ -408,7 +408,7 @@ export class OCILanguageModel implements LanguageModelV3 {
 
       return {
         stream: new ReadableStream<LanguageModelV3StreamPart>({
-          async start(controller) {
+          async start(controller): Promise<void> {
             controller.enqueue({ type: 'stream-start', warnings });
 
             let hasText = false;

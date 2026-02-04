@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/require-await, @typescript-eslint/unbound-method */
+/* eslint-disable @typescript-eslint/unbound-method */
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { createOCI } from '../index';
 import { mockOCIError } from './utils/test-helpers';

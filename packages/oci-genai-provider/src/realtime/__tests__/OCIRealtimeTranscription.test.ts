@@ -111,7 +111,7 @@ let mockWsInstance: MockWebSocket | null = null;
 
 beforeEach(() => {
   mockWsInstance = null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   (globalThis as any).WebSocket = class extends MockWebSocket {
     constructor(url: string) {
       super(url);
@@ -121,7 +121,6 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (globalThis as any).WebSocket = originalWebSocket;
   jest.clearAllMocks();
 });

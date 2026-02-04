@@ -227,7 +227,7 @@ export class OCIRealtimeClient {
   /**
    * Request final results and close the session gracefully.
    */
-  async requestFinalResult(): Promise<void> {
+  requestFinalResult(): void {
     if (!this.isConnected || !this.ws) {
       return;
     }
@@ -251,7 +251,7 @@ export class OCIRealtimeClient {
     if (this.ws) {
       // Request final result before closing
       try {
-        await this.requestFinalResult();
+        this.requestFinalResult();
         // Give server a moment to send final results
         await new Promise((resolve) => setTimeout(resolve, 100));
       } catch {
@@ -282,7 +282,7 @@ export class OCIRealtimeClient {
         break;
 
       case 'resource_principal':
-        authProvider = await common.ResourcePrincipalAuthenticationDetailsProvider.builder();
+        authProvider = common.ResourcePrincipalAuthenticationDetailsProvider.builder();
         break;
 
       case 'config_file':

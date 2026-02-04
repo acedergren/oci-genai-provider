@@ -33,7 +33,6 @@ describe('withTimeout', () => {
   });
 
   it('should include custom message in TimeoutError', async () => {
-    /* eslint-disable-next-line @typescript-eslint/explicit-function-return-type */
     const fn = () => new Promise((resolve) => setTimeout(resolve, 10000));
 
     const promise = withTimeout(fn(), 500, 'API request');

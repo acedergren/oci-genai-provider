@@ -110,7 +110,7 @@ describe('Message Conversion', () => {
           role: 'user' as const,
           content: [
             { type: 'text' as const, text: 'Text part' },
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
             { type: 'unsupported' as const, data: '...' } as any,
           ],
         },
@@ -147,7 +147,6 @@ describe('Message Conversion', () => {
         {
           role: 'user' as const,
           content: [
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             { type: 'file' as const, data: new Uint8Array(), mediaType: 'application/pdf' } as any,
           ],
         },
@@ -163,10 +162,7 @@ describe('Message Conversion', () => {
       const aiPrompt = [
         {
           role: 'user' as const,
-          content: [
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            { type: 'image' as const, image: new Uint8Array([1, 2, 3]) } as any,
-          ],
+          content: [{ type: 'image' as const, image: new Uint8Array([1, 2, 3]) } as any],
         },
       ];
 
@@ -181,7 +177,6 @@ describe('Message Conversion', () => {
         {
           role: 'user' as const,
           content: [
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             { type: 'file' as const, data: new Uint8Array(), mediaType: 'application/pdf' } as any,
           ],
         },
@@ -225,10 +220,10 @@ describe('Message Conversion', () => {
           role: 'user' as const,
           content: [
             { type: 'text' as const, text: 'Text 1' },
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
             { type: 'file' as const, data: new Uint8Array(), mediaType: 'image/png' } as any,
             { type: 'text' as const, text: 'Text 2' },
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
             { type: 'file' as const, data: new Uint8Array(), mediaType: 'application/pdf' } as any,
             { type: 'text' as const, text: 'Text 3' },
           ],
@@ -251,7 +246,7 @@ describe('Message Conversion', () => {
           role: 'assistant' as const,
           content: [
             { type: 'text' as const, text: 'Response' },
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
             { type: 'image' as const, image: 'base64...' } as any,
           ],
         },
@@ -274,7 +269,7 @@ describe('Message Conversion', () => {
               data: new Uint8Array([1, 2, 3]),
               mediaType: 'image/png',
             } as any,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
             { type: 'file' as const, data: new Uint8Array(), mediaType: 'text/plain' } as any,
           ],
         },
@@ -289,7 +284,6 @@ describe('Message Conversion', () => {
     });
 
     it('should handle content that is not string or array (edge case for branch coverage)', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const aiPrompt: any = [
         {
           role: 'user' as const,
@@ -297,7 +291,6 @@ describe('Message Conversion', () => {
         },
       ];
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const result = convertToOCIMessages(aiPrompt);
 
       // When content is neither string nor array, should result in empty content
@@ -308,7 +301,6 @@ describe('Message Conversion', () => {
     it('should throw error for unsupported role', () => {
       const aiPrompt = [
         {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
           role: 'function' as any,
           content: 'test',
         },
@@ -474,7 +466,6 @@ describe('Message Conversion', () => {
         if (i % 2 === 0) {
           parts.push({ type: 'text' as const, text: `Text ${i}` });
         } else {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           parts.push({ type: 'image' as const, image: `image${i}` } as any);
         }
       }
