@@ -22,8 +22,8 @@ This provider implements the Vercel AI SDK's `ProviderV3` interface, which means
 ## Features
 
 - **5+ Model Types** - Language models, embeddings, speech, transcription, reranking
-- **16+ Language Models** - Cohere Command, Meta Llama, Anthropic Claude, Mistral, Grok
-- **3 Embedding Models** - Multilingual and English semantic search
+- **Language Models** - Multiple model families via OCI GenAI ([see available models](https://docs.oracle.com/en-us/iaas/Content/generative-ai/pretrained-models.htm))
+- **Embedding Models** - Multilingual and English semantic search
 - **Speech Models (TTS)** - OCI Speech Synthesis in Phoenix region
 - **Transcription Models (STT)** - OCI Speech to Text services
 - **Reranking Models** - Cohere Rerank for search optimization
@@ -36,7 +36,7 @@ This provider implements the Vercel AI SDK's `ProviderV3` interface, which means
 | Feature                | OCI GenAI               | Other Providers |
 | ---------------------- | ----------------------- | --------------- |
 | **EU Data Residency**  | ✅ Frankfurt, Stockholm | Limited         |
-| **Grok Models**        | ✅ xAI Grok 4           | ❌              |
+| **Grok Models**        | ✅ Available            | ❌              |
 | **Cost**               | 💰 Competitive          | Varies          |
 | **Context Window**     | Up to 1M tokens         | Up to 2M tokens |
 | **Enterprise Support** | ✅ Oracle Cloud         | Varies          |
@@ -82,7 +82,7 @@ This provider supports most Vercel AI SDK v6 features for text generation. See [
 - Streaming and non-streaming generation
 - Temperature, topP, topK, penalties
 - Seed parameter (best-effort determinism)
-- Multiple model families (Llama, Gemini, Cohere, Grok)
+- Multiple model families ([see Oracle docs](https://docs.oracle.com/en-us/iaas/Content/generative-ai/pretrained-models.htm))
 - Retry logic and timeout control
 
 ### Not Supported ❌
@@ -146,17 +146,9 @@ Generate text using powerful language models from multiple providers.
 
 ### Available Models
 
-| Model ID                         | Family    | Context | Best For              |
-| -------------------------------- | --------- | ------- | --------------------- |
-| `cohere.command-r-plus`          | Cohere    | 128K    | Long context, RAG     |
-| `cohere.command-r`               | Cohere    | 128K    | General purpose       |
-| `meta.llama-3.3-70b-instruct`    | Meta      | 8K      | Instruction following |
-| `meta.llama-3.1-405b-instruct`   | Meta      | 128K    | Most capable          |
-| `anthropic.claude-3-5-sonnet-v2` | Anthropic | 200K    | Analysis, coding      |
-| `mistral.mistral-large-2`        | Mistral   | 128K    | Multilingual          |
-| `xai.grok-4`                     | xAI       | 131K    | Most capable          |
+OCI GenAI supports models from multiple families including Cohere, Meta Llama, and others. Model availability varies by region and changes over time.
 
-[See full model list in API Reference](./docs/api-reference.md)
+See [Oracle's pretrained model documentation](https://docs.oracle.com/en-us/iaas/Content/generative-ai/pretrained-models.htm) for the current list of available models and their capabilities.
 
 ### Usage
 
@@ -216,10 +208,7 @@ console.log('Transcript:', text);
 
 ### Available Transcription Models
 
-| Model ID              | Languages | Custom Vocabulary | Formats                        | Use Case                 |
-| --------------------- | --------- | ----------------- | ------------------------------ | ------------------------ |
-| `oci.speech.standard` | 21        | ✅ Yes            | WAV, MP3, FLAC, OGG            | Production transcription |
-| `oci.speech.whisper`  | 99+       | ❌ No             | WAV, MP3, FLAC, OGG, M4A, WEBM | Multilingual support     |
+See [Oracle's Speech documentation](https://docs.oracle.com/en-us/iaas/Content/speech/overview.htm) for the current list of available transcription models, supported languages, and audio formats.
 
 ### Transcription Options
 
@@ -240,11 +229,7 @@ Generate text embeddings for semantic search, clustering, and RAG applications.
 
 ### Available Embedding Models
 
-| Model ID                          | Dimensions | Max Batch | Use Case                     |
-| --------------------------------- | ---------- | --------- | ---------------------------- |
-| `cohere.embed-multilingual-v3.0`  | 1024       | 96        | Multilingual semantic search |
-| `cohere.embed-english-v3.0`       | 1024       | 96        | English semantic search      |
-| `cohere.embed-english-light-v3.0` | 384        | 96        | Fast English embeddings      |
+See [Oracle's pretrained model documentation](https://docs.oracle.com/en-us/iaas/Content/generative-ai/pretrained-models.htm) for the current list of available embedding models.
 
 ### Usage
 
