@@ -232,7 +232,7 @@ function convertFromCohereToolCall(
 
 /**
  * Check if a model supports tool calling.
- * Currently supported: Llama 3.1+, Grok, Gemini, Cohere Command R/R+
+ * Currently supported: Llama 3.1+, Grok, Gemini, Cohere Command R/R+, OpenAI (GPT-OSS)
  */
 export function supportsToolCalling(modelId: string): boolean {
   const supportedPatterns = [
@@ -240,6 +240,7 @@ export function supportsToolCalling(modelId: string): boolean {
     /^cohere\.command-r/, // Cohere Command R and R+
     /^xai\.grok/, // Grok models
     /^google\.gemini/, // Gemini models
+    /^openai\./, // OpenAI models (GPT-OSS on OCI GenAI)
   ];
 
   return supportedPatterns.some((pattern) => pattern.test(modelId));

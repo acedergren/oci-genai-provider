@@ -745,7 +745,7 @@ declare class OCIRealtimeClient {
     off<K extends keyof RealtimeClientEvents>(event: K, callback: RealtimeClientEvents[K]): void;
     connect(settings?: OCIRealtimeSettings): Promise<void>;
     sendAudio(audio: Uint8Array | ArrayBuffer): void;
-    requestFinalResult(): Promise<void>;
+    requestFinalResult(): void;
     close(code?: number, reason?: string): Promise<void>;
     private createSpeechClient;
     private createSessionToken;

@@ -212,6 +212,9 @@ describe('Tool Calling Integration', () => {
         'xai.grok-4-maverick',
         'google.gemini-1.5-pro',
         'google.gemini-2.0-flash',
+        // OpenAI GPT-OSS models on OCI GenAI (GENERIC format, tools supported by OCI SDK)
+        'openai.gpt-oss-120b',
+        'openai.gpt-oss-20b',
       ];
 
       const unsupported = [

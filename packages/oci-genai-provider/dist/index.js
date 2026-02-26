@@ -4387,8 +4387,10 @@ function supportsToolCalling(modelId) {
     // Cohere Command R and R+
     /^xai\.grok/,
     // Grok models
-    /^google\.gemini/
+    /^google\.gemini/,
     // Gemini models
+    /^openai\./
+    // OpenAI models (GPT-OSS on OCI GenAI)
   ];
   return supportedPatterns.some((pattern) => pattern.test(modelId));
 }
@@ -6747,7 +6749,7 @@ var OCIRealtimeClient = class {
   /**
    * Request final results and close the session gracefully.
    */
-  async requestFinalResult() {
+  requestFinalResult() {
     if (!this.isConnected || !this.ws) {
       return;
     }
@@ -6766,7 +6768,7 @@ var OCIRealtimeClient = class {
     this.clearReconnectTimer();
     if (this.ws) {
       try {
-        await this.requestFinalResult();
+        this.requestFinalResult();
         await new Promise((resolve) => setTimeout(resolve, 100));
       } catch {
       }
@@ -6788,7 +6790,7 @@ var OCIRealtimeClient = class {
         authProvider = await new common2__namespace.InstancePrincipalsAuthenticationDetailsProviderBuilder().build();
         break;
       case "resource_principal":
-        authProvider = await common2__namespace.ResourcePrincipalAuthenticationDetailsProvider.builder();
+        authProvider = common2__namespace.ResourcePrincipalAuthenticationDetailsProvider.builder();
         break;
       case "config_file":
       default: {
