@@ -58,7 +58,7 @@
   "dependencies": {
     "@acedergren/oci-genai-provider": "workspace:*",
     "ai": "^6.0.61",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76 || ^4.0.0"
   },
   "devDependencies": {
     "@types/bun": "latest",

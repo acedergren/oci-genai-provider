@@ -170,8 +170,8 @@ describe('parseProviderSettings', () => {
     };
     const result = parseProviderSettings(settings);
     expect(result.compartmentId).toBe(settings.compartmentId);
-    // servingMode is optional and stays undefined when not provided
-    expect(result.servingMode).toBeUndefined();
+    // servingMode defaults to 'on-demand' when not provided
+    expect(result.servingMode).toBe('on-demand');
   });
 
   it('ZOD-026: includes validation issues in OCIValidationError', () => {
