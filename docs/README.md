@@ -54,7 +54,7 @@ Step-by-step guides for common tasks:
 1. [Basic Chat](tutorials/01-basic-chat.md) — Simple chat implementation
 2. [Streaming Responses](tutorials/02-streaming-responses.md) — Real-time output
 3. [Tool Calling](tutorials/03-tool-calling.md) — Function integration
-4. [OpenCode Integration](tutorials/04-opencode-integration.md) — OpenCode setup
+4. [Vercel AI SDK Integration](guides/vercel-ai-sdk-integration/README.md) — Provider integration patterns
 5. [GitHub Bot](tutorials/05-github-bot.md) — Build a GitHub assistant
 6. [Production Deployment](tutorials/06-production-deployment.md) — Deploy to OCI
 
@@ -67,7 +67,6 @@ Step-by-step guides for common tasks:
 ## Architecture
 
 - [Overview](architecture/README.md) — System architecture
-- [Design Decisions](architecture/design-decisions.md) — Technical choices
 - [Code Conventions](architecture/code-conventions.md) — Style and patterns
 - [Technology Stack](architecture/technology-stack.md) — Dependencies
 
@@ -98,4 +97,4 @@ We welcome contributions. See:
 ---
 
 **Documentation Version**: 1.0.0
-**Last Updated**: 2026-01-28
+**Last Updated**: 2026-03-09

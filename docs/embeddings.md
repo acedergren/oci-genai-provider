@@ -455,7 +455,7 @@ try {
 
 ## Examples
 
-See [RAG Demo Example](../examples/rag-demo) for a complete working example demonstrating:
+See [oci-genai-examples](https://github.com/acedergren/oci-genai-examples) for a complete RAG example demonstrating:
 
 - Embedding documents
 - Searching with semantic similarity

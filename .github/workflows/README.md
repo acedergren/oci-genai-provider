@@ -252,7 +252,7 @@ All workflows use self-hosted runners (gha01, gha02) for zero GitHub Actions min
 **Problem:** Can't access demo (Cloudflare Access blocks)
 
 - **Solution:** Configure Cloudflare Zero Trust Access policy
-- See [Cloudflare Access Setup](../../examples/chatbot-demo/DEPLOYMENT.md#cloudflare-access-setup)
+- See the deployment notes in [oci-genai-examples](https://github.com/acedergren/oci-genai-examples)
 
 **Problem:** Workspace cleanup fails on self-hosted runner
 

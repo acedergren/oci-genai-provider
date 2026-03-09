@@ -293,7 +293,7 @@ If you encounter issues during migration:
 
 1. Check [Troubleshooting Guide](./troubleshooting.md)
 2. Review [API Reference](./api-reference.md)
-3. See [examples/](../../examples/) for working code
+3. See [oci-genai-examples](https://github.com/acedergren/oci-genai-examples) for working code
 4. Open an issue on GitHub
 
 ## Rollback Plan

@@ -7,22 +7,23 @@ Oracle Cloud Infrastructure Generative AI provider for the Vercel AI SDK, with c
 - **Package Manager**: pnpm
 - **Build**: `pnpm build`
 - **Test**: `pnpm test`
-- **Type Check**: `pnpm typecheck`
+- **Type Check**: `pnpm type-check`
 
 ## Setup & Configuration
 
 Detailed guides for project setup and configuration:
 
-- [Credentials & Secrets](.claude/credentials.md) — GitHub PAT, OCI API keys, vault locations (git-ignored)
-- [OCI Configuration](.claude/oci-setup.md) — Tenancy, regions, profiles, environment variables
-- [CI/CD & Deployment](.claude/ci-cd.md) — Pre-commit hooks, GitHub Actions, deployment strategy
-- [Security Practices](.claude/security.md) — Best practices for credentials, secrets, and access control
-- [Code Standards](.claude/code-standards.md) — Naming conventions, patterns, and coding guidelines
+- [Authentication Guide](docs/guides/authentication/README.md) — OCI credentials, profiles, and auth methods
+- [Publishing Guide](docs/guides/publishing.md) — GitHub Packages release workflow
+- [Troubleshooting](docs/guides/troubleshooting.md) — Common OCI and SDK issues
+- [Security Policy](SECURITY.md) — Reporting and handling vulnerabilities
+- [Code Conventions](docs/architecture/code-conventions.md) — Naming conventions, patterns, and coding guidelines
 
 ## Technical References
 
-- [Dependency Compatibility](.claude/dependency-compatibility-matrix.md) — Version matrix for AI SDK and OCI SDK
-- [Upgrade Quick Reference](.claude/upgrade-quick-reference.md) — Migration guides for major version upgrades
+- [Model Catalog](docs/reference/oci-genai-models/README.md) — Available OCI GenAI models and capabilities
+- [Technology Stack](docs/architecture/technology-stack.md) — Workspace dependencies and tooling
+- [Major Dependency Migrations](docs/troubleshooting/major-dependency-migrations.md) — Upgrade notes for major dependency changes
 
 ## Key Information
 
@@ -45,7 +46,7 @@ Monorepo containing the OCI GenAI provider ecosystem for AI development.
 │   ├── oci-openai-compatible/     # OpenAI API compatibility wrapper
 │   ├── oci-genai-setup/           # Interactive CLI setup tool
 │   └── test-utils/                # Shared test utilities
-└── .claude/                        # Agent instructions
+└── .claude/                        # Local Claude settings
 ```
 
 **Note:** Example applications have been extracted to a separate repository:
@@ -54,4 +55,4 @@ Monorepo containing the OCI GenAI provider ecosystem for AI development.
 
 ---
 
-**Last Updated**: 2026-02-01
+**Last Updated**: 2026-03-09

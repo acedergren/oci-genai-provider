@@ -374,14 +374,14 @@ try {
 
 ## Examples
 
-Complete working examples in `examples/` directory:
+Complete working examples live in the [`oci-genai-examples`](https://github.com/acedergren/oci-genai-examples) repository:
 
-- **[chatbot-demo](../../examples/chatbot-demo/)** - SvelteKit chatbot with streaming
-- **[nextjs-chatbot](../../examples/nextjs-chatbot/)** - Next.js chatbot
-- **[rag-demo](../../examples/rag-demo/)** - RAG with embeddings
-- **[speech-demo](../../examples/speech-demo/)** - Text-to-speech
-- **[transcription-demo](../../examples/transcription-demo/)** - Speech-to-text
-- **[rag-reranking-demo](../../examples/rag-reranking-demo/)** - RAG with embeddings + reranking
+- SvelteKit chatbot with streaming
+- Next.js chatbot
+- RAG with embeddings
+- Text-to-speech
+- Speech-to-text
+- RAG with embeddings + reranking
 
 ## Migration from v1.x
 
@@ -540,4 +540,4 @@ MIT
 
 - GitHub Issues: [oci-genai-provider/issues](https://github.com/acedergren/oci-genai-provider/issues)
 - Documentation: [docs/](./docs/)
-- Examples: [examples/](../../examples/)
+- Examples: [oci-genai-examples](https://github.com/acedergren/oci-genai-examples)

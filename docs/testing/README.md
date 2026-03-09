@@ -7,7 +7,7 @@ This document describes the test suite organization and testing practices for th
 - **[Test Suite Specification](../plans/2026-01-26-test-suite-specification.md)** - Complete test specifications (121 tests)
 - **[TDD Implementation Plan](../plans/2026-01-27-core-provider-tdd-implementation.md)** - RED-GREEN-REFACTOR implementation guide
 - **[Core Implementation Plan](../plans/2026-01-27-core-provider-implementation.md)** - High-level implementation roadmap
-- **[OpenCode Integration Plan](../plans/2026-01-27-opencode-integration-implementation.md)** - OpenCode wrapper implementation
+- **[OpenCode Integration Plan](../_archived/2026-01-27-opencode-integration-implementation.md)** - Archived OpenCode wrapper implementation
 
 ## Test Suite Structure
 

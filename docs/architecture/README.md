@@ -223,10 +223,9 @@ Test categories:
 
 ## Further Reading
 
-- [Design Decisions](design-decisions.md) — Why we made specific choices
 - [Technology Stack](technology-stack.md) — Dependencies and versions
 - [Code Conventions](code-conventions.md) — Style and patterns
 
 ---
 
-**Last Updated**: 2026-01-28
+**Last Updated**: 2026-03-09

@@ -154,5 +154,5 @@ interface RerankingResponse {
 ## Next Steps
 
 - [Embeddings Guide](./embeddings.md) - Combine with embeddings for powerful RAG
-- [Language Models Guide](./language-models.md) - Generate responses with LLMs
-- [Examples](../../examples/) - Working implementations
+- [Language Models Guide](../packages/oci-genai-provider/docs/language-models.md) - Generate responses with LLMs
+- [Examples](https://github.com/acedergren/oci-genai-examples) - Working implementations
