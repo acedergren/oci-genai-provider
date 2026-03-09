@@ -94,7 +94,7 @@ Generates `~/.config/opencode/opencode.json`:
   "$schema": "https://opencode.ai/config.json",
   "provider": {
     "oci-genai": {
-      "npm": "@acedergren/opencode-oci-genai",
+      "npm": "@acedergren/oci-genai-provider",
       "name": "OCI GenAI",
       "options": {
         "compartmentId": "ocid1.compartment.oc1...",

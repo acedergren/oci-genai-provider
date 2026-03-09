@@ -526,7 +526,7 @@ git commit -m "test: verify rollback"
 - Jest 29 is still actively maintained and well-supported
 - No critical bugs or security issues
 - Jest 30 introduces breaking changes that require careful testing
-- All tests currently pass with Jest 29 (208/208 passing)
+- All current workspace tests pass with Jest 29 in the Jest-based packages.
 
 ### When to Migrate
 
@@ -568,7 +568,7 @@ pnpm test
 ```bash
 # 1. Check package manager
 pnpm --version
-# Expected: 8.15.0
+# Expected: 10.28.2 or later
 
 # 2. Check Node types
 pnpm list @types/node
@@ -576,7 +576,7 @@ pnpm list @types/node
 
 # 3. Check ESLint version
 pnpm list eslint
-# Expected: eslint@9.20.0
+# Expected: eslint@9.39.2
 
 # 4. Check Husky version
 pnpm list husky
@@ -604,7 +604,7 @@ pnpm exec turbo run build
 
 # 2. Run all tests
 pnpm exec turbo run test
-# Expected: 208/208 tests passing
+# Expected: current workspace tests passing
 
 # 3. Lint all packages
 pnpm exec turbo run lint
@@ -634,10 +634,10 @@ packages/oci-genai-provider:build: ✓ built in 1.2s
 **Test Output:**
 
 ```bash
-Test Suites: 13 passed, 13 total
-Tests:       208 passed, 208 total
+Test Suites: all configured suites passing
+Tests:       current workspace tests passing
 Snapshots:   0 total
-Time:        5.123 s
+Time:        varies by environment
 ```
 
 **Lint Output:**
@@ -699,7 +699,7 @@ git checkout main
 - **11:00 AM**: Documentation updated
 
 **Total Time:** ~4 hours
-**Tests Passing:** 208/208
+**Tests Passing:** Current workspace test suite green
 **Build Status:** All packages building successfully
 **Lint Status:** 0 errors
 

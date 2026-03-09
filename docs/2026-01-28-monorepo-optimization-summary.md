@@ -2,11 +2,11 @@
 
 **Date**: 2026-01-28
 **Author**: Claude Code
-**Project**: opencode-oci-genai
+**Project**: oci-genai-provider
 
 ## Overview
 
-Completed comprehensive 7-task optimization plan for the opencode-oci-genai monorepo, focusing on build performance, developer experience, and CI/CD efficiency.
+Completed comprehensive 7-task optimization plan for the oci-genai-provider monorepo, focusing on build performance, developer experience, and CI/CD efficiency.
 
 ## Changes Made
 
@@ -353,6 +353,6 @@ All changes follow industry best practices and are ready for production use.
 
 ---
 
-**Summary Document**: `/Users/acedergr/Projects/opencode-oci-genai/docs/2026-01-28-monorepo-optimization-summary.md`
+**Summary Document**: `/Users/acedergr/Projects/oci-genai-provider/docs/2026-01-28-monorepo-optimization-summary.md`
 **Total Commits**: 6 optimization commits
 **Status**: ✅ Optimization plan completed successfully

@@ -228,5 +228,5 @@ Issues and PRs welcome! See [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 ## Support
 
-- [GitHub Issues](https://github.com/acedergren/opencode-oci-genai/issues)
+- [GitHub Issues](https://github.com/acedergren/oci-genai-provider/issues)
 - [OCI Documentation](https://docs.oracle.com/en-us/iaas/Content/generative-ai/home.htm)

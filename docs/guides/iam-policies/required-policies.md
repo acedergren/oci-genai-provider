@@ -89,7 +89,7 @@ Allow group <YOUR_GROUP_NAME> to use vaults in compartment <VAULT_COMPARTMENT>
 **What this enables:**
 
 - Retrieve OAuth client secret from OCI Vault
-- Required for `packages/opencode-oci-genai-auth` plugin
+- Required for OAuth-enabled auth flows that read secrets from OCI Vault
 - API: `SecretsClient.getSecretBundle({ secretId })`
 
 **Note:** Not needed for standard API key or instance principal auth
@@ -373,7 +373,7 @@ Allow group <YOUR_GROUP_NAME> to read compartments in compartment AC
 - [Official OCI GenAI IAM Documentation](https://docs.oracle.com/en-us/iaas/Content/generative-ai/iam-policies.htm)
 - [OCI IAM Policy Reference](https://docs.oracle.com/en-us/iaas/Content/Identity/Reference/policyreference.htm)
 - [Managing Dynamic Groups](https://docs.oracle.com/en-us/iaas/Content/Identity/Tasks/managingdynamicgroups.htm)
-- Provider README: `/Users/acedergr/Projects/oci-genai-provider/packages/opencode-oci-genai/README.md`
+- Provider README: `/Users/acedergr/Projects/oci-genai-provider/packages/oci-genai-provider/README.md`
 - Test Results: `/Users/acedergr/Projects/oci-genai-provider/TEST_RESULTS_SUMMARY.md`
 
 ---

@@ -17,10 +17,10 @@ Both packages are configured for GitHub Package Registry:
 
 ### Packages
 
-| Package                          | Description                  | Size    |
-| -------------------------------- | ---------------------------- | ------- |
-| `@acedergren/oci-genai-provider` | Core Vercel AI SDK provider  | ~23 KB  |
-| `@acedergren/opencode-oci-genai` | OpenCode integration wrapper | ~2.6 KB |
+| Package                             | Description                 | Size    |
+| ----------------------------------- | --------------------------- | ------- |
+| `@acedergren/oci-genai-provider`    | Core Vercel AI SDK provider | ~23 KB  |
+| `@acedergren/oci-openai-compatible` | OpenAI-compatible wrapper   | ~2.6 KB |
 
 ### Package Contents
 
@@ -67,7 +67,7 @@ pnpm build
 
 # Dry run to verify
 pnpm --filter @acedergren/oci-genai-provider publish --dry-run --no-git-checks
-pnpm --filter @acedergren/opencode-oci-genai publish --dry-run --no-git-checks
+pnpm --filter @acedergren/oci-openai-compatible publish --dry-run --no-git-checks
 
 # Actual publish
 pnpm -r publish --no-git-checks
@@ -113,8 +113,8 @@ npm login --registry=https://npm.pkg.github.com
 # Install core provider
 pnpm add @acedergren/oci-genai-provider
 
-# Or install OpenCode wrapper (includes core provider)
-pnpm add @acedergren/opencode-oci-genai
+# Or install the OpenAI-compatible wrapper
+pnpm add @acedergren/oci-openai-compatible
 ```
 
 ## Version Management

@@ -508,10 +508,10 @@ This package is part of a monorepo. For contributors:
 
 ```bash
 # Clone the monorepo
-git clone https://github.com/acedergren/opencode-oci-genai.git
-cd opencode-oci-genai
+git clone https://github.com/acedergren/oci-genai-provider.git
+cd oci-genai-provider
 
-# Install dependencies (requires pnpm 8+)
+# Install dependencies (requires pnpm 10+)
 pnpm install
 
 # Build this package
@@ -538,6 +538,6 @@ MIT
 
 ## Support
 
-- GitHub Issues: [opencode-oci-genai/issues](https://github.com/acedergren/opencode-oci-genai/issues)
+- GitHub Issues: [oci-genai-provider/issues](https://github.com/acedergren/oci-genai-provider/issues)
 - Documentation: [docs/](./docs/)
 - Examples: [examples/](../../examples/)

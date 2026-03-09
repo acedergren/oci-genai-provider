@@ -414,7 +414,7 @@ If your issue isn't covered here:
    - [Migration Guide](./migration.md)
 
 2. **Search existing issues:**
-   - [GitHub Issues](https://github.com/acedergren/opencode-oci-genai/issues)
+   - [GitHub Issues](https://github.com/acedergren/oci-genai-provider/issues)
 
 3. **Create a new issue:**
    - Include error messages
