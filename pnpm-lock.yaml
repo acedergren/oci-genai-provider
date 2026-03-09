@@ -17,6 +17,9 @@ importers:
         specifier: ^6.0.61
         version: 6.0.61(zod@4.3.6)
     devDependencies:
+      '@eslint/js':
+        specifier: ^9.39.2
+        version: 9.39.2
       '@types/jest':
         specifier: ^29.5.14
         version: 29.5.14

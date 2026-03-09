@@ -42,7 +42,7 @@ const OCID_PATTERNS = {
 export const OcidSchema = z
   .string()
   .regex(OCID_PATTERNS.generic, {
-    message: 'Invalid OCID format. Expected format: ocid1.<resource-type>.<realm>.[region.]<id>',
+    error: 'Invalid OCID format. Expected format: ocid1.<resource-type>.<realm>.[region.]<id>',
   })
   .describe('An OCI resource identifier (OCID)');
 
@@ -52,7 +52,7 @@ export const OcidSchema = z
 export const CompartmentIdSchema = z
   .string()
   .regex(OCID_PATTERNS.compartment, {
-    message: 'Invalid compartment ID format. Expected OCID format: ocid1.compartment.oc1..xxxxx',
+    error: 'Invalid compartment ID format. Expected OCID format: ocid1.compartment.oc1..xxxxx',
   })
   .describe('The compartment OCID for OCI GenAI requests');
 
@@ -62,7 +62,7 @@ export const CompartmentIdSchema = z
 export const RegionSchema = z
   .string()
   .regex(regionPattern, {
-    message: 'Invalid region format. Expected format: <geo>-<city>-<number> (e.g., us-chicago-1)',
+    error: 'Invalid region format. Expected format: <geo>-<city>-<number> (e.g., us-chicago-1)',
   })
   .describe('The OCI region identifier');
 
@@ -71,7 +71,7 @@ export const RegionSchema = z
  */
 export const ConfigProfileSchema = z
   .string()
-  .min(1, { message: 'Config profile cannot be empty' })
+  .min(1, { error: 'Config profile cannot be empty' })
   .default('DEFAULT')
   .describe('The OCI config profile name from ~/.oci/config');
 
@@ -81,7 +81,7 @@ export const ConfigProfileSchema = z
  */
 export const ServingModeSchema = z
   .enum(['on-demand', 'dedicated'], {
-    message: "Serving mode must be either 'on-demand' or 'dedicated'",
+    error: "Serving mode must be either 'on-demand' or 'dedicated'",
   })
   .default('on-demand')
   .describe('The serving mode for model inference');
@@ -92,7 +92,7 @@ export const ServingModeSchema = z
 export const EndpointIdSchema = z
   .string()
   .regex(OCID_PATTERNS.generativeaiendpoint, {
-    message:
+    error:
       'Invalid endpoint ID format. Expected OCID format: ocid1.generativeaiendpoint.oc1..xxxxx',
   })
   .describe('The endpoint OCID for dedicated serving mode');
@@ -117,7 +117,7 @@ export const OCIProviderSettingsSchema = z
       return true;
     },
     {
-      message: "endpointId is required when servingMode is 'dedicated'",
+      error: "endpointId is required when servingMode is 'dedicated'",
       path: ['endpointId'],
     }
   )
@@ -166,7 +166,7 @@ export function parseProviderSettings(settings: unknown): OCIProviderSettingsVal
  */
 export const ModelIdSchema = z
   .string()
-  .min(1, { message: 'Model ID cannot be empty' })
+  .min(1, { error: 'Model ID cannot be empty' })
   .describe('The model ID or endpoint OCID');
 
 /**

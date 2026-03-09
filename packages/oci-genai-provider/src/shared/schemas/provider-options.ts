@@ -7,7 +7,7 @@ import { OCIValidationError } from '../errors';
  */
 const OnDemandServingModeSchema = z.object({
   type: z.literal('ON_DEMAND'),
-  modelId: z.string().min(1, { message: 'modelId is required for ON_DEMAND serving' }),
+  modelId: z.string().min(1, { error: 'modelId is required for ON_DEMAND serving' }),
   endpointId: z.string().optional(),
 });
 
@@ -18,7 +18,7 @@ const OnDemandServingModeSchema = z.object({
 const DedicatedServingModeSchema = z.object({
   type: z.literal('DEDICATED'),
   modelId: z.string().optional(),
-  endpointId: z.string().min(1, { message: 'endpointId is required for DEDICATED serving' }),
+  endpointId: z.string().min(1, { error: 'endpointId is required for DEDICATED serving' }),
 });
 
 /**
@@ -116,7 +116,7 @@ export const OCIProviderOptionsSchema = z
   })
   .strict()
   .refine((data) => !data.tokenBudget || data.thinking === true, {
-    message: 'tokenBudget requires thinking to be enabled',
+    error: 'tokenBudget requires thinking to be enabled',
     path: ['tokenBudget'],
   });
 

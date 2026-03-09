@@ -13,6 +13,8 @@ describe('Package exports', () => {
   });
 
   it('should export default ociOpenAI instance', () => {
+    process.env.OCI_COMPARTMENT_ID = 'ocid1.compartment.oc1..test';
+
     expect(ociOpenAI).toBeDefined();
     expect(ociOpenAI.chat).toBeDefined();
   });
