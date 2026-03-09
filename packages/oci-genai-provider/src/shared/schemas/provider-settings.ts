@@ -81,7 +81,7 @@ export const ConfigProfileSchema = z
  */
 export const ServingModeSchema = z
   .enum(['on-demand', 'dedicated'], {
-    errorMap: () => ({ message: "Serving mode must be either 'on-demand' or 'dedicated'" }),
+    message: "Serving mode must be either 'on-demand' or 'dedicated'",
   })
   .default('on-demand')
   .describe('The serving mode for model inference');

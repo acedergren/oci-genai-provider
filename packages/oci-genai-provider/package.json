@@ -1,6 +1,6 @@
 {
   "name": "@acedergren/oci-genai-provider",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Oracle Cloud Infrastructure Generative AI provider for Vercel AI SDK",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -54,7 +54,7 @@
     "oci-aispeech": "^2.94.0",
     "oci-identity": "^2.94.0",
     "oci-objectstorage": "^2.94.0",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76 || ^4.0.0"
   },
   "peerDependencies": {
     "ai": "^5.0.0 || ^6.0.0"
