@@ -5,7 +5,6 @@
  * - message: string (the latest user input)
  * - chatHistory: Array of previous messages with role, message, and optional toolCalls
  * - toolResults: Array of tool execution results (when continuing after tool calls)
- * - hasToolResults: Flag indicating toolResults are present (caller uses for isForceSingleStep)
  *
  * Reference: OCI SDK CohereChatRequest documentation
  */
@@ -49,13 +48,13 @@ interface CohereChatRequest {
   chatHistory?: CohereMessage[];
   preambleOverride?: string;
   toolResults?: CohereToolResult[];
-  hasToolResults: boolean;
 }
 
 /**
  * Converts generic OCI messages to Cohere format.
- * Extracts the last user message as 'message', converts previous messages to 'chatHistory',
- * and extracts tool results from TOOL messages.
+ * Extracts the last user message as 'message', converts all other messages to 'chatHistory',
+ * and extracts tool results from TOOL messages. This preserves tool-call/tool-result turns
+ * that occur after the latest user message during AI SDK tool loops.
  */
 export function convertToCohereFormat(messages: OCIMessage[]): CohereChatRequest {
   if (messages.length === 0) {
@@ -86,11 +85,17 @@ export function convertToCohereFormat(messages: OCIMessage[]): CohereChatRequest
   // Build a map of tool calls by ID for matching with results
   const toolCallsById = new Map<string, { name: string; parameters: Record<string, unknown> }>();
 
-  // Convert previous messages to chatHistory and collect tool results
+  // Convert all non-current messages to chatHistory and collect tool results.
+  // During automatic tool loops, assistant/tool messages can occur after the latest
+  // user message, and they still need to be preserved for Cohere follow-up requests.
   const chatHistory: CohereMessage[] = [];
   const toolResults: CohereToolResult[] = [];
 
-  for (let i = 0; i < lastUserIndex; i++) {
+  for (let i = 0; i < messages.length; i++) {
+    if (i === lastUserIndex) {
+      continue;
+    }
+
     const msg = messages[i];
 
     // Skip system messages (handled by preambleOverride)
@@ -115,7 +120,7 @@ export function convertToCohereFormat(messages: OCIMessage[]): CohereChatRequest
               name: toolCall.name,
               parameters: toolCall.parameters,
             },
-            outputs: [{ result: resultText }],
+            outputs: normalizeCohereToolOutputs(resultText),
           });
         }
       }
@@ -176,13 +181,57 @@ export function convertToCohereFormat(messages: OCIMessage[]): CohereChatRequest
     }
   }
 
-  const hasToolResults = toolResults.length > 0;
-
   return {
     message: messageText,
     ...(chatHistory.length > 0 ? { chatHistory } : {}),
     ...(systemMessages ? { preambleOverride: systemMessages } : {}),
-    ...(hasToolResults ? { toolResults } : {}),
-    hasToolResults,
+    ...(toolResults.length > 0 ? { toolResults } : {}),
+  };
+}
+
+function normalizeCohereToolOutputs(
+  resultText: string
+): Array<{ result: string } | Record<string, unknown>> {
+  const normalized = tryNormalizeAISDKToolResult(resultText);
+
+  return [normalized ?? { result: resultText }];
+}
+
+function tryNormalizeAISDKToolResult(
+  resultText: string
+): { result: string } | Record<string, unknown> | undefined {
+  try {
+    const parsed = JSON.parse(resultText) as unknown;
+
+    if (
+      parsed &&
+      typeof parsed === 'object' &&
+      'type' in parsed &&
+      'value' in parsed &&
+      typeof parsed.type === 'string'
+    ) {
+      return normalizeAISDKToolResultValue(parsed.type, parsed.value);
+    }
+  } catch {
+    // Non-JSON tool outputs should remain plain result strings.
+  }
+
+  return undefined;
+}
+
+function normalizeAISDKToolResultValue(
+  type: string,
+  value: unknown
+): { result: string } | Record<string, unknown> {
+  if (type === 'json' && value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+
+  if (type === 'text' && typeof value === 'string') {
+    return { result: value };
+  }
+
+  return {
+    result: typeof value === 'string' ? value : JSON.stringify(value),
   };
 }

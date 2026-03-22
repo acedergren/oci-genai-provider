@@ -80,6 +80,7 @@ This provider supports most Vercel AI SDK v6 features for text generation. See [
 ### Supported ✅
 
 - Streaming and non-streaming generation
+- Tool/function calling on OCI-supported models
 - Temperature, topP, topK, penalties
 - Seed parameter (best-effort determinism)
 - Multiple model families ([see Oracle docs](https://docs.oracle.com/en-us/iaas/Content/generative-ai/pretrained-models.htm))
@@ -87,11 +88,12 @@ This provider supports most Vercel AI SDK v6 features for text generation. See [
 
 ### Not Supported ❌
 
-- Tool/function calling (OCI API limitation)
 - Multi-modal input (vision, audio, documents)
 - JSON mode (pending AI SDK integration)
 
 For detailed information on each feature, see [FEATURES.md](./FEATURES.md).
+
+Tool calling is available for OCI model families that support it, including Cohere Command models, Llama 3.1+, Grok, Gemini, and GPT-OSS on the OCI GENERIC API format. For Cohere request debugging, set `OCI_GENAI_DEBUG_COHERE_REQUESTS=1` before running your tool loop.
 
 ## Authentication
 

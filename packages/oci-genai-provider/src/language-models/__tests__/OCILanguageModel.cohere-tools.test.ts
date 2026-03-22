@@ -7,6 +7,8 @@
  * 3. Tool calls in chat history are properly formatted for Cohere
  */
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { generateText, stepCountIs, tool } from 'ai';
+import { z } from 'zod';
 import { OCILanguageModel } from '../OCILanguageModel';
 import type { AuthenticationDetailsProvider } from 'oci-common';
 import type { OCIConfig } from '../../types';
@@ -58,6 +60,14 @@ interface CohereChatRequest {
   message: string;
   chatHistory?: CohereHistoryMessage[];
   toolResults?: CohereToolResult[];
+  tools?: Array<{
+    name: string;
+    description: string;
+    parameterDefinitions?: Record<
+      string,
+      { type: string; description?: string; isRequired?: boolean }
+    >;
+  }>;
   isForceSingleStep?: boolean;
 }
 interface ChatCallArgs {
@@ -255,6 +265,154 @@ describe('OCILanguageModel - Cohere Tool Calling', () => {
       });
     });
 
+    it('should serialize the exact Cohere tool payload without internal flags', async () => {
+      const prompt: LanguageModelV3Prompt = [
+        {
+          role: 'system',
+          content: 'You are an orchestrator. Use tools to finish the task.',
+        },
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Analyze 2 instances.' }],
+        },
+        {
+          role: 'assistant',
+          content: [
+            { type: 'text', text: 'I will classify the instances first.' },
+            {
+              type: 'tool-call',
+              toolCallId: 'call_classify',
+              toolName: 'classifyInstances',
+              input: { instanceIds: ['ocid1.instance.oc1..a', 'ocid1.instance.oc1..b'] },
+            },
+          ],
+        },
+        {
+          role: 'tool',
+          content: [
+            {
+              type: 'tool-result',
+              toolCallId: 'call_classify',
+              toolName: 'classifyInstances',
+              output: { type: 'text', value: '{"classified":2}' },
+            },
+          ],
+        },
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Summarize the findings.' }],
+        },
+      ];
+
+      mockChat.mockResolvedValueOnce({
+        body: createReadableStream([
+          'data: {"text": "Two instances classified."}\n\n',
+          'data: {"finishReason": "STOP"}\n\n',
+        ]),
+      });
+
+      const model = new OCILanguageModel('cohere.command-a-03-2025', mockConfig);
+
+      const result = await model.doGenerate({
+        prompt,
+        tools: [
+          {
+            type: 'function',
+            name: 'classifyInstances',
+            description: 'Classify workload types',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                instanceIds: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  description: 'List of instance OCIDs',
+                },
+              },
+              required: ['instanceIds'],
+            },
+          },
+        ],
+      });
+
+      const serializedRequest = JSON.parse(result.request?.body as string) as {
+        chatRequest: CohereChatRequest & { hasToolResults?: boolean };
+      };
+
+      expect(serializedRequest.chatRequest.apiFormat).toBe('COHERE');
+      expect(serializedRequest.chatRequest).not.toHaveProperty('hasToolResults');
+      expect(serializedRequest.chatRequest.isForceSingleStep).toBe(true);
+      expect(serializedRequest.chatRequest.tools?.[0]).toMatchObject({
+        name: 'classifyInstances',
+        parameterDefinitions: {
+          instanceIds: {
+            type: 'List[str]',
+            description: 'List of instance OCIDs',
+            isRequired: true,
+          },
+        },
+      });
+      expect(serializedRequest.chatRequest.toolResults).toMatchObject([
+        {
+          call: {
+            name: 'classifyInstances',
+            parameters: { instanceIds: ['ocid1.instance.oc1..a', 'ocid1.instance.oc1..b'] },
+          },
+          outputs: [{ result: '{"classified":2}' }],
+        },
+      ]);
+    });
+
+    it('should log the serialized Cohere payload when debug logging is enabled', async () => {
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const previousDebugValue = process.env.OCI_GENAI_DEBUG_COHERE_REQUESTS;
+      process.env.OCI_GENAI_DEBUG_COHERE_REQUESTS = '1';
+
+      try {
+        mockChat.mockResolvedValueOnce({
+          body: createReadableStream([
+            'data: {"toolCalls":[{"name":"classifyInstances","parameters":{"instanceIds":["ocid1.instance.oc1..a"]}}]}\n\n',
+            'data: {"finishReason":"TOOL_CALLS"}\n\n',
+          ]),
+        });
+
+        const model = new OCILanguageModel('cohere.command-a-03-2025', mockConfig);
+
+        await model.doGenerate({
+          prompt: [{ role: 'user', content: [{ type: 'text', text: 'Analyze one instance.' }] }],
+          tools: [
+            {
+              type: 'function',
+              name: 'classifyInstances',
+              description: 'Classify workload types',
+              inputSchema: {
+                type: 'object',
+                properties: {
+                  instanceIds: {
+                    type: 'array',
+                    items: { type: 'string' },
+                  },
+                },
+                required: ['instanceIds'],
+              },
+            },
+          ],
+        });
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          expect.stringContaining('Cohere tool request payload')
+        );
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('List[str]'));
+      } finally {
+        if (previousDebugValue === undefined) {
+          delete process.env.OCI_GENAI_DEBUG_COHERE_REQUESTS;
+        } else {
+          process.env.OCI_GENAI_DEBUG_COHERE_REQUESTS = previousDebugValue;
+        }
+        consoleErrorSpy.mockRestore();
+      }
+    });
+
     it('should handle multiple tool calls and results', async () => {
       const prompt: LanguageModelV3Prompt = [
         {
@@ -334,6 +492,73 @@ describe('OCILanguageModel - Cohere Tool Calling', () => {
 
       expect(lsResult!.outputs[0].result).toBe('file1.txt\nfile2.txt');
       expect(pwdResult!.outputs[0].result).toBe('/home/user');
+    });
+
+    it('should complete a multi-step AI SDK generateText tool loop for Cohere models', async () => {
+      mockChat
+        .mockResolvedValueOnce({
+          body: createReadableStream([
+            'data: {"toolCalls":[{"name":"classifyInstances","parameters":{"instanceIds":["ocid1.instance.oc1..1","ocid1.instance.oc1..2"]}}]}\n\n',
+            'data: {"finishReason":"TOOL_CALLS"}\n\n',
+          ]),
+        })
+        .mockResolvedValueOnce({
+          body: createReadableStream([
+            'data: {"text":"Classified 2 instances and completed the analysis."}\n\n',
+            'data: {"finishReason":"STOP"}\n\n',
+          ]),
+        });
+
+      const model = new OCILanguageModel('cohere.command-a-03-2025', mockConfig);
+
+      const result = await generateText({
+        model,
+        system: 'You are an orchestrator. Use tools to complete the task.',
+        prompt: 'Analyze 2 instances.',
+        stopWhen: stepCountIs(5),
+        tools: {
+          classifyInstances: tool({
+            description: 'Classify workload types',
+            inputSchema: z.object({
+              instanceIds: z.array(z.string()),
+            }),
+            execute: async ({ instanceIds }) => ({ classified: instanceIds.length }),
+          }),
+        },
+      });
+
+      expect(result.text).toBe('Classified 2 instances and completed the analysis.');
+
+      expect(mockChat).toHaveBeenCalledTimes(2);
+      const firstRequest: CohereChatRequest = mockChat.mock.calls[0][0].chatDetails.chatRequest;
+      const secondRequest: CohereChatRequest = mockChat.mock.calls[1][0].chatDetails.chatRequest;
+
+      expect(firstRequest.tools?.[0]).toMatchObject({
+        name: 'classifyInstances',
+        parameterDefinitions: {
+          instanceIds: { type: 'List[str]', isRequired: true },
+        },
+      });
+      expect(secondRequest.chatHistory).toContainEqual({
+        role: 'CHATBOT',
+        message: '',
+        toolCalls: [
+          {
+            name: 'classifyInstances',
+            parameters: { instanceIds: ['ocid1.instance.oc1..1', 'ocid1.instance.oc1..2'] },
+          },
+        ],
+      });
+      expect(secondRequest.toolResults).toMatchObject([
+        {
+          call: {
+            name: 'classifyInstances',
+            parameters: { instanceIds: ['ocid1.instance.oc1..1', 'ocid1.instance.oc1..2'] },
+          },
+          outputs: [{ classified: 2 }],
+        },
+      ]);
+      expect(secondRequest.isForceSingleStep).toBe(true);
     });
   });
 });

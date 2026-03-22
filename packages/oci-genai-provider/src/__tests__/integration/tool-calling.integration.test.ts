@@ -173,7 +173,7 @@ describe('Tool Calling Integration', () => {
         name: 'web_search',
         description: 'Search the web',
         parameterDefinitions: {
-          query: { type: 'string', description: 'Search query', required: true },
+          query: { type: 'str', description: 'Search query', isRequired: true },
         },
       });
 
@@ -208,6 +208,8 @@ describe('Tool Calling Integration', () => {
         'cohere.command-r-plus',
         'cohere.command-r',
         'cohere.command-r-08-2024',
+        'cohere.command-a-03-2025',
+        'cohere.command-a-reasoning-08-2025',
         'xai.grok-3',
         'xai.grok-4-maverick',
         'google.gemini-1.5-pro',

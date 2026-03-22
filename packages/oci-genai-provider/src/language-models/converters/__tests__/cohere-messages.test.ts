@@ -212,7 +212,109 @@ describe('convertToCohereFormat', () => {
       expect(result.toolResults![1].call.parameters).toEqual({ city: 'Paris' });
     });
 
-    it('should set hasToolResults flag when tool results are present', () => {
+    it('should preserve assistant tool calls and tool results after the latest user message', () => {
+      const messages: OCIMessage[] = [
+        {
+          role: 'SYSTEM',
+          content: [{ type: 'TEXT', text: 'You are an orchestrator.' }],
+        },
+        {
+          role: 'USER',
+          content: [{ type: 'TEXT', text: 'Analyze 2 instances.' }],
+        },
+        {
+          role: 'ASSISTANT',
+          content: [{ type: 'TEXT', text: 'I will classify them first.' }],
+          toolCalls: [
+            {
+              id: 'call_classify',
+              type: 'FUNCTION',
+              name: 'classifyInstances',
+              arguments: '{"instanceIds":["ocid1.instance.oc1..1","ocid1.instance.oc1..2"]}',
+            },
+          ],
+        },
+        {
+          role: 'TOOL',
+          content: [{ type: 'TEXT', text: '{"classified":2}' }],
+          toolCallId: 'call_classify',
+        },
+      ];
+
+      const result = convertToCohereFormat(messages);
+
+      expect(result.message).toBe('Analyze 2 instances.');
+      expect(result.chatHistory).toContainEqual({
+        role: 'CHATBOT',
+        message: 'I will classify them first.',
+        toolCalls: [
+          {
+            name: 'classifyInstances',
+            parameters: {
+              instanceIds: ['ocid1.instance.oc1..1', 'ocid1.instance.oc1..2'],
+            },
+          },
+        ],
+      });
+      expect(result.toolResults).toEqual([
+        {
+          call: {
+            name: 'classifyInstances',
+            parameters: {
+              instanceIds: ['ocid1.instance.oc1..1', 'ocid1.instance.oc1..2'],
+            },
+          },
+          outputs: [{ result: '{"classified":2}' }],
+        },
+      ]);
+    });
+
+    it('should unwrap AI SDK JSON tool-result envelopes for Cohere outputs', () => {
+      const messages: OCIMessage[] = [
+        {
+          role: 'USER',
+          content: [{ type: 'TEXT', text: 'Analyze 2 instances.' }],
+        },
+        {
+          role: 'ASSISTANT',
+          content: [{ type: 'TEXT', text: 'I will classify them first.' }],
+          toolCalls: [
+            {
+              id: 'call_classify',
+              type: 'FUNCTION',
+              name: 'classifyInstances',
+              arguments: '{"instanceIds":["ocid1.instance.oc1..1","ocid1.instance.oc1..2"]}',
+            },
+          ],
+        },
+        {
+          role: 'TOOL',
+          content: [
+            {
+              type: 'TEXT',
+              text: '{"type":"json","value":{"classified":2}}',
+            },
+          ],
+          toolCallId: 'call_classify',
+        },
+      ];
+
+      const result = convertToCohereFormat(messages);
+
+      expect(result.toolResults).toEqual([
+        {
+          call: {
+            name: 'classifyInstances',
+            parameters: {
+              instanceIds: ['ocid1.instance.oc1..1', 'ocid1.instance.oc1..2'],
+            },
+          },
+          outputs: [{ classified: 2 }],
+        },
+      ]);
+    });
+
+    it('should include toolResults when tool results are present', () => {
       const messages: OCIMessage[] = [
         {
           role: 'USER',
@@ -243,13 +345,11 @@ describe('convertToCohereFormat', () => {
 
       const result = convertToCohereFormat(messages);
 
-      // The caller (OCILanguageModel) should check hasToolResults to set isForceSingleStep
-      expect(result.hasToolResults).toBe(true);
       expect(result.toolResults).toBeDefined();
       expect(result.toolResults!.length).toBeGreaterThan(0);
     });
 
-    it('should not set hasToolResults when no tool results present', () => {
+    it('should omit toolResults when no tool results are present', () => {
       const messages: OCIMessage[] = [
         {
           role: 'USER',
@@ -259,7 +359,6 @@ describe('convertToCohereFormat', () => {
 
       const result = convertToCohereFormat(messages);
 
-      expect(result.hasToolResults).toBe(false);
       expect(result.toolResults).toBeUndefined();
     });
   });

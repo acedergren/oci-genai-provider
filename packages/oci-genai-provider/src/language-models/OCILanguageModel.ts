@@ -40,6 +40,33 @@ type ChatRequest =
   | OCIModel.CohereChatRequest
   | OCIModel.CohereChatRequestV2;
 
+const COHERE_REQUEST_DEBUG_ENV = 'OCI_GENAI_DEBUG_COHERE_REQUESTS';
+
+function serializeChatDetails(chatDetails: OCIModel.ChatDetails): string {
+  const serializer = (
+    OCIModel as unknown as
+      | {
+          ChatDetails?: { getJsonObj?: (value: OCIModel.ChatDetails) => object };
+        }
+      | undefined
+  )?.ChatDetails;
+
+  if (serializer?.getJsonObj) {
+    return JSON.stringify(serializer.getJsonObj(chatDetails));
+  }
+
+  return JSON.stringify(chatDetails);
+}
+
+function shouldLogCohereToolRequest(apiFormat: OCIApiFormat, toolCount: number): boolean {
+  return (
+    apiFormat === 'COHERE' &&
+    toolCount > 0 &&
+    typeof process !== 'undefined' &&
+    process.env[COHERE_REQUEST_DEBUG_ENV] === '1'
+  );
+}
+
 export class OCILanguageModel implements LanguageModelV3 {
   readonly specificationVersion = 'v3';
   readonly provider = 'oci-genai';
@@ -334,6 +361,7 @@ export class OCILanguageModel implements LanguageModelV3 {
         } as OCIModel.CohereChatRequestV2;
       } else if (apiFormat === 'COHERE') {
         const cohereFormat = convertToCohereFormat(messages);
+        const hasToolResults = (cohereFormat.toolResults?.length ?? 0) > 0;
         chatRequest = {
           apiFormat,
           ...cohereFormat,
@@ -341,7 +369,7 @@ export class OCILanguageModel implements LanguageModelV3 {
           ...toolParams,
           // Cohere requires isForceSingleStep=true when tool results are present
           // This ensures multi-step tool use works correctly
-          ...(cohereFormat.hasToolResults ? { isForceSingleStep: true } : {}),
+          ...(hasToolResults ? { isForceSingleStep: true } : {}),
         } as OCIModel.CohereChatRequest;
       } else {
         chatRequest = {
@@ -372,18 +400,27 @@ export class OCILanguageModel implements LanguageModelV3 {
 
       if (options.seed !== undefined) chatRequest.seed = options.seed;
 
+      const chatDetails = {
+        compartmentId,
+        servingMode: resolveServingMode(
+          this.modelId,
+          this.config.servingMode,
+          ociOptions?.servingMode
+        ),
+        chatRequest,
+      } as OCIModel.ChatDetails;
+      const serializedRequestBody = serializeChatDetails(chatDetails);
+
+      if (shouldLogCohereToolRequest(apiFormat, functionTools.length)) {
+        console.error(
+          `[oci-genai-provider] Cohere tool request payload (${COHERE_REQUEST_DEBUG_ENV}=1): ${serializedRequestBody}`
+        );
+      }
+
       const response = (await this.executeWithResilience<unknown>(
         () =>
           client.chat({
-            chatDetails: {
-              compartmentId,
-              servingMode: resolveServingMode(
-                this.modelId,
-                this.config.servingMode,
-                ociOptions?.servingMode
-              ),
-              chatRequest,
-            },
+            chatDetails,
           }),
         'OCI chat stream',
         ociOptions?.requestOptions
@@ -494,7 +531,7 @@ export class OCILanguageModel implements LanguageModelV3 {
             }
           },
         }),
-        request: { body: JSON.stringify(messages) },
+        request: { body: serializedRequestBody },
         response: {
           headers,
         },

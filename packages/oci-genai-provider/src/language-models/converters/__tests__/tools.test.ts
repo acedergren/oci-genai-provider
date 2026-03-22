@@ -69,8 +69,68 @@ describe('Tool Converters', () => {
           name: 'search_database',
           description: 'Search the database',
           parameterDefinitions: {
-            query: { type: 'string', description: 'Search query', isRequired: true },
-            limit: { type: 'number', description: 'Max results', isRequired: false },
+            query: { type: 'str', description: 'Search query', isRequired: true },
+            limit: { type: 'float', description: 'Max results', isRequired: false },
+          },
+        },
+      ]);
+    });
+
+    it('should convert nested JSON schema types to Cohere Python-style parameter types', () => {
+      const tools: LanguageModelV3FunctionTool[] = [
+        {
+          type: 'function',
+          name: 'classify_instances',
+          description: 'Classify OCI instances',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              instanceIds: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Instance OCIDs',
+              },
+              metadata: {
+                type: 'object',
+                description: 'Optional metadata by instance',
+                properties: {
+                  owner: { type: 'string' },
+                  isProduction: { type: 'boolean' },
+                },
+              },
+              priority: {
+                type: 'string',
+                description: 'Priority for classification',
+                enum: ['high', 'low'],
+              },
+            },
+            required: ['instanceIds'],
+          },
+        },
+      ];
+
+      const result = convertToOCITools(tools, 'COHERE');
+
+      expect(result).toEqual([
+        {
+          name: 'classify_instances',
+          description: 'Classify OCI instances',
+          parameterDefinitions: {
+            instanceIds: {
+              type: 'List[str]',
+              description: 'Instance OCIDs',
+              isRequired: true,
+            },
+            metadata: {
+              type: 'Dict',
+              description: 'Optional metadata by instance',
+              isRequired: false,
+            },
+            priority: {
+              type: 'str',
+              description: 'Priority for classification Allowed values: "high", "low"',
+              isRequired: false,
+            },
           },
         },
       ]);
@@ -238,10 +298,12 @@ describe('Tool Converters', () => {
       expect(supportsToolCalling('meta.llama-2-70b-chat')).toBe(false);
     });
 
-    it('should return true for Cohere Command R models', () => {
+    it('should return true for Cohere Command models with tool calling', () => {
       expect(supportsToolCalling('cohere.command-r-plus')).toBe(true);
       expect(supportsToolCalling('cohere.command-r')).toBe(true);
       expect(supportsToolCalling('cohere.command-r-08-2024')).toBe(true);
+      expect(supportsToolCalling('cohere.command-a-03-2025')).toBe(true);
+      expect(supportsToolCalling('cohere.command-a-reasoning-08-2025')).toBe(true);
     });
 
     it('should return false for older Cohere models', () => {

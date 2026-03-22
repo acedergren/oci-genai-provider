@@ -6,6 +6,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). This p
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-03-22
+
+### Fixed
+
+- Cohere Command-A tool loops now serialize tool schemas using Cohere-compatible parameter types such as `List[str]` and `Dict`, which fixes `generateText({ tools })` requests rejected with `Please pass in correct format of request`.
+- Cohere follow-up tool-loop requests now preserve assistant tool calls and `toolResults` after the latest user turn, so multi-step AI SDK tool execution completes correctly.
+- Cohere tool-result payloads now unwrap AI SDK JSON result envelopes into real output objects for better follow-up context.
+
+### Added
+
+- Opt-in serialized Cohere request logging via `OCI_GENAI_DEBUG_COHERE_REQUESTS=1` for debugging `/actions/chat` payloads.
+- Regression coverage for Cohere Command-A tool conversion, follow-up tool-result formatting, and AI SDK multi-step tool loops.
+
 ### Added
 
 - **Zod Validation Schemas**: Runtime validation for provider settings with clear error messages
