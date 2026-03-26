@@ -7,7 +7,7 @@ import { NoSuchModelError, TooManyEmbeddingValuesForCallError } from '@ai-sdk/pr
 import { GenerativeAiInferenceClient, models as ociModels } from 'oci-generativeaiinference';
 import { Region } from 'oci-common';
 import { createAuthProvider, getCompartmentId, getRegion } from '../auth';
-import { isValidEmbeddingModelId } from './registry';
+import { getEmbeddingModelMetadata, isValidEmbeddingModelId } from './registry';
 import type { OCIEmbeddingSettings, RequestOptions } from '../types';
 import { handleOCIError } from '../shared/errors';
 import { withRetry, withTimeout, isRetryableError } from '../shared/utils';
@@ -18,6 +18,12 @@ import {
   resolveServingMode,
 } from '../shared/provider-options';
 import { resolveRequestOptions } from '../shared/request-options';
+import {
+  applyInputGuardrails,
+  getEffectiveGuardrailsWarning,
+  getInputGuardrailText,
+  toJSONGuardrailsMetadata,
+} from '../shared/guardrails';
 
 type Truncate = ociModels.EmbedTextDetails.Truncate;
 type InputType = ociModels.EmbedTextDetails.InputType;
@@ -25,7 +31,7 @@ type InputType = ociModels.EmbedTextDetails.InputType;
 export class OCIEmbeddingModel implements EmbeddingModelV3 {
   readonly specificationVersion = 'v3';
   readonly provider = 'oci-genai';
-  readonly maxEmbeddingsPerCall = 96;
+  readonly maxEmbeddingsPerCall: number;
   readonly supportsParallelCalls = true;
 
   private _client?: GenerativeAiInferenceClient;
@@ -40,6 +46,8 @@ export class OCIEmbeddingModel implements EmbeddingModelV3 {
         modelType: 'embeddingModel',
       });
     }
+
+    this.maxEmbeddingsPerCall = getEmbeddingModelMetadata(modelId)?.maxTextsPerBatch ?? 96;
   }
 
   private async getClient(endpointOverride?: string): Promise<GenerativeAiInferenceClient> {
@@ -100,7 +108,6 @@ export class OCIEmbeddingModel implements EmbeddingModelV3 {
 
   async doEmbed(options: EmbeddingModelV3CallOptions): Promise<EmbeddingModelV3Result> {
     const { values } = options;
-
     // Validate batch size
     if (values.length > this.maxEmbeddingsPerCall) {
       throw new TooManyEmbeddingValuesForCallError({
@@ -117,9 +124,29 @@ export class OCIEmbeddingModel implements EmbeddingModelV3 {
       getCompartmentId(this.config),
       ociOptions?.compartmentId
     );
+    const warnings = [];
+
+    const guardrailsWarning = getEffectiveGuardrailsWarning(this.config, ociOptions?.guardrails);
+    if (guardrailsWarning) {
+      warnings.push({
+        type: 'unsupported' as const,
+        feature: 'guardrails',
+        details: guardrailsWarning,
+      });
+    }
 
     try {
-      const response = await this.executeWithResilience(
+      const guardrailsMetadata =
+        ociOptions?.guardrails?.input && !guardrailsWarning
+          ? await applyInputGuardrails(
+              client,
+              compartmentId,
+              getInputGuardrailText(values),
+              ociOptions.guardrails
+            )
+          : undefined;
+
+      const response = (await this.executeWithResilience(
         () =>
           client.embedText({
             embedTextDetails: {
@@ -130,13 +157,23 @@ export class OCIEmbeddingModel implements EmbeddingModelV3 {
               ),
               compartmentId,
               inputs: values,
+              embeddingTypes: this.config
+                .embeddingTypes as ociModels.EmbedTextDetails.EmbeddingTypes[],
+              outputDimensions: this.config.dimensions,
               truncate: (this.config.truncate ?? 'END') as Truncate,
               inputType: (this.config.inputType ?? 'SEARCH_DOCUMENT') as InputType,
             },
           }),
         'OCI embed request',
         ociOptions?.requestOptions
-      );
+      )) as {
+        embedTextResult: {
+          embeddings: number[][];
+          usage?: { promptTokens?: number; totalTokens?: number };
+          modelId?: string;
+        };
+        opcRequestId?: string;
+      };
 
       const embeddings = response.embedTextResult.embeddings;
       const usage = response.embedTextResult.usage;
@@ -151,13 +188,16 @@ export class OCIEmbeddingModel implements EmbeddingModelV3 {
           oci: {
             requestId: response.opcRequestId,
             modelId: response.embedTextResult.modelId ?? this.modelId,
+            ...(guardrailsMetadata
+              ? { guardrails: toJSONGuardrailsMetadata(guardrailsMetadata) }
+              : {}),
           },
         },
         response: {
           headers: response.opcRequestId ? { 'opc-request-id': response.opcRequestId } : undefined,
           body: response,
         },
-        warnings: [],
+        warnings,
       };
     } catch (error) {
       throw handleOCIError(error);

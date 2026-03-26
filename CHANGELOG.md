@@ -6,6 +6,28 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). This p
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-03-26
+
+### Added
+
+- OCI Generative AI service API-key auth support through the OpenAI-compatible Bearer-token transport for supported chat models.
+- Typed OCI AI Guardrails input preflight support for chat and embedding requests, including provider metadata surfaced back to callers.
+- `cohere.embed-v4.0` plus OCI image-capable embedding variants and configurable embedding dimensions/encodings.
+- Current OCI model catalog coverage for `openai.gpt-oss-120b`, `openai.gpt-oss-20b`, `xai.grok-code-fast-1`, `xai.grok-4.20-0309-reasoning`, `xai.grok-4.20-0309-non-reasoning`, and `xai.grok-4.20-multi-agent-0309`.
+- New examples for API-key auth and Embed 4 usage.
+
+### Changed
+
+- Refreshed language-model capability metadata to align with current OCI documentation, especially Grok 4.x/4.20, GPT-OSS, and Cohere Command A.
+- Refreshed public README and embedding docs with updated auth, model, embedding, and regional-availability guidance.
+- Fixed the package integration-test script and strengthened local Jest module mapping for OCI SDK-backed tests.
+
+### Fixed
+
+- Cohere Command A reasoning and vision models now use the Cohere V2 path consistently.
+- Streaming finish-reason fallback now maps unknown OCI reasons to `other` instead of incorrectly defaulting to `stop`.
+- AI SDK tool-calling compatibility coverage now includes GPT-OSS and current Cohere/Grok catalog entries.
+
 ## [0.3.2] - 2026-03-22
 
 ### Fixed

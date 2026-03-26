@@ -6,11 +6,13 @@ import type { EmbeddingModelV3CallOptions } from '@ai-sdk/provider';
 // Mockable embedText function - use any to avoid complex Jest typing issues
 
 const mockEmbedText = jest.fn() as jest.Mock<any>;
+const mockApplyGuardrails = jest.fn() as jest.Mock<any>;
 
 // Mock OCI SDK
 jest.mock('oci-generativeaiinference', () => ({
   GenerativeAiInferenceClient: jest.fn().mockImplementation(() => ({
     embedText: mockEmbedText,
+    applyGuardrails: mockApplyGuardrails,
   })),
 }));
 
@@ -25,12 +27,26 @@ describe('OCIEmbeddingModel', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockEmbedText.mockClear();
+    mockApplyGuardrails.mockClear();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { GenerativeAiInferenceClient } = require('oci-generativeaiinference');
+    GenerativeAiInferenceClient.mockImplementation(() => ({
+      embedText: mockEmbedText,
+      applyGuardrails: mockApplyGuardrails,
+      region: undefined,
+      endpoint: undefined,
+    }));
     mockEmbedText.mockResolvedValue({
       embedTextResult: {
         embeddings: [
           [0.1, 0.2, 0.3],
           [0.4, 0.5, 0.6],
         ],
+      },
+    });
+    mockApplyGuardrails.mockResolvedValue({
+      applyGuardrailsResult: {
+        results: {},
       },
     });
   });
@@ -49,6 +65,12 @@ describe('OCIEmbeddingModel', () => {
     const model = new OCIEmbeddingModel('cohere.embed-multilingual-v3.0', {});
 
     expect(model.maxEmbeddingsPerCall).toBe(96);
+  });
+
+  it('should set maxEmbeddingsPerCall to 1 for image-only batch models', () => {
+    const model = new OCIEmbeddingModel('cohere.embed-multilingual-image-v3.0', {});
+
+    expect(model.maxEmbeddingsPerCall).toBe(1);
   });
 
   it('should throw error for invalid model ID', () => {
@@ -166,6 +188,60 @@ describe('OCIEmbeddingModel', () => {
           truncate: 'END',
           inputType: 'SEARCH_DOCUMENT',
         }),
+      });
+    });
+
+    it('should pass v4 output dimensions and embedding types', async () => {
+      const model = new OCIEmbeddingModel('cohere.embed-v4.0', {
+        compartmentId: 'ocid1.compartment.test',
+        dimensions: 512,
+        embeddingTypes: ['float', 'base64'],
+      });
+
+      await model.doEmbed({ values: ['test text'] });
+
+      expect(mockEmbedText).toHaveBeenCalledWith({
+        embedTextDetails: expect.objectContaining({
+          outputDimensions: 512,
+          embeddingTypes: ['float', 'base64'],
+        }),
+      });
+    });
+
+    it('should attach guardrails metadata when requested', async () => {
+      mockApplyGuardrails.mockResolvedValueOnce({
+        applyGuardrailsResult: {
+          results: {
+            promptInjection: { score: 0.25 },
+          },
+        },
+      });
+
+      const model = new OCIEmbeddingModel('cohere.embed-v4.0', {
+        compartmentId: 'test',
+      });
+
+      const result = await model.doEmbed({
+        values: ['sensitive text'],
+        providerOptions: {
+          oci: {
+            guardrails: {
+              input: {
+                promptInjection: true,
+              },
+            },
+          },
+        },
+      });
+
+      expect(mockApplyGuardrails).toHaveBeenCalledTimes(1);
+      expect(result.providerMetadata?.oci).toMatchObject({
+        guardrails: {
+          blocked: false,
+          input: {
+            promptInjectionScore: 0.25,
+          },
+        },
       });
     });
 

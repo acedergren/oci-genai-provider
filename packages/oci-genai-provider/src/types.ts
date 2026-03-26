@@ -70,6 +70,53 @@ export interface OCIProviderOptions {
   thinking?: boolean;
   /** Token budget for reasoning/thinking (Cohere models). */
   tokenBudget?: number;
+  /** Apply OCI AI Guardrails to request input before inference. */
+  guardrails?: OCIGuardrailsOptions;
+}
+
+export interface OCIGuardrailsContentModerationOptions {
+  /** Categories to evaluate, such as OVERALL and BLOCKLIST. */
+  categories?: string[];
+}
+
+export interface OCIGuardrailsPIIOptions {
+  /** PII entity types to evaluate, such as PERSON, EMAIL, and TELEPHONE_NUMBER. */
+  types?: string[];
+}
+
+export interface OCIGuardrailsInputOptions {
+  /** Optional BCP-47 language code for the input text. */
+  languageCode?: string;
+  /** Enable prompt injection evaluation. */
+  promptInjection?: boolean;
+  /** Threshold used when failOnDetection is enabled. */
+  promptInjectionThreshold?: number;
+  /** Enable content moderation evaluation. */
+  contentModeration?: OCIGuardrailsContentModerationOptions;
+  /** Enable PII evaluation. */
+  pii?: OCIGuardrailsPIIOptions;
+  /** Throw before inference when detections exceed configured thresholds. */
+  failOnDetection?: boolean;
+}
+
+export interface OCIGuardrailsOptions {
+  /** Input guardrails are evaluated before chat/embed inference. */
+  input?: OCIGuardrailsInputOptions;
+}
+
+export interface OCIGuardrailsMetadata {
+  blocked: boolean;
+  input: {
+    contentModeration?: Array<{ category: string; score: number }>;
+    promptInjectionScore?: number;
+    pii?: Array<{
+      text: string;
+      label: string;
+      score: number;
+      offset: number;
+      length: number;
+    }>;
+  };
 }
 
 /**
@@ -77,6 +124,7 @@ export interface OCIProviderOptions {
  */
 export type OCIAuthMethod =
   | 'config_file' // API key from ~/.oci/config
+  | 'api_key' // OCI Generative AI service API key (Bearer token)
   | 'instance_principal' // OCI Compute instance
   | 'resource_principal'; // OCI Functions
 
@@ -126,6 +174,12 @@ export interface OCIConfig {
   configPath?: string;
 
   /**
+   * OCI Generative AI service API key secret for Bearer authentication.
+   * Used only when auth='api_key'.
+   */
+  apiKey?: string;
+
+  /**
    * Compartment OCID for API calls
    * If not provided, will be read from config or environment
    */
@@ -154,6 +208,7 @@ export interface OCIConfig {
 export type OCIGenAIRegion =
   | 'us-chicago-1'
   | 'eu-frankfurt-1'
+  | 'us-phoenix-1'
   | 'ap-osaka-1'
   | 'uk-london-1'
   | 'us-ashburn-1'
@@ -203,12 +258,14 @@ export type OCILanguageModelSettings = OCIConfig;
  * Settings for embedding models
  */
 export interface OCIEmbeddingSettings extends OCIConfig {
-  /** Embedding dimensions (384 for light, 1024 for standard) */
-  dimensions?: 384 | 1024;
+  /** Embedding dimensions (v4 models support 256, 512, 1024, and 1536). */
+  dimensions?: 256 | 384 | 512 | 1024 | 1536;
   /** How to truncate input text if it exceeds model limits */
   truncate?: 'START' | 'END' | 'NONE';
   /** Input type optimization for embeddings */
   inputType?: 'SEARCH_QUERY' | 'SEARCH_DOCUMENT' | 'CLASSIFICATION' | 'CLUSTERING' | 'IMAGE';
+  /** Encoding of the returned embeddings. */
+  embeddingTypes?: Array<'float' | 'int8' | 'uint8' | 'binary' | 'ubinary' | 'base64'>;
 }
 
 /**

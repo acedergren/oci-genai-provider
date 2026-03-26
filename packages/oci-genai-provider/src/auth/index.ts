@@ -1,6 +1,39 @@
 import * as common from 'oci-common';
 import type { OCIConfig } from '../types';
 
+const OCI_GENAI_API_KEY_ENV_VARS = ['OCI_GENAI_API_KEY', 'OCI_API_KEY', 'OPENAI_API_KEY'] as const;
+
+export function isAPIKeyAuth(config: OCIConfig): boolean {
+  return config.auth === 'api_key';
+}
+
+export function getAPIKey(config: OCIConfig): string {
+  if (config.apiKey) {
+    return config.apiKey;
+  }
+
+  for (const envVar of OCI_GENAI_API_KEY_ENV_VARS) {
+    const value = process.env[envVar];
+    if (value) {
+      return value;
+    }
+  }
+
+  throw new Error(
+    'OCI Generative AI API key not found. Provide config.apiKey or set OCI_GENAI_API_KEY, OCI_API_KEY, or OPENAI_API_KEY.'
+  );
+}
+
+export function getOpenAICompatibleEndpoint(config: OCIConfig): string {
+  const region = getRegion(config);
+  const baseEndpoint =
+    config.endpoint ?? `https://inference.generativeai.${region}.oci.oraclecloud.com`;
+
+  return baseEndpoint.endsWith('/20231130/actions/v1')
+    ? baseEndpoint
+    : `${baseEndpoint.replace(/\/$/, '')}/20231130/actions/v1`;
+}
+
 /**
  * Create OCI authentication provider based on configuration
  */
@@ -17,6 +50,12 @@ export async function createAuthProvider(
       return new common.ConfigFileAuthenticationDetailsProvider(configPath, profile);
     }
 
+    case 'api_key': {
+      throw new Error(
+        'The OCI Generative AI service API key uses the OpenAI-compatible Bearer-token transport, not the native OCI SDK signer. Use a model path that supports auth="api_key".'
+      );
+    }
+
     case 'instance_principal': {
       const builder = new common.InstancePrincipalsAuthenticationDetailsProviderBuilder();
       return await builder.build();
@@ -29,7 +68,7 @@ export async function createAuthProvider(
     default:
       throw new Error(
         `Unsupported authentication method: ${authMethod as string}. ` +
-          `Supported methods: config_file, instance_principal, resource_principal`
+          `Supported methods: config_file, api_key, instance_principal, resource_principal`
       );
   }
 }

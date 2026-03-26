@@ -19,7 +19,7 @@ import type { OCIMessage } from './converters/messages';
 import { convertToCohereFormat } from './converters/cohere-messages';
 import { convertToOCITools, convertToOCIToolChoice, supportsToolCalling } from './converters/tools';
 import { parseSSEStream } from '../shared/streaming/sse-parser';
-import { createAuthProvider, getRegion, getCompartmentId } from '../auth/index.js';
+import { createAuthProvider, getRegion, getCompartmentId, isAPIKeyAuth } from '../auth/index.js';
 import { handleOCIError } from '../shared/errors/index.js';
 import { withRetry, withTimeout, isRetryableError } from '../shared/utils/index.js';
 import {
@@ -34,6 +34,13 @@ import {
   toOCIReasoningEffort,
   createThinkingConfig,
 } from '../shared/oci-sdk-types';
+import {
+  applyInputGuardrails,
+  getEffectiveGuardrailsWarning,
+  getInputGuardrailText,
+  toJSONGuardrailsMetadata,
+} from '../shared/guardrails';
+import { doOpenAICompatibleStream } from './openai-compatible';
 
 type ChatRequest =
   | OCIModel.GenericChatRequest
@@ -128,6 +135,14 @@ export class OCILanguageModel implements LanguageModelV3 {
   private getApiFormat(hasImages: boolean = false): OCIApiFormat {
     const metadata = getModelMetadata(this.modelId);
     if (metadata?.family === 'cohere') {
+      if (
+        this.modelId === 'cohere.command-a-reasoning-08-2025' ||
+        this.modelId === 'cohere.command-a-vision-07-2025' ||
+        this.modelId === 'cohere.command-a-reasoning' ||
+        this.modelId === 'cohere.command-a-vision'
+      ) {
+        return 'COHEREV2';
+      }
       // Upgrade to COHEREV2 for vision-capable models when images are present
       // COHERE V1 format silently drops images, V2 supports them properly
       if (hasImages && metadata.capabilities.vision) {
@@ -247,11 +262,6 @@ export class OCILanguageModel implements LanguageModelV3 {
   async doStream(options: LanguageModelV3CallOptions): Promise<LanguageModelV3StreamResult> {
     const messages: OCIMessage[] = convertToOCIMessages(options.prompt);
     const ociOptions = getOCIProviderOptions(options.providerOptions);
-    const client = await this.getClient(ociOptions?.endpoint);
-    const compartmentId = resolveCompartmentId(
-      getCompartmentId(this.config),
-      ociOptions?.compartmentId
-    );
 
     // Check for images early - needed for API format selection
     const hasImages = messages.some((m) => m.content.some((c) => c.type === 'IMAGE'));
@@ -317,6 +327,40 @@ export class OCILanguageModel implements LanguageModelV3 {
         details: `Cohere V1 API format does not support images. Images in your prompt will be ignored. Use a vision-capable model like cohere.command-a-vision which uses the Cohere V2 format.`,
       });
     }
+
+    const guardrailsWarning = getEffectiveGuardrailsWarning(this.config, ociOptions?.guardrails);
+    if (guardrailsWarning) {
+      warnings.push({
+        type: 'unsupported',
+        feature: 'guardrails',
+        details: guardrailsWarning,
+      });
+    }
+
+    if (isAPIKeyAuth(this.config)) {
+      return doOpenAICompatibleStream(this.modelId, this.config, options, ociOptions, warnings);
+    }
+
+    const client = await this.getClient(ociOptions?.endpoint);
+    const compartmentId = resolveCompartmentId(
+      getCompartmentId(this.config),
+      ociOptions?.compartmentId
+    );
+    const guardrailsMetadata =
+      ociOptions?.guardrails?.input && !guardrailsWarning
+        ? await applyInputGuardrails(
+            client,
+            compartmentId,
+            getInputGuardrailText(
+              messages.flatMap((message) =>
+                message.content
+                  .filter((content) => content.type === 'TEXT')
+                  .map((content) => content.text)
+              )
+            ),
+            ociOptions.guardrails
+          )
+        : undefined;
 
     try {
       const commonParams = {
@@ -513,7 +557,12 @@ export class OCILanguageModel implements LanguageModelV3 {
                         },
                       },
                       providerMetadata: {
-                        oci: { requestId: headers?.['opc-request-id'] },
+                        oci: {
+                          requestId: headers?.['opc-request-id'],
+                          ...(guardrailsMetadata
+                            ? { guardrails: toJSONGuardrailsMetadata(guardrailsMetadata) }
+                            : {}),
+                        },
                       },
                     });
                     break;

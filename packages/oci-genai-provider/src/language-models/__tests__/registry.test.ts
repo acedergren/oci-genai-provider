@@ -20,6 +20,14 @@ describe('Model Registry', () => {
         expect(isValidModelId('xai.grok-4-1-fast-reasoning')).toBe(true);
       });
 
+      it('should validate xai.grok-4.20-0309-reasoning', () => {
+        expect(isValidModelId('xai.grok-4.20-0309-reasoning')).toBe(true);
+      });
+
+      it('should validate xai.grok-4.20-multi-agent-0309', () => {
+        expect(isValidModelId('xai.grok-4.20-multi-agent-0309')).toBe(true);
+      });
+
       it('should validate xai.grok-4-1-fast-non-reasoning', () => {
         expect(isValidModelId('xai.grok-4-1-fast-non-reasoning')).toBe(true);
       });
@@ -111,7 +119,8 @@ describe('Model Registry', () => {
       expect(metadata?.family).toBe('grok');
       expect(metadata?.capabilities.streaming).toBe(true);
       expect(metadata?.capabilities.tools).toBe(true);
-      expect(metadata?.contextWindow).toBe(131072);
+      expect(metadata?.capabilities.reasoning).toBe(true);
+      expect(metadata?.contextWindow).toBe(256000);
       expect(metadata?.speed).toBe('very-fast');
     });
 
@@ -192,13 +201,16 @@ describe('Model Registry', () => {
 
   describe('supportsReasoning', () => {
     describe('reasoning-capable models', () => {
-      // Note: Grok models don't support reasoningEffort parameter despite the "-reasoning" name
-      it('should return false for xai.grok-4-1-fast-reasoning (no API support)', () => {
-        expect(supportsReasoning('xai.grok-4-1-fast-reasoning')).toBe(false);
+      it('should return true for xai.grok-4-1-fast-reasoning', () => {
+        expect(supportsReasoning('xai.grok-4-1-fast-reasoning')).toBe(true);
       });
 
-      it('should return false for xai.grok-4-fast-reasoning (no API support)', () => {
-        expect(supportsReasoning('xai.grok-4-fast-reasoning')).toBe(false);
+      it('should return true for xai.grok-4-fast-reasoning', () => {
+        expect(supportsReasoning('xai.grok-4-fast-reasoning')).toBe(true);
+      });
+
+      it('should return true for openai.gpt-oss-120b', () => {
+        expect(supportsReasoning('openai.gpt-oss-120b')).toBe(true);
       });
 
       it('should return true for cohere.command-a-reasoning-08-2025', () => {
@@ -269,8 +281,8 @@ describe('Model Registry', () => {
         expect(supportsVision('cohere.command-r-plus')).toBe(false);
       });
 
-      it('should return false for xai.grok-4-1-fast-reasoning', () => {
-        expect(supportsVision('xai.grok-4-1-fast-reasoning')).toBe(false);
+      it('should return true for xai.grok-4-1-fast-reasoning', () => {
+        expect(supportsVision('xai.grok-4-1-fast-reasoning')).toBe(true);
       });
     });
 

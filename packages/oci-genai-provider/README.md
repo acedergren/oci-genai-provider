@@ -140,6 +140,21 @@ const provider = createOCI({
 });
 ```
 
+### Option 4: OCI Generative AI API Key
+
+```typescript
+const provider = createOCI({
+  auth: 'api_key',
+  apiKey: process.env.OCI_GENAI_API_KEY,
+  region: 'us-chicago-1',
+  compartmentId: 'ocid1.compartment.oc1..aaa...',
+});
+
+const model = provider.languageModel('openai.gpt-oss-120b');
+```
+
+`auth: 'api_key'` currently uses OCI's OpenAI-compatible Bearer-token endpoint for supported chat models (Meta Llama, xAI Grok, and OpenAI GPT-OSS).
+
 See [Configuration Guide](./docs/configuration.md) for complete authentication documentation.
 
 ## Language Models
@@ -149,6 +164,27 @@ Generate text using powerful language models from multiple providers.
 ### Available Models
 
 OCI GenAI supports models from multiple families including Cohere, Meta Llama, and others. Model availability varies by region and changes over time.
+
+Current catalog highlights in this package include:
+
+- `meta.llama-4-maverick-17b-128e-instruct-fp8`
+- `meta.llama-4-scout-17b-16e-instruct`
+- `meta.llama-3.3-70b-instruct`
+- `google.gemini-2.5-flash`
+- `google.gemini-2.5-pro`
+- `google.gemini-2.5-flash-lite`
+- `cohere.command-a-03-2025`
+- `cohere.command-a-reasoning-08-2025`
+- `cohere.command-a-vision-07-2025`
+- `xai.grok-code-fast-1`
+- `xai.grok-4.20-0309-reasoning`
+- `xai.grok-4.20-0309-non-reasoning`
+- `xai.grok-4.20-multi-agent-0309`
+- `xai.grok-4-1-fast-reasoning`
+- `xai.grok-4-1-fast-non-reasoning`
+- `xai.grok-3-fast`
+- `openai.gpt-oss-120b`
+- `openai.gpt-oss-20b`
 
 See [Oracle's pretrained model documentation](https://docs.oracle.com/en-us/iaas/Content/generative-ai/pretrained-models.htm) for the current list of available models and their capabilities.
 
@@ -241,16 +277,23 @@ import { embed, embedMany } from 'ai';
 
 // Single embedding
 const { embedding } = await embed({
-  model: oci.embeddingModel('cohere.embed-multilingual-v3.0'),
+  model: oci.embeddingModel('cohere.embed-v4.0', {
+    dimensions: 1536,
+    embeddingTypes: ['float'],
+  }),
   value: 'Hello world',
 });
 
 // Batch embeddings (up to 96 texts)
 const { embeddings } = await embedMany({
-  model: oci.embeddingModel('cohere.embed-multilingual-v3.0'),
+  model: oci.embeddingModel('cohere.embed-v4.0', {
+    inputType: 'SEARCH_DOCUMENT',
+  }),
   values: ['Text 1', 'Text 2', 'Text 3'],
 });
 ```
+
+`cohere.embed-v4.0` adds multimodal embedding support plus configurable output dimensions (`256`, `512`, `1024`, `1536`). The catalog also includes OCI image-capable variants such as `cohere.embed-multilingual-image-v3.0`.
 
 See [Embeddings Documentation](./docs/embeddings.md) for complete reference.
 
@@ -336,15 +379,19 @@ See [Reranking Models Documentation](./docs/reranking.md) for complete reference
 
 ## Regional Availability
 
-| Service             | Available Regions     |
-| ------------------- | --------------------- |
-| Language Models     | All OCI regions       |
-| Embeddings          | All OCI regions       |
-| Speech (TTS)        | **us-phoenix-1 only** |
-| Transcription (STT) | **us-phoenix-1 only** |
-| Reranking           | All OCI regions       |
+| Surface             | Region Summary                                                                                                 |
+| ------------------- | -------------------------------------------------------------------------------------------------------------- |
+| xAI Grok            | Primarily `us-ashburn-1` and `us-chicago-1`; check the Oracle model-region matrix per model                    |
+| Meta Llama          | Broad OCI commercial coverage, but model-specific                                                              |
+| Google Gemini       | Region-limited and externally hosted for some regions                                                          |
+| Cohere Command      | Broad OCI commercial coverage with some dedicated-only SKUs                                                    |
+| OpenAI GPT-OSS      | `us-ashburn-1`, `us-chicago-1`, `us-phoenix-1`, `eu-frankfurt-1` in the current catalog                        |
+| Embeddings          | `cohere.embed-v4.0` is on-demand in select regions; image-capable v3 variants vary and some are dedicated-only |
+| Speech (TTS)        | **`us-phoenix-1` only**                                                                                        |
+| Transcription (STT) | **`us-phoenix-1` only**                                                                                        |
+| Reranking           | Model-specific; verify in Oracle model docs                                                                    |
 
-Supported regions include: `us-phoenix-1`, `us-ashburn-1`, `eu-frankfurt-1`, `eu-stockholm-1`, `uk-london-1`, `ap-tokyo-1`, `ap-mumbai-1`, and more.
+For exact availability, use Oracle’s **Generative AI Models by Region** page and the per-model docs. This package intentionally keeps exact model IDs current, while regions/modes should be treated as model-specific rather than universally available.
 
 ## Error Handling
 
@@ -377,6 +424,8 @@ try {
 ## Examples
 
 Complete working examples live in the [`oci-genai-examples`](https://github.com/acedergren/oci-genai-examples) repository:
+
+- Monorepo workspace examples: [`../../examples/`](../../examples/)
 
 - SvelteKit chatbot with streaming
 - Next.js chatbot

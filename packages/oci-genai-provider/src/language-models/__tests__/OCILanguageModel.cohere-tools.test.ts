@@ -36,6 +36,7 @@ jest.mock('../../auth/index.js', () => ({
     mockCreateAuthProvider(config),
   getRegion: (config: OCIConfig): string => mockGetRegion(config),
   getCompartmentId: (config: OCIConfig): string => mockGetCompartmentId(config),
+  isAPIKeyAuth: () => false,
 }));
 
 // Mock oci-common Region

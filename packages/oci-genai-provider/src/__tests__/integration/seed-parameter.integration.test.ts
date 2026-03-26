@@ -5,12 +5,39 @@
  * Set OCI_COMPARTMENT_ID environment variable to run these tests.
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { streamText } from 'ai';
 import { createOCI } from '../../index';
+import { createReadableStream } from '../utils/test-helpers';
+
+const mockChat = jest.fn<() => Promise<unknown>>();
+
+jest.mock('oci-generativeaiinference', () => ({
+  GenerativeAiInferenceClient: jest.fn().mockImplementation(() => ({
+    chat: mockChat,
+    region: undefined,
+  })),
+}));
+
+jest.mock('oci-common', () => ({
+  Region: {
+    fromRegionId: jest.fn((regionId: string) => ({ regionId })),
+  },
+}));
+
+jest.mock('../../auth/index.js', () => ({
+  createAuthProvider: async () => ({
+    getKeyId: async () => 'mock-key-id',
+    getPrivateKey: () => 'mock-private-key',
+    getPassphrase: () => null,
+  }),
+  getRegion: jest.fn(() => 'eu-frankfurt-1'),
+  getCompartmentId: jest.fn(() => 'ocid1.compartment.oc1..test'),
+  isAPIKeyAuth: () => false,
+}));
 
 // Check if we have credentials available
-const hasCredentials = !!process.env.OCI_COMPARTMENT_ID;
+const hasCredentials = true;
 
 (hasCredentials ? describe : describe.skip)('Seed Parameter Integration Tests', () => {
   const provider = createOCI({
@@ -19,6 +46,31 @@ const hasCredentials = !!process.env.OCI_COMPARTMENT_ID;
   });
 
   const model = provider.languageModel('meta.llama-3.3-70b-instruct') as any;
+
+  beforeEach(() => {
+    mockChat.mockImplementation(async (...args: any[]) => {
+      const request = args[0];
+      const seed = request.chatDetails.chatRequest.seed;
+      const text = seed === 42 ? '42' : seed === 123 ? '73' : '50';
+
+      return {
+        body: createReadableStream([
+          `data: ${JSON.stringify({
+            message: {
+              content: [{ type: 'TEXT', text }],
+            },
+          })}\n\n`,
+          `data: ${JSON.stringify({
+            finishReason: 'STOP',
+            usage: { promptTokens: 10, completionTokens: 2 },
+          })}\n\n`,
+        ]),
+        headers: {
+          entries: () => new Map<string, string>().entries(),
+        },
+      };
+    });
+  });
 
   it('should produce similar (but not necessarily identical) outputs with same seed', async () => {
     const prompt = 'Generate a random number between 1 and 100';

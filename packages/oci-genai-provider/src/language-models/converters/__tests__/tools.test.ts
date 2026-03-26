@@ -313,7 +313,8 @@ describe('Tool Converters', () => {
 
     it('should return true for Grok models', () => {
       expect(supportsToolCalling('xai.grok-3')).toBe(true);
-      expect(supportsToolCalling('xai.grok-4-maverick')).toBe(true);
+      expect(supportsToolCalling('xai.grok-4.20-0309-reasoning')).toBe(true);
+      expect(supportsToolCalling('xai.grok-4.20-multi-agent-0309')).toBe(true);
     });
 
     it('should return true for Gemini models', () => {

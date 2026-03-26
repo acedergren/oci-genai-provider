@@ -16,18 +16,53 @@ interface OCIServingMode {
     modelId?: string;
     endpointId?: string;
 }
-type OCIAuthMethod = 'config_file' | 'instance_principal' | 'resource_principal';
+interface OCIGuardrailsContentModerationOptions {
+    categories?: string[];
+}
+interface OCIGuardrailsPIIOptions {
+    types?: string[];
+}
+interface OCIGuardrailsInputOptions {
+    languageCode?: string;
+    promptInjection?: boolean;
+    promptInjectionThreshold?: number;
+    contentModeration?: OCIGuardrailsContentModerationOptions;
+    pii?: OCIGuardrailsPIIOptions;
+    failOnDetection?: boolean;
+}
+interface OCIGuardrailsOptions {
+    input?: OCIGuardrailsInputOptions;
+}
+interface OCIGuardrailsMetadata {
+    blocked: boolean;
+    input: {
+        contentModeration?: Array<{
+            category: string;
+            score: number;
+        }>;
+        promptInjectionScore?: number;
+        pii?: Array<{
+            text: string;
+            label: string;
+            score: number;
+            offset: number;
+            length: number;
+        }>;
+    };
+}
+type OCIAuthMethod = 'config_file' | 'api_key' | 'instance_principal' | 'resource_principal';
 interface OCIConfig {
     region?: string;
     profile?: string;
     auth?: OCIAuthMethod;
     configPath?: string;
+    apiKey?: string;
     compartmentId?: string;
     endpoint?: string;
     servingMode?: OCIServingMode;
     requestOptions?: RequestOptions;
 }
-type OCIGenAIRegion$1 = 'us-chicago-1' | 'eu-frankfurt-1' | 'ap-osaka-1' | 'uk-london-1' | 'us-ashburn-1' | 'ap-mumbai-1' | 'us-sanjose-1' | 'ap-singapore-1' | 'ap-seoul-1' | 'sa-saopaulo-1' | 'ap-sydney-1' | 'ap-tokyo-1' | 'ca-toronto-1';
+type OCIGenAIRegion$1 = 'us-chicago-1' | 'eu-frankfurt-1' | 'us-phoenix-1' | 'ap-osaka-1' | 'uk-london-1' | 'us-ashburn-1' | 'ap-mumbai-1' | 'us-sanjose-1' | 'ap-singapore-1' | 'ap-seoul-1' | 'sa-saopaulo-1' | 'ap-sydney-1' | 'ap-tokyo-1' | 'ca-toronto-1';
 interface ModelMetadata {
     id: string;
     name: string;
@@ -47,9 +82,10 @@ interface ModelMetadata {
 }
 type OCILanguageModelSettings = OCIConfig;
 interface OCIEmbeddingSettings extends OCIConfig {
-    dimensions?: 384 | 1024;
+    dimensions?: 256 | 384 | 512 | 1024 | 1536;
     truncate?: 'START' | 'END' | 'NONE';
     inputType?: 'SEARCH_QUERY' | 'SEARCH_DOCUMENT' | 'CLASSIFICATION' | 'CLUSTERING' | 'IMAGE';
+    embeddingTypes?: Array<'float' | 'int8' | 'uint8' | 'binary' | 'ubinary' | 'base64'>;
 }
 interface OCISpeechSettings extends OCIConfig {
     voice?: string;
@@ -242,7 +278,7 @@ declare class OCILanguageModel implements LanguageModelV3 {
     doStream(options: LanguageModelV3CallOptions): Promise<LanguageModelV3StreamResult>;
 }
 
-type OCIGenAIRegion = 'us-chicago-1' | 'eu-frankfurt-1' | 'ap-osaka-1' | 'uk-london-1' | 'us-ashburn-1' | 'ap-mumbai-1' | 'us-sanjose-1' | 'ap-singapore-1' | 'ap-seoul-1' | 'sa-saopaulo-1' | 'ap-sydney-1' | 'ap-tokyo-1' | 'ca-toronto-1';
+type OCIGenAIRegion = 'us-chicago-1' | 'eu-frankfurt-1' | 'us-phoenix-1' | 'ap-osaka-1' | 'uk-london-1' | 'us-ashburn-1' | 'ap-mumbai-1' | 'us-sanjose-1' | 'ap-singapore-1' | 'ap-seoul-1' | 'sa-saopaulo-1' | 'ap-sydney-1' | 'ap-tokyo-1' | 'ca-toronto-1';
 declare function isValidModelId(modelId: string): boolean;
 declare function getModelMetadata(modelId: string): ModelMetadata | undefined;
 declare function getAllModels(): ModelMetadata[];
@@ -259,7 +295,7 @@ declare class OCIEmbeddingModel implements EmbeddingModelV3 {
     private config;
     readonly specificationVersion = "v3";
     readonly provider = "oci-genai";
-    readonly maxEmbeddingsPerCall = 96;
+    readonly maxEmbeddingsPerCall: number;
     readonly supportsParallelCalls = true;
     private _client?;
     constructor(modelId: string, config: OCIEmbeddingSettings);
@@ -273,9 +309,13 @@ interface EmbeddingModelMetadata {
     id: string;
     name: string;
     family: 'cohere';
-    dimensions: 384 | 1024;
+    dimensions: 256 | 384 | 512 | 1024 | 1536;
     maxTextsPerBatch: number;
-    maxTokensPerText: number;
+    maxTokensPerText?: number;
+    maxTokensPerCall: number;
+    supportsImageInput?: boolean;
+    dedicatedOnly?: boolean;
+    supportedDimensions?: ReadonlyArray<256 | 384 | 512 | 1024 | 1536>;
 }
 declare function isValidEmbeddingModelId(modelId: string): boolean;
 declare function getEmbeddingModelMetadata(modelId: string): EmbeddingModelMetadata | undefined;
@@ -488,35 +528,25 @@ declare class TimeoutError extends Error {
 }
 declare function withTimeout<T>(promise: Promise<T>, timeoutMs: number, operation?: string): Promise<T>;
 
-declare const OCIProviderOptionsSchema: z.ZodEffects<z.ZodObject<{
-    reasoningEffort: z.ZodOptional<z.ZodEnum<["none", "minimal", "low", "medium", "high"]>>;
+declare const OCIProviderOptionsSchema: z.ZodObject<{
+    reasoningEffort: z.ZodOptional<z.ZodEnum<{
+        none: "none";
+        minimal: "minimal";
+        low: "low";
+        medium: "medium";
+        high: "high";
+    }>>;
     thinking: z.ZodOptional<z.ZodBoolean>;
     tokenBudget: z.ZodOptional<z.ZodNumber>;
-    servingMode: z.ZodOptional<z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
+    servingMode: z.ZodOptional<z.ZodDiscriminatedUnion<[z.ZodObject<{
         type: z.ZodLiteral<"ON_DEMAND">;
         modelId: z.ZodString;
         endpointId: z.ZodOptional<z.ZodString>;
-    }, "strip", z.ZodTypeAny, {
-        type: "ON_DEMAND";
-        modelId: string;
-        endpointId?: string | undefined;
-    }, {
-        type: "ON_DEMAND";
-        modelId: string;
-        endpointId?: string | undefined;
-    }>, z.ZodObject<{
+    }, z.core.$strip>, z.ZodObject<{
         type: z.ZodLiteral<"DEDICATED">;
         modelId: z.ZodOptional<z.ZodString>;
         endpointId: z.ZodString;
-    }, "strip", z.ZodTypeAny, {
-        type: "DEDICATED";
-        endpointId: string;
-        modelId?: string | undefined;
-    }, {
-        type: "DEDICATED";
-        endpointId: string;
-        modelId?: string | undefined;
-    }>]>>;
+    }, z.core.$strip>], "type">>;
     compartmentId: z.ZodOptional<z.ZodString>;
     endpoint: z.ZodOptional<z.ZodString>;
     requestOptions: z.ZodOptional<z.ZodObject<{
@@ -526,131 +556,23 @@ declare const OCIProviderOptionsSchema: z.ZodEffects<z.ZodObject<{
             maxRetries: z.ZodOptional<z.ZodNumber>;
             baseDelayMs: z.ZodOptional<z.ZodNumber>;
             maxDelayMs: z.ZodOptional<z.ZodNumber>;
-        }, "strict", z.ZodTypeAny, {
-            maxRetries?: number | undefined;
-            baseDelayMs?: number | undefined;
-            maxDelayMs?: number | undefined;
-            enabled?: boolean | undefined;
-        }, {
-            maxRetries?: number | undefined;
-            baseDelayMs?: number | undefined;
-            maxDelayMs?: number | undefined;
-            enabled?: boolean | undefined;
-        }>>;
-    }, "strict", z.ZodTypeAny, {
-        timeoutMs?: number | undefined;
-        retry?: {
-            maxRetries?: number | undefined;
-            baseDelayMs?: number | undefined;
-            maxDelayMs?: number | undefined;
-            enabled?: boolean | undefined;
-        } | undefined;
-    }, {
-        timeoutMs?: number | undefined;
-        retry?: {
-            maxRetries?: number | undefined;
-            baseDelayMs?: number | undefined;
-            maxDelayMs?: number | undefined;
-            enabled?: boolean | undefined;
-        } | undefined;
-    }>>;
-}, "strict", z.ZodTypeAny, {
-    reasoningEffort?: "none" | "minimal" | "low" | "medium" | "high" | undefined;
-    thinking?: boolean | undefined;
-    tokenBudget?: number | undefined;
-    servingMode?: {
-        type: "ON_DEMAND";
-        modelId: string;
-        endpointId?: string | undefined;
-    } | {
-        type: "DEDICATED";
-        endpointId: string;
-        modelId?: string | undefined;
-    } | undefined;
-    compartmentId?: string | undefined;
-    endpoint?: string | undefined;
-    requestOptions?: {
-        timeoutMs?: number | undefined;
-        retry?: {
-            maxRetries?: number | undefined;
-            baseDelayMs?: number | undefined;
-            maxDelayMs?: number | undefined;
-            enabled?: boolean | undefined;
-        } | undefined;
-    } | undefined;
-}, {
-    reasoningEffort?: "none" | "minimal" | "low" | "medium" | "high" | undefined;
-    thinking?: boolean | undefined;
-    tokenBudget?: number | undefined;
-    servingMode?: {
-        type: "ON_DEMAND";
-        modelId: string;
-        endpointId?: string | undefined;
-    } | {
-        type: "DEDICATED";
-        endpointId: string;
-        modelId?: string | undefined;
-    } | undefined;
-    compartmentId?: string | undefined;
-    endpoint?: string | undefined;
-    requestOptions?: {
-        timeoutMs?: number | undefined;
-        retry?: {
-            maxRetries?: number | undefined;
-            baseDelayMs?: number | undefined;
-            maxDelayMs?: number | undefined;
-            enabled?: boolean | undefined;
-        } | undefined;
-    } | undefined;
-}>, {
-    reasoningEffort?: "none" | "minimal" | "low" | "medium" | "high" | undefined;
-    thinking?: boolean | undefined;
-    tokenBudget?: number | undefined;
-    servingMode?: {
-        type: "ON_DEMAND";
-        modelId: string;
-        endpointId?: string | undefined;
-    } | {
-        type: "DEDICATED";
-        endpointId: string;
-        modelId?: string | undefined;
-    } | undefined;
-    compartmentId?: string | undefined;
-    endpoint?: string | undefined;
-    requestOptions?: {
-        timeoutMs?: number | undefined;
-        retry?: {
-            maxRetries?: number | undefined;
-            baseDelayMs?: number | undefined;
-            maxDelayMs?: number | undefined;
-            enabled?: boolean | undefined;
-        } | undefined;
-    } | undefined;
-}, {
-    reasoningEffort?: "none" | "minimal" | "low" | "medium" | "high" | undefined;
-    thinking?: boolean | undefined;
-    tokenBudget?: number | undefined;
-    servingMode?: {
-        type: "ON_DEMAND";
-        modelId: string;
-        endpointId?: string | undefined;
-    } | {
-        type: "DEDICATED";
-        endpointId: string;
-        modelId?: string | undefined;
-    } | undefined;
-    compartmentId?: string | undefined;
-    endpoint?: string | undefined;
-    requestOptions?: {
-        timeoutMs?: number | undefined;
-        retry?: {
-            maxRetries?: number | undefined;
-            baseDelayMs?: number | undefined;
-            maxDelayMs?: number | undefined;
-            enabled?: boolean | undefined;
-        } | undefined;
-    } | undefined;
-}>;
+        }, z.core.$strict>>;
+    }, z.core.$strict>>;
+    guardrails: z.ZodOptional<z.ZodObject<{
+        input: z.ZodOptional<z.ZodObject<{
+            languageCode: z.ZodOptional<z.ZodString>;
+            promptInjection: z.ZodOptional<z.ZodBoolean>;
+            promptInjectionThreshold: z.ZodOptional<z.ZodNumber>;
+            failOnDetection: z.ZodOptional<z.ZodBoolean>;
+            contentModeration: z.ZodOptional<z.ZodObject<{
+                categories: z.ZodOptional<z.ZodArray<z.ZodString>>;
+            }, z.core.$strict>>;
+            pii: z.ZodOptional<z.ZodObject<{
+                types: z.ZodOptional<z.ZodArray<z.ZodString>>;
+            }, z.core.$strict>>;
+        }, z.core.$strict>>;
+    }, z.core.$strict>>;
+}, z.core.$strict>;
 type OCIProviderOptions = z.infer<typeof OCIProviderOptionsSchema>;
 type OCIProviderOptionsInput = z.input<typeof OCIProviderOptionsSchema>;
 declare function parseProviderOptions(options: unknown): OCIProviderOptions;
@@ -658,66 +580,36 @@ declare function parseProviderOptions(options: unknown): OCIProviderOptions;
 declare const CompartmentIdSchema: z.ZodString;
 declare const RegionSchema: z.ZodString;
 declare const ConfigProfileSchema: z.ZodDefault<z.ZodString>;
-declare const ServingModeSchema: z.ZodDefault<z.ZodEnum<["on-demand", "dedicated"]>>;
+declare const ServingModeSchema: z.ZodDefault<z.ZodEnum<{
+    "on-demand": "on-demand";
+    dedicated: "dedicated";
+}>>;
 declare const EndpointIdSchema: z.ZodString;
-declare const OCIProviderSettingsSchema: z.ZodEffects<z.ZodObject<{
+declare const OCIProviderSettingsSchema: z.ZodObject<{
     compartmentId: z.ZodOptional<z.ZodString>;
     region: z.ZodOptional<z.ZodString>;
     configProfile: z.ZodOptional<z.ZodDefault<z.ZodString>>;
-    servingMode: z.ZodOptional<z.ZodDefault<z.ZodEnum<["on-demand", "dedicated"]>>>;
+    servingMode: z.ZodOptional<z.ZodDefault<z.ZodEnum<{
+        "on-demand": "on-demand";
+        dedicated: "dedicated";
+    }>>>;
     endpointId: z.ZodOptional<z.ZodString>;
-}, "strip", z.ZodTypeAny, {
-    endpointId?: string | undefined;
-    servingMode?: "on-demand" | "dedicated" | undefined;
-    compartmentId?: string | undefined;
-    region?: string | undefined;
-    configProfile?: string | undefined;
-}, {
-    endpointId?: string | undefined;
-    servingMode?: "on-demand" | "dedicated" | undefined;
-    compartmentId?: string | undefined;
-    region?: string | undefined;
-    configProfile?: string | undefined;
-}>, {
-    endpointId?: string | undefined;
-    servingMode?: "on-demand" | "dedicated" | undefined;
-    compartmentId?: string | undefined;
-    region?: string | undefined;
-    configProfile?: string | undefined;
-}, {
-    endpointId?: string | undefined;
-    servingMode?: "on-demand" | "dedicated" | undefined;
-    compartmentId?: string | undefined;
-    region?: string | undefined;
-    configProfile?: string | undefined;
-}>;
+}, z.core.$strip>;
 type OCIProviderSettingsInput = z.input<typeof OCIProviderSettingsSchema>;
 type OCIProviderSettingsValidated = z.output<typeof OCIProviderSettingsSchema>;
-declare function validateProviderSettings(settings: unknown): z.SafeParseReturnType<{
-    endpointId?: string | undefined;
-    servingMode?: "on-demand" | "dedicated" | undefined;
+declare function validateProviderSettings(settings: unknown): z.ZodSafeParseResult<{
     compartmentId?: string | undefined;
     region?: string | undefined;
     configProfile?: string | undefined;
-}, {
-    endpointId?: string | undefined;
     servingMode?: "on-demand" | "dedicated" | undefined;
-    compartmentId?: string | undefined;
-    region?: string | undefined;
-    configProfile?: string | undefined;
+    endpointId?: string | undefined;
 }>;
 declare function parseProviderSettings(settings: unknown): OCIProviderSettingsValidated;
 declare const ModelIdSchema: z.ZodString;
 declare const OCIChatModelIdSchema: z.ZodObject<{
     modelId: z.ZodString;
     isDedicatedEndpoint: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
-}, "strip", z.ZodTypeAny, {
-    modelId: string;
-    isDedicatedEndpoint: boolean;
-}, {
-    modelId: string;
-    isDedicatedEndpoint?: boolean | undefined;
-}>;
+}, z.core.$strip>;
 type OCIChatModelId = z.infer<typeof OCIChatModelIdSchema>;
 
 interface RealtimeClientEvents {
@@ -805,4 +697,4 @@ declare class WebSocketAdapter {
 declare function createOCI(config?: OCIConfig): OCIGenAIProvider;
 declare const oci: OCIGenAIProvider;
 
-export { type AudioAckDetails, AuthenticationError, type AuthenticationErrorOptions, CompartmentIdSchema, ConfigProfileSchema, type EmbeddingModelMetadata, EndpointIdSchema, ModelIdSchema, type ModelMetadata, ModelNotFoundError, NetworkError, type NetworkErrorOptions, type OCIAuthMethod, type OCIChatModelId, OCIChatModelIdSchema, type OCIConfig, OCIEmbeddingModel, type OCIEmbeddingSettings, OCIGenAIError, type OCIGenAIErrorOptions, OCIGenAIProvider, type OCIGenAIRegion$1 as OCIGenAIRegion, OCILanguageModel, type OCILanguageModelSettings, type OCIProviderOptions, type OCIProviderOptionsInput, OCIProviderOptionsSchema, type OCIProviderSettingsInput, OCIProviderSettingsSchema, type OCIProviderSettingsValidated, OCIRealtimeClient, type OCIRealtimeSettings, OCIRealtimeTranscription, OCIRerankingModel, type OCIRerankingSettings, OCISpeechModel, type OCISpeechSettings, OCITranscriptionModel, type OCITranscriptionSettings, type PartialResultStability, RateLimitError, type RateLimitErrorOptions, type RealtimeAudioEncoding, type RealtimeClientEvents, type RealtimeConnectionState, RealtimeError, type RealtimeErrorCode, type RealtimeModelDomain, type RealtimeModelType, type RealtimePunctuation, type RealtimeSessionInfo, type RealtimeTranscriptionEvents, type RealtimeTranscriptionResult, RegionSchema, type RequestOptions, type RerankingModelMetadata, type RetryOptions, ServingModeSchema, type SpeechModelMetadata, type SupportedLanguage, TimeoutError, type TranscriptionModelMetadata, type TranscriptionToken, WebSocketAdapter, WebSocketReadyState, createOCI, getAllEmbeddingModels, getAllModels, getAllRerankingModels, getAllSpeechModels, getAllTranscriptionModels, getAllVoices, getCodingRecommendedModels, getEmbeddingModelMetadata, getModelMetadata, getModelsByFamily, getModelsByRegion, getRerankingModelMetadata, getSpeechModelMetadata, getSupportedLanguages, getTranscriptionModelMetadata, getVisionModels, handleOCIError, isCodingSuitable, isRetryableError, isRetryableStatusCode, isValidEmbeddingModelId, isValidModelId, isValidRerankingModelId, isValidSpeechModelId, isValidTranscriptionModelId, oci, parseProviderOptions, parseProviderSettings, supportsReasoning, supportsVision, validateProviderSettings, withRetry, withTimeout };
+export { type AudioAckDetails, AuthenticationError, type AuthenticationErrorOptions, CompartmentIdSchema, ConfigProfileSchema, type EmbeddingModelMetadata, EndpointIdSchema, ModelIdSchema, type ModelMetadata, ModelNotFoundError, NetworkError, type NetworkErrorOptions, type OCIAuthMethod, type OCIChatModelId, OCIChatModelIdSchema, type OCIConfig, OCIEmbeddingModel, type OCIEmbeddingSettings, OCIGenAIError, type OCIGenAIErrorOptions, OCIGenAIProvider, type OCIGenAIRegion$1 as OCIGenAIRegion, type OCIGuardrailsInputOptions, type OCIGuardrailsMetadata, type OCIGuardrailsOptions, OCILanguageModel, type OCILanguageModelSettings, type OCIProviderOptions, type OCIProviderOptionsInput, OCIProviderOptionsSchema, type OCIProviderSettingsInput, OCIProviderSettingsSchema, type OCIProviderSettingsValidated, OCIRealtimeClient, type OCIRealtimeSettings, OCIRealtimeTranscription, OCIRerankingModel, type OCIRerankingSettings, OCISpeechModel, type OCISpeechSettings, OCITranscriptionModel, type OCITranscriptionSettings, type PartialResultStability, RateLimitError, type RateLimitErrorOptions, type RealtimeAudioEncoding, type RealtimeClientEvents, type RealtimeConnectionState, RealtimeError, type RealtimeErrorCode, type RealtimeModelDomain, type RealtimeModelType, type RealtimePunctuation, type RealtimeSessionInfo, type RealtimeTranscriptionEvents, type RealtimeTranscriptionResult, RegionSchema, type RequestOptions, type RerankingModelMetadata, type RetryOptions, ServingModeSchema, type SpeechModelMetadata, type SupportedLanguage, TimeoutError, type TranscriptionModelMetadata, type TranscriptionToken, WebSocketAdapter, WebSocketReadyState, createOCI, getAllEmbeddingModels, getAllModels, getAllRerankingModels, getAllSpeechModels, getAllTranscriptionModels, getAllVoices, getCodingRecommendedModels, getEmbeddingModelMetadata, getModelMetadata, getModelsByFamily, getModelsByRegion, getRerankingModelMetadata, getSpeechModelMetadata, getSupportedLanguages, getTranscriptionModelMetadata, getVisionModels, handleOCIError, isCodingSuitable, isRetryableError, isRetryableStatusCode, isValidEmbeddingModelId, isValidModelId, isValidRerankingModelId, isValidSpeechModelId, isValidTranscriptionModelId, oci, parseProviderOptions, parseProviderSettings, supportsReasoning, supportsVision, validateProviderSettings, withRetry, withTimeout };

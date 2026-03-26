@@ -32,6 +32,12 @@ module.exports = {
   // Don't apply the .js -> no extension mapping to node_modules
   moduleNameMapper: {
     '^(\\.{1,2}/(?!.*node_modules).*)\\.js$': '$1',
+    '^oci-common$': '<rootDir>/src/__tests__/__mocks__/oci-common.ts',
+    '^oci-generativeaiinference$':
+      '<rootDir>/src/__tests__/__mocks__/oci-generativeaiinference.ts',
+    '^oci-aispeech$': '<rootDir>/src/__tests__/__mocks__/oci-aispeech.ts',
+    '^oci-identity$': '<rootDir>/src/__tests__/__mocks__/oci-identity.ts',
+    '^oci-objectstorage$': '<rootDir>/src/__tests__/__mocks__/oci-objectstorage.ts',
   },
   transform: {
     '^.+\\.tsx?$': [

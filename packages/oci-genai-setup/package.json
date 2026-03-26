@@ -15,7 +15,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "bun build src/cli.ts --outdir dist --target bun --minify",
+    "build": "bun build src/cli.ts --outdir dist --target bun --minify --external @acedergren/oci-genai-provider --external @acedergren/oci-genai-provider/config --external oci-common --external oci-identity --external oci-generativeaiinference --external oci-aispeech --external oci-objectstorage",
     "dev": "bun --watch src/cli.ts",
     "lint": "eslint src",
     "type-check": "tsc --noEmit"

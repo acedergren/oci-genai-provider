@@ -1,6 +1,6 @@
 {
   "name": "@acedergren/oci-genai-provider",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Oracle Cloud Infrastructure Generative AI provider for Vercel AI SDK",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -42,7 +42,7 @@
     "lint:fix": "eslint src --fix",
     "type-check": "tsc --noEmit",
     "test:coverage:ci": "jest --coverage --ci --maxWorkers=2",
-    "test:integration": "jest --testPathPattern=integration",
+    "test:integration": "jest --testMatch '**/__tests__/integration/**/*.integration.test.ts' --testPathIgnorePatterns=/node_modules/",
     "test:unit": "jest --testPathPattern=__tests__ --testPathIgnorePatterns=integration"
   },
   "dependencies": {

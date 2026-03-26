@@ -79,6 +79,9 @@ export type {
   ModelMetadata,
   RequestOptions,
   OCIGenAIRegion,
+  OCIGuardrailsOptions,
+  OCIGuardrailsInputOptions,
+  OCIGuardrailsMetadata,
 } from './types';
 
 // ============================================================================

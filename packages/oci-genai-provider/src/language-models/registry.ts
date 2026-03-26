@@ -4,6 +4,7 @@ import type { ModelMetadata } from '../types';
 export type OCIGenAIRegion =
   | 'us-chicago-1'
   | 'eu-frankfurt-1'
+  | 'us-phoenix-1'
   | 'ap-osaka-1'
   | 'uk-london-1'
   | 'us-ashburn-1'
@@ -49,7 +50,12 @@ const LLAMA_REGIONS: OCIGenAIRegion[] = [
   'ap-tokyo-1',
   'ca-toronto-1',
 ];
-const OPENAI_REGIONS: OCIGenAIRegion[] = ['us-chicago-1', 'eu-frankfurt-1', 'us-ashburn-1'];
+const OPENAI_REGIONS: OCIGenAIRegion[] = [
+  'us-chicago-1',
+  'eu-frankfurt-1',
+  'us-ashburn-1',
+  'us-phoenix-1',
+];
 
 // Extended metadata with region support
 interface ExtendedModelMetadata extends ModelMetadata {
@@ -73,12 +79,43 @@ export const MODEL_CATALOG: ExtendedModelMetadata[] = [
     id: 'xai.grok-code-fast-1',
     name: 'Grok Code Fast 1',
     family: 'grok',
-    capabilities: { streaming: true, tools: true, vision: false },
-    contextWindow: 131072,
+    capabilities: { streaming: true, tools: true, vision: false, reasoning: true },
+    contextWindow: 256000,
     speed: 'very-fast',
     regions: GROK_REGIONS,
     codingRecommended: true,
     codingNote: 'Purpose-built for code generation and understanding',
+  },
+  {
+    id: 'xai.grok-4.20-0309-reasoning',
+    name: 'Grok 4.20 Reasoning',
+    family: 'grok',
+    capabilities: { streaming: true, tools: true, vision: true, reasoning: true },
+    contextWindow: 2000000,
+    speed: 'very-fast',
+    regions: GROK_REGIONS,
+    codingRecommended: true,
+    codingNote: 'Latest Grok reasoning release with multimodal tool use',
+  },
+  {
+    id: 'xai.grok-4.20-0309-non-reasoning',
+    name: 'Grok 4.20 Non-Reasoning',
+    family: 'grok',
+    capabilities: { streaming: true, tools: true, vision: true },
+    contextWindow: 2000000,
+    speed: 'very-fast',
+    regions: GROK_REGIONS,
+  },
+  {
+    id: 'xai.grok-4.20-multi-agent-0309',
+    name: 'Grok 4.20 Multi-Agent',
+    family: 'grok',
+    capabilities: { streaming: true, tools: true, vision: false, reasoning: true },
+    contextWindow: 2000000,
+    speed: 'very-fast',
+    regions: GROK_REGIONS,
+    codingNote:
+      'Oracle documents this as the 4.20 multi-agent research SKU; capability details beyond multi-agent/tool workflows are treated conservatively here.',
   },
   {
     id: 'xai.grok-4-1-fast-reasoning',
@@ -87,7 +124,7 @@ export const MODEL_CATALOG: ExtendedModelMetadata[] = [
     // Note: Grok models don't support reasoningEffort parameter despite the "-reasoning" name
     // They throw: "This model does not support `reasoning_effort`"
     // Reasoning is built-in but not controllable via API parameter
-    capabilities: { streaming: true, tools: true, vision: false },
+    capabilities: { streaming: true, tools: true, vision: true, reasoning: true },
     contextWindow: 2000000,
     speed: 'very-fast',
     regions: GROK_REGIONS,
@@ -98,7 +135,7 @@ export const MODEL_CATALOG: ExtendedModelMetadata[] = [
     id: 'xai.grok-4-1-fast-non-reasoning',
     name: 'Grok 4.1 Fast (Non-Reasoning)',
     family: 'grok',
-    capabilities: { streaming: true, tools: true, vision: false },
+    capabilities: { streaming: true, tools: true, vision: true },
     contextWindow: 2000000,
     speed: 'very-fast',
     regions: GROK_REGIONS,
@@ -108,7 +145,7 @@ export const MODEL_CATALOG: ExtendedModelMetadata[] = [
     name: 'Grok 4 Fast Reasoning',
     family: 'grok',
     // Note: Grok models don't support reasoningEffort parameter (see xai.grok-4-1-fast-reasoning)
-    capabilities: { streaming: true, tools: true, vision: false },
+    capabilities: { streaming: true, tools: true, vision: true, reasoning: true },
     contextWindow: 131072,
     speed: 'very-fast',
     regions: GROK_REGIONS,
@@ -119,7 +156,7 @@ export const MODEL_CATALOG: ExtendedModelMetadata[] = [
     id: 'xai.grok-4-fast-non-reasoning',
     name: 'Grok 4 Fast (Non-Reasoning)',
     family: 'grok',
-    capabilities: { streaming: true, tools: true, vision: false },
+    capabilities: { streaming: true, tools: true, vision: true },
     contextWindow: 131072,
     speed: 'very-fast',
     regions: GROK_REGIONS,
@@ -128,7 +165,7 @@ export const MODEL_CATALOG: ExtendedModelMetadata[] = [
     id: 'xai.grok-4',
     name: 'Grok 4',
     family: 'grok',
-    capabilities: { streaming: true, tools: true, vision: false },
+    capabilities: { streaming: true, tools: true, vision: true, reasoning: true },
     contextWindow: 131072,
     speed: 'fast',
     regions: GROK_REGIONS,
@@ -350,7 +387,6 @@ export const MODEL_CATALOG: ExtendedModelMetadata[] = [
     contextWindow: 128000,
     speed: 'medium',
     regions: COHERE_REGIONS,
-    dedicatedOnly: true,
   },
   {
     id: 'cohere.command-a-reasoning',
@@ -399,8 +435,8 @@ export const MODEL_CATALOG: ExtendedModelMetadata[] = [
     id: 'openai.gpt-oss-120b',
     name: 'GPT-OSS 120B',
     family: 'openai',
-    capabilities: { streaming: true, tools: true, vision: false },
-    contextWindow: 131072,
+    capabilities: { streaming: true, tools: true, vision: false, reasoning: true },
+    contextWindow: 128000,
     speed: 'medium',
     regions: OPENAI_REGIONS,
     codingNote: 'OpenAI open-source model - less proven for code',
@@ -409,8 +445,8 @@ export const MODEL_CATALOG: ExtendedModelMetadata[] = [
     id: 'openai.gpt-oss-20b',
     name: 'GPT-OSS 20B',
     family: 'openai',
-    capabilities: { streaming: true, tools: true, vision: false },
-    contextWindow: 131072,
+    capabilities: { streaming: true, tools: true, vision: false, reasoning: true },
+    contextWindow: 128000,
     speed: 'fast',
     regions: OPENAI_REGIONS,
     codingNote: 'Lightweight OpenAI model',

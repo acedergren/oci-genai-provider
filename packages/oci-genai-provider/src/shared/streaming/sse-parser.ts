@@ -171,7 +171,7 @@ export async function* parseSSEStream(
           hasFinishOrUsage = true;
           if (parsed.finishReason) {
             lastRawFinishReason = parsed.finishReason.toUpperCase();
-            lastFinishReason = FINISH_REASON_MAP[lastRawFinishReason] ?? 'stop';
+            lastFinishReason = FINISH_REASON_MAP[lastRawFinishReason] ?? 'other';
           }
           if (parsed.usage) {
             const usage = parsed.usage;

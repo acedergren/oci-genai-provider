@@ -1,5 +1,5 @@
 import { AISDKError, InvalidResponseDataError, APICallError, NoSuchModelError, TooManyEmbeddingValuesForCallError, InvalidArgumentError } from '@ai-sdk/provider';
-import { GenerativeAiInferenceClient } from 'oci-generativeaiinference';
+import { GenerativeAiInferenceClient, models as models$1 } from 'oci-generativeaiinference';
 import * as common2 from 'oci-common';
 import { Region } from 'oci-common';
 import { createParser } from 'eventsource-parser';
@@ -3704,7 +3704,12 @@ var LLAMA_REGIONS = [
   "ap-tokyo-1",
   "ca-toronto-1"
 ];
-var OPENAI_REGIONS = ["us-chicago-1", "eu-frankfurt-1", "us-ashburn-1"];
+var OPENAI_REGIONS = [
+  "us-chicago-1",
+  "eu-frankfurt-1",
+  "us-ashburn-1",
+  "us-phoenix-1"
+];
 var MODEL_CATALOG = [
   // ==========================================================================
   // xAI Grok models (US regions only)
@@ -3713,12 +3718,42 @@ var MODEL_CATALOG = [
     id: "xai.grok-code-fast-1",
     name: "Grok Code Fast 1",
     family: "grok",
-    capabilities: { streaming: true, tools: true, vision: false },
-    contextWindow: 131072,
+    capabilities: { streaming: true, tools: true, vision: false, reasoning: true },
+    contextWindow: 256e3,
     speed: "very-fast",
     regions: GROK_REGIONS,
     codingRecommended: true,
     codingNote: "Purpose-built for code generation and understanding"
+  },
+  {
+    id: "xai.grok-4.20-0309-reasoning",
+    name: "Grok 4.20 Reasoning",
+    family: "grok",
+    capabilities: { streaming: true, tools: true, vision: true, reasoning: true },
+    contextWindow: 2e6,
+    speed: "very-fast",
+    regions: GROK_REGIONS,
+    codingRecommended: true,
+    codingNote: "Latest Grok reasoning release with multimodal tool use"
+  },
+  {
+    id: "xai.grok-4.20-0309-non-reasoning",
+    name: "Grok 4.20 Non-Reasoning",
+    family: "grok",
+    capabilities: { streaming: true, tools: true, vision: true },
+    contextWindow: 2e6,
+    speed: "very-fast",
+    regions: GROK_REGIONS
+  },
+  {
+    id: "xai.grok-4.20-multi-agent-0309",
+    name: "Grok 4.20 Multi-Agent",
+    family: "grok",
+    capabilities: { streaming: true, tools: true, vision: false, reasoning: true },
+    contextWindow: 2e6,
+    speed: "very-fast",
+    regions: GROK_REGIONS,
+    codingNote: "Oracle documents this as the 4.20 multi-agent research SKU; capability details beyond multi-agent/tool workflows are treated conservatively here."
   },
   {
     id: "xai.grok-4-1-fast-reasoning",
@@ -3727,7 +3762,7 @@ var MODEL_CATALOG = [
     // Note: Grok models don't support reasoningEffort parameter despite the "-reasoning" name
     // They throw: "This model does not support `reasoning_effort`"
     // Reasoning is built-in but not controllable via API parameter
-    capabilities: { streaming: true, tools: true, vision: false },
+    capabilities: { streaming: true, tools: true, vision: true, reasoning: true },
     contextWindow: 2e6,
     speed: "very-fast",
     regions: GROK_REGIONS,
@@ -3738,7 +3773,7 @@ var MODEL_CATALOG = [
     id: "xai.grok-4-1-fast-non-reasoning",
     name: "Grok 4.1 Fast (Non-Reasoning)",
     family: "grok",
-    capabilities: { streaming: true, tools: true, vision: false },
+    capabilities: { streaming: true, tools: true, vision: true },
     contextWindow: 2e6,
     speed: "very-fast",
     regions: GROK_REGIONS
@@ -3748,7 +3783,7 @@ var MODEL_CATALOG = [
     name: "Grok 4 Fast Reasoning",
     family: "grok",
     // Note: Grok models don't support reasoningEffort parameter (see xai.grok-4-1-fast-reasoning)
-    capabilities: { streaming: true, tools: true, vision: false },
+    capabilities: { streaming: true, tools: true, vision: true, reasoning: true },
     contextWindow: 131072,
     speed: "very-fast",
     regions: GROK_REGIONS,
@@ -3759,7 +3794,7 @@ var MODEL_CATALOG = [
     id: "xai.grok-4-fast-non-reasoning",
     name: "Grok 4 Fast (Non-Reasoning)",
     family: "grok",
-    capabilities: { streaming: true, tools: true, vision: false },
+    capabilities: { streaming: true, tools: true, vision: true },
     contextWindow: 131072,
     speed: "very-fast",
     regions: GROK_REGIONS
@@ -3768,7 +3803,7 @@ var MODEL_CATALOG = [
     id: "xai.grok-4",
     name: "Grok 4",
     family: "grok",
-    capabilities: { streaming: true, tools: true, vision: false },
+    capabilities: { streaming: true, tools: true, vision: true, reasoning: true },
     contextWindow: 131072,
     speed: "fast",
     regions: GROK_REGIONS
@@ -3986,8 +4021,7 @@ var MODEL_CATALOG = [
     capabilities: { streaming: true, tools: true, vision: true },
     contextWindow: 128e3,
     speed: "medium",
-    regions: COHERE_REGIONS,
-    dedicatedOnly: true
+    regions: COHERE_REGIONS
   },
   {
     id: "cohere.command-a-reasoning",
@@ -4035,8 +4069,8 @@ var MODEL_CATALOG = [
     id: "openai.gpt-oss-120b",
     name: "GPT-OSS 120B",
     family: "openai",
-    capabilities: { streaming: true, tools: true, vision: false },
-    contextWindow: 131072,
+    capabilities: { streaming: true, tools: true, vision: false, reasoning: true },
+    contextWindow: 128e3,
     speed: "medium",
     regions: OPENAI_REGIONS,
     codingNote: "OpenAI open-source model - less proven for code"
@@ -4045,8 +4079,8 @@ var MODEL_CATALOG = [
     id: "openai.gpt-oss-20b",
     name: "GPT-OSS 20B",
     family: "openai",
-    capabilities: { streaming: true, tools: true, vision: false },
-    contextWindow: 131072,
+    capabilities: { streaming: true, tools: true, vision: false, reasoning: true },
+    contextWindow: 128e3,
     speed: "fast",
     regions: OPENAI_REGIONS,
     codingNote: "Lightweight OpenAI model"
@@ -4216,7 +4250,10 @@ function convertToCohereFormat(messages) {
   const toolCallsById = /* @__PURE__ */ new Map();
   const chatHistory = [];
   const toolResults = [];
-  for (let i = 0; i < lastUserIndex; i++) {
+  for (let i = 0; i < messages.length; i++) {
+    if (i === lastUserIndex) {
+      continue;
+    }
     const msg = messages[i];
     if (msg.role === "SYSTEM") {
       continue;
@@ -4232,7 +4269,7 @@ function convertToCohereFormat(messages) {
               name: toolCall.name,
               parameters: toolCall.parameters
             },
-            outputs: [{ result: resultText }]
+            outputs: normalizeCohereToolOutputs(resultText)
           });
         }
       }
@@ -4275,13 +4312,36 @@ function convertToCohereFormat(messages) {
       });
     }
   }
-  const hasToolResults = toolResults.length > 0;
   return {
     message: messageText,
     ...chatHistory.length > 0 ? { chatHistory } : {},
     ...systemMessages ? { preambleOverride: systemMessages } : {},
-    ...hasToolResults ? { toolResults } : {},
-    hasToolResults
+    ...toolResults.length > 0 ? { toolResults } : {}
+  };
+}
+function normalizeCohereToolOutputs(resultText) {
+  const normalized = tryNormalizeAISDKToolResult(resultText);
+  return [normalized ?? { result: resultText }];
+}
+function tryNormalizeAISDKToolResult(resultText) {
+  try {
+    const parsed = JSON.parse(resultText);
+    if (parsed && typeof parsed === "object" && "type" in parsed && "value" in parsed && typeof parsed.type === "string") {
+      return normalizeAISDKToolResultValue(parsed.type, parsed.value);
+    }
+  } catch {
+  }
+  return void 0;
+}
+function normalizeAISDKToolResultValue(type, value) {
+  if (type === "json" && value && typeof value === "object" && !Array.isArray(value)) {
+    return value;
+  }
+  if (type === "text" && typeof value === "string") {
+    return { result: value };
+  }
+  return {
+    result: typeof value === "string" ? value : JSON.stringify(value)
   };
 }
 
@@ -4327,11 +4387,9 @@ function convertToCohereToolFormat(tool) {
     const required = schema.required ?? [];
     for (const [key, value] of Object.entries(schema.properties)) {
       parameterDefinitions[key] = {
-        type: value.type || "string",
-        // Default to string if type is missing
-        description: value.description,
+        type: jsonSchemaToCohereType(value),
+        description: buildCohereParameterDescription(value),
         isRequired: required.includes(key)
-        // Cohere uses isRequired, not required
       };
     }
   }
@@ -4340,6 +4398,88 @@ function convertToCohereToolFormat(tool) {
     description: tool.description ?? "",
     parameterDefinitions: Object.keys(parameterDefinitions).length > 0 ? parameterDefinitions : void 0
   };
+}
+function resolveSchemaVariant(schema) {
+  const variant = schema.anyOf ?? schema.oneOf;
+  if (!variant || variant.length === 0) {
+    return schema;
+  }
+  const preferred = variant.find((entry) => {
+    const type = entry.type;
+    if (Array.isArray(type)) {
+      return type.some((value) => value !== "null");
+    }
+    return type !== "null";
+  });
+  return preferred ?? variant[0] ?? schema;
+}
+function normalizeSchemaType(schema) {
+  const type = schema.type;
+  if (Array.isArray(type)) {
+    return type.find((value) => value !== "null") ?? type[0];
+  }
+  return type;
+}
+function jsonSchemaToCohereType(rawSchema) {
+  const schema = resolveSchemaVariant(rawSchema);
+  const normalizedType = normalizeSchemaType(schema);
+  switch (normalizedType) {
+    case "string":
+      return "str";
+    case "integer":
+      return "int";
+    case "number":
+      return "float";
+    case "boolean":
+      return "bool";
+    case "array": {
+      const itemSchema = Array.isArray(schema.items) ? schema.items[0] : schema.items;
+      return itemSchema ? `List[${jsonSchemaToCohereType(itemSchema)}]` : "List";
+    }
+    case "object": {
+      const propertyTypes = Object.values(schema.properties ?? {}).map(
+        (property) => jsonSchemaToCohereType(property)
+      );
+      const uniquePropertyTypes = Array.from(new Set(propertyTypes));
+      if (uniquePropertyTypes.length === 1) {
+        return `Dict[str, ${uniquePropertyTypes[0]}]`;
+      }
+      return "Dict";
+    }
+    case "null":
+      return "None";
+    default:
+      return normalizedType ?? inferEnumType(schema.enum) ?? "str";
+  }
+}
+function inferEnumType(values) {
+  if (!values || values.length === 0) {
+    return void 0;
+  }
+  const firstValue = values[0];
+  switch (typeof firstValue) {
+    case "string":
+      return "str";
+    case "boolean":
+      return "bool";
+    case "number":
+      return Number.isInteger(firstValue) ? "int" : "float";
+    default:
+      return void 0;
+  }
+}
+function buildCohereParameterDescription(schema) {
+  const parts = [];
+  if (schema.description) {
+    parts.push(schema.description);
+  }
+  if (schema.enum && schema.enum.length > 0) {
+    parts.push(`Allowed values: ${schema.enum.map(formatEnumValue).join(", ")}`);
+  }
+  return parts.length > 0 ? parts.join(" ") : void 0;
+}
+function formatEnumValue(value) {
+  return typeof value === "string" ? `"${value}"` : String(value);
 }
 function convertToOCIToolChoice(choice) {
   switch (choice.type) {
@@ -4362,8 +4502,8 @@ function supportsToolCalling(modelId) {
   const supportedPatterns = [
     /^meta\.llama-3\.[1-9]/,
     // Llama 3.1+
-    /^cohere\.command-r/,
-    // Cohere Command R and R+
+    /^cohere\.command-(r|a)/,
+    // Cohere Command R/R+ and Command A family
     /^xai\.grok/,
     // Grok models
     /^google\.gemini/,
@@ -4464,7 +4604,7 @@ async function* parseSSEStream(input, options) {
           hasFinishOrUsage = true;
           if (parsed.finishReason) {
             lastRawFinishReason = parsed.finishReason.toUpperCase();
-            lastFinishReason = FINISH_REASON_MAP[lastRawFinishReason] ?? "stop";
+            lastFinishReason = FINISH_REASON_MAP[lastRawFinishReason] ?? "other";
           }
           if (parsed.usage) {
             const usage = parsed.usage;
@@ -4509,6 +4649,29 @@ async function* parseSSEStream(input, options) {
     yield parts[yieldedIndex++];
   }
 }
+var OCI_GENAI_API_KEY_ENV_VARS = ["OCI_GENAI_API_KEY", "OCI_API_KEY", "OPENAI_API_KEY"];
+function isAPIKeyAuth(config) {
+  return config.auth === "api_key";
+}
+function getAPIKey(config) {
+  if (config.apiKey) {
+    return config.apiKey;
+  }
+  for (const envVar of OCI_GENAI_API_KEY_ENV_VARS) {
+    const value = process.env[envVar];
+    if (value) {
+      return value;
+    }
+  }
+  throw new Error(
+    "OCI Generative AI API key not found. Provide config.apiKey or set OCI_GENAI_API_KEY, OCI_API_KEY, or OPENAI_API_KEY."
+  );
+}
+function getOpenAICompatibleEndpoint(config) {
+  const region = getRegion(config);
+  const baseEndpoint = config.endpoint ?? `https://inference.generativeai.${region}.oci.oraclecloud.com`;
+  return baseEndpoint.endsWith("/20231130/actions/v1") ? baseEndpoint : `${baseEndpoint.replace(/\/$/, "")}/20231130/actions/v1`;
+}
 async function createAuthProvider(config) {
   const authMethod = config.auth || "config_file";
   switch (authMethod) {
@@ -4516,6 +4679,11 @@ async function createAuthProvider(config) {
       const configPath = config.configPath || void 0;
       const profile = config.profile || "DEFAULT";
       return new common2.ConfigFileAuthenticationDetailsProvider(configPath, profile);
+    }
+    case "api_key": {
+      throw new Error(
+        'The OCI Generative AI service API key uses the OpenAI-compatible Bearer-token transport, not the native OCI SDK signer. Use a model path that supports auth="api_key".'
+      );
     }
     case "instance_principal": {
       const builder = new common2.InstancePrincipalsAuthenticationDetailsProviderBuilder();
@@ -4526,7 +4694,7 @@ async function createAuthProvider(config) {
     }
     default:
       throw new Error(
-        `Unsupported authentication method: ${authMethod}. Supported methods: config_file, instance_principal, resource_principal`
+        `Unsupported authentication method: ${authMethod}. Supported methods: config_file, api_key, instance_principal, resource_principal`
       );
   }
 }
@@ -4747,15 +4915,29 @@ function withTimeout(promise, timeoutMs, operation) {
 }
 var OnDemandServingModeSchema = z.object({
   type: z.literal("ON_DEMAND"),
-  modelId: z.string().min(1, { message: "modelId is required for ON_DEMAND serving" }),
+  modelId: z.string().min(1, { error: "modelId is required for ON_DEMAND serving" }),
   endpointId: z.string().optional()
 });
 var DedicatedServingModeSchema = z.object({
   type: z.literal("DEDICATED"),
   modelId: z.string().optional(),
-  endpointId: z.string().min(1, { message: "endpointId is required for DEDICATED serving" })
+  endpointId: z.string().min(1, { error: "endpointId is required for DEDICATED serving" })
 });
 var ServingModeSchema = z.discriminatedUnion("type", [OnDemandServingModeSchema, DedicatedServingModeSchema]).describe("Model serving mode configuration");
+var GuardrailsSchema = z.object({
+  input: z.object({
+    languageCode: z.string().min(2).optional(),
+    promptInjection: z.boolean().optional(),
+    promptInjectionThreshold: z.number().min(0).max(1).optional(),
+    failOnDetection: z.boolean().optional(),
+    contentModeration: z.object({
+      categories: z.array(z.string().min(1)).min(1).optional()
+    }).strict().optional(),
+    pii: z.object({
+      types: z.array(z.string().min(1)).min(1).optional()
+    }).strict().optional()
+  }).strict().optional()
+}).strict();
 var OCIProviderOptionsSchema = z.object({
   /**
    * Reasoning effort level for models that support extended thinking.
@@ -4798,9 +4980,13 @@ var OCIProviderOptionsSchema = z.object({
       baseDelayMs: z.number().int().positive().optional(),
       maxDelayMs: z.number().int().positive().optional()
     }).strict().optional()
-  }).strict().optional().describe("Per-request timeout and retry configuration")
+  }).strict().optional().describe("Per-request timeout and retry configuration"),
+  /**
+   * OCI AI Guardrails input evaluation before inference.
+   */
+  guardrails: GuardrailsSchema.optional().describe("OCI AI Guardrails preflight options")
 }).strict().refine((data) => !data.tokenBudget || data.thinking === true, {
-  message: "tokenBudget requires thinking to be enabled",
+  error: "tokenBudget requires thinking to be enabled",
   path: ["tokenBudget"]
 });
 function parseProviderOptions(options) {
@@ -4826,20 +5012,20 @@ var OCID_PATTERNS = {
   generic: /^ocid1\.[a-z0-9]+\.[a-z0-9]+\.[a-z0-9-]*\.[a-z0-9]+$/i
 };
 z.string().regex(OCID_PATTERNS.generic, {
-  message: "Invalid OCID format. Expected format: ocid1.<resource-type>.<realm>.[region.]<id>"
+  error: "Invalid OCID format. Expected format: ocid1.<resource-type>.<realm>.[region.]<id>"
 }).describe("An OCI resource identifier (OCID)");
 var CompartmentIdSchema = z.string().regex(OCID_PATTERNS.compartment, {
-  message: "Invalid compartment ID format. Expected OCID format: ocid1.compartment.oc1..xxxxx"
+  error: "Invalid compartment ID format. Expected OCID format: ocid1.compartment.oc1..xxxxx"
 }).describe("The compartment OCID for OCI GenAI requests");
 var RegionSchema = z.string().regex(regionPattern, {
-  message: "Invalid region format. Expected format: <geo>-<city>-<number> (e.g., us-chicago-1)"
+  error: "Invalid region format. Expected format: <geo>-<city>-<number> (e.g., us-chicago-1)"
 }).describe("The OCI region identifier");
-var ConfigProfileSchema = z.string().min(1, { message: "Config profile cannot be empty" }).default("DEFAULT").describe("The OCI config profile name from ~/.oci/config");
+var ConfigProfileSchema = z.string().min(1, { error: "Config profile cannot be empty" }).default("DEFAULT").describe("The OCI config profile name from ~/.oci/config");
 var ServingModeSchema2 = z.enum(["on-demand", "dedicated"], {
-  errorMap: () => ({ message: "Serving mode must be either 'on-demand' or 'dedicated'" })
+  error: "Serving mode must be either 'on-demand' or 'dedicated'"
 }).default("on-demand").describe("The serving mode for model inference");
 var EndpointIdSchema = z.string().regex(OCID_PATTERNS.generativeaiendpoint, {
-  message: "Invalid endpoint ID format. Expected OCID format: ocid1.generativeaiendpoint.oc1..xxxxx"
+  error: "Invalid endpoint ID format. Expected OCID format: ocid1.generativeaiendpoint.oc1..xxxxx"
 }).describe("The endpoint OCID for dedicated serving mode");
 var OCIProviderSettingsSchema = z.object({
   compartmentId: CompartmentIdSchema.optional(),
@@ -4855,7 +5041,7 @@ var OCIProviderSettingsSchema = z.object({
     return true;
   },
   {
-    message: "endpointId is required when servingMode is 'dedicated'",
+    error: "endpointId is required when servingMode is 'dedicated'",
     path: ["endpointId"]
   }
 ).describe("Configuration settings for the OCI GenAI provider");
@@ -4872,7 +5058,7 @@ function parseProviderSettings(settings) {
   }
   return result.data;
 }
-var ModelIdSchema = z.string().min(1, { message: "Model ID cannot be empty" }).describe("The model ID or endpoint OCID");
+var ModelIdSchema = z.string().min(1, { error: "Model ID cannot be empty" }).describe("The model ID or endpoint OCID");
 var OCIChatModelIdSchema = z.object({
   modelId: ModelIdSchema,
   isDedicatedEndpoint: z.boolean().optional().default(false)
@@ -4961,7 +5147,349 @@ function createThinkingConfig(enabled, tokenBudget) {
   };
 }
 
+// src/shared/guardrails.ts
+var DEFAULT_CONTENT_MODERATION_CATEGORIES = ["OVERALL", "BLOCKLIST"];
+var DEFAULT_PII_TYPES = ["PERSON", "EMAIL", "TELEPHONE_NUMBER"];
+var DEFAULT_PROMPT_INJECTION_THRESHOLD = 0.5;
+function hasInputGuardrails(guardrails) {
+  return Boolean(
+    guardrails?.input && (guardrails.input.promptInjection || guardrails.input.contentModeration || guardrails.input.pii)
+  );
+}
+async function applyInputGuardrails(client, compartmentId, inputText, guardrails) {
+  if (!inputText.trim() || !hasInputGuardrails(guardrails)) {
+    return void 0;
+  }
+  const input = guardrails.input;
+  const response = await client.applyGuardrails({
+    applyGuardrailsDetails: {
+      compartmentId,
+      input: {
+        type: "TEXT",
+        content: inputText,
+        languageCode: input.languageCode
+      },
+      guardrailConfigs: {
+        ...input.contentModeration ? {
+          contentModerationConfig: {
+            categories: input.contentModeration.categories ?? DEFAULT_CONTENT_MODERATION_CATEGORIES
+          }
+        } : {},
+        ...input.promptInjection ? { promptInjectionConfig: {} } : {},
+        ...input.pii ? {
+          personallyIdentifiableInformationConfig: {
+            types: input.pii.types ?? DEFAULT_PII_TYPES
+          }
+        } : {}
+      }
+    }
+  });
+  const results = response.applyGuardrailsResult.results;
+  const metadata = {
+    blocked: false,
+    input: {
+      contentModeration: results.contentModeration?.categories?.map((category) => ({
+        category: category.name ?? "UNKNOWN",
+        score: category.score ?? 0
+      })),
+      promptInjectionScore: results.promptInjection?.score,
+      pii: results.personallyIdentifiableInformation?.map((entry) => ({
+        text: entry.text,
+        label: entry.label,
+        score: entry.score,
+        offset: entry.offset,
+        length: entry.length
+      }))
+    }
+  };
+  if (input.failOnDetection && shouldBlockGuardrails(metadata, input.promptInjectionThreshold)) {
+    metadata.blocked = true;
+    throw new Error("OCI AI Guardrails blocked the request input before inference.");
+  }
+  return metadata;
+}
+function getInputGuardrailText(parts) {
+  return parts.map((part) => part.trim()).filter((part) => part.length > 0).join("\n\n");
+}
+function toJSONGuardrailsMetadata(metadata) {
+  return JSON.parse(JSON.stringify(metadata));
+}
+function shouldBlockGuardrails(metadata, promptInjectionThreshold = DEFAULT_PROMPT_INJECTION_THRESHOLD) {
+  const hasUnsafeModeration = metadata.input.contentModeration?.some((category) => category.score >= 0.5) ?? false;
+  const hasPII = (metadata.input.pii?.length ?? 0) > 0;
+  const hasPromptInjection = (metadata.input.promptInjectionScore ?? 0) >= promptInjectionThreshold;
+  return hasUnsafeModeration || hasPII || hasPromptInjection;
+}
+function getEffectiveGuardrailsWarning(config, guardrails) {
+  if (config.auth === "api_key" && guardrails?.input) {
+    return "OCI AI Guardrails preflight is not available on the api_key transport path in this provider yet.";
+  }
+  return void 0;
+}
+var FINISH_REASON_MAP2 = {
+  stop: "stop",
+  length: "length",
+  tool_calls: "tool-calls",
+  content_filter: "content-filter"
+};
+async function doOpenAICompatibleStream(modelId, config, options, ociOptions, warnings) {
+  const promptMessages = convertToOCIMessages(options.prompt);
+  const endpoint = `${getOpenAICompatibleEndpoint(config)}/chat/completions`;
+  const apiKey = getAPIKey(config);
+  const compartmentId = ociOptions?.compartmentId ?? getCompartmentId(config);
+  const body = createOpenAICompatibleRequestBody(modelId, promptMessages, options, ociOptions);
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "x-oci-compartment-id": compartmentId
+    },
+    body: JSON.stringify(body)
+  });
+  if (!response.ok || !response.body) {
+    const errorBody = await response.text().catch(() => "");
+    throw new Error(
+      `OCI OpenAI-compatible request failed (${response.status} ${response.statusText})${errorBody ? `: ${errorBody}` : ""}`
+    );
+  }
+  const requestId = response.headers.get("opc-request-id") ?? void 0;
+  const requestBody = JSON.stringify(body);
+  return {
+    request: {
+      body: requestBody
+    },
+    response: {
+      headers: requestId ? { "opc-request-id": requestId } : void 0
+    },
+    stream: createOpenAICompatibleResponseStream(response, requestId, warnings)
+  };
+}
+function createOpenAICompatibleRequestBody(modelId, messages, options, ociOptions) {
+  const functionTools = options.tools?.filter((tool) => tool.type === "function") ?? [];
+  return {
+    model: modelId,
+    messages: messages.map(convertMessageToOpenAICompatibleFormat),
+    stream: true,
+    max_tokens: options.maxOutputTokens,
+    temperature: options.temperature,
+    top_p: options.topP,
+    stop: options.stopSequences,
+    seed: options.seed,
+    ...functionTools.length > 0 ? {
+      tools: convertToOCITools(functionTools, "GENERIC").map((tool) => ({
+        type: "function",
+        function: {
+          name: tool.name,
+          description: tool.description,
+          parameters: "parameters" in tool ? tool.parameters : {}
+        }
+      }))
+    } : {},
+    ...options.toolChoice ? {
+      tool_choice: toOpenAICompatibleToolChoice(convertToOCIToolChoice(options.toolChoice))
+    } : {},
+    ...ociOptions?.reasoningEffort && modelId.startsWith("openai.gpt-oss") ? { reasoning_effort: ociOptions.reasoningEffort } : {}
+  };
+}
+function convertMessageToOpenAICompatibleFormat(message) {
+  switch (message.role) {
+    case "SYSTEM":
+      return {
+        role: "system",
+        content: serializeOpenAICompatibleContent(message.content)
+      };
+    case "USER":
+      return {
+        role: "user",
+        content: serializeOpenAICompatibleContent(message.content)
+      };
+    case "ASSISTANT":
+      return {
+        role: "assistant",
+        content: serializeAssistantContent(message.content),
+        ...message.toolCalls ? {
+          tool_calls: message.toolCalls.map((toolCall) => ({
+            id: toolCall.id,
+            type: "function",
+            function: {
+              name: toolCall.name,
+              arguments: toolCall.arguments
+            }
+          }))
+        } : {}
+      };
+    case "TOOL":
+      return {
+        role: "tool",
+        tool_call_id: message.toolCallId ?? "tool-call-missing-id",
+        content: message.content.filter((content) => content.type === "TEXT").map((content) => content.text).join("\n")
+      };
+  }
+}
+function serializeOpenAICompatibleContent(content) {
+  if (content.length === 1 && content[0]?.type === "TEXT") {
+    return content[0].text;
+  }
+  return content.map(
+    (part) => part.type === "TEXT" ? { type: "text", text: part.text } : { type: "image_url", image_url: { url: part.imageUrl.url } }
+  );
+}
+function serializeAssistantContent(content) {
+  const text = content.filter((part) => part.type === "TEXT").map((part) => part.text).join("\n");
+  return text.length > 0 ? text : null;
+}
+function toOpenAICompatibleToolChoice(choice) {
+  switch (choice.type) {
+    case "AUTO":
+      return "auto";
+    case "REQUIRED":
+      return "required";
+    case "NONE":
+      return "none";
+    case "FUNCTION":
+      return {
+        type: "function",
+        function: { name: choice.function.name }
+      };
+  }
+}
+function createOpenAICompatibleResponseStream(response, requestId, warnings) {
+  return new ReadableStream({
+    async start(controller) {
+      controller.enqueue({ type: "stream-start", warnings });
+      const body = response.body;
+      if (!body) {
+        controller.enqueue({
+          type: "error",
+          error: new Error("OCI OpenAI-compatible response body is missing")
+        });
+        controller.close();
+        return;
+      }
+      const reader = body.getReader();
+      const decoder = new TextDecoder();
+      const toolCalls = /* @__PURE__ */ new Map();
+      let promptTokens = 0;
+      let completionTokens = 0;
+      let finishReason = { unified: "other", raw: "INCOMPLETE" };
+      let textStarted = false;
+      let reasoningStarted = false;
+      const textId = `text-${Date.now()}`;
+      const reasoningId = `reasoning-${Date.now()}`;
+      const parser = createParser({
+        onEvent(event) {
+          if (event.data === "[DONE]") {
+            return;
+          }
+          const parsed = JSON.parse(event.data);
+          const choice = parsed.choices?.[0];
+          if (choice?.delta?.content) {
+            if (!textStarted) {
+              controller.enqueue({ type: "text-start", id: textId });
+              textStarted = true;
+            }
+            controller.enqueue({ type: "text-delta", id: textId, delta: choice.delta.content });
+          }
+          if (choice?.delta?.reasoning_content) {
+            if (!reasoningStarted) {
+              controller.enqueue({ type: "reasoning-start", id: reasoningId });
+              reasoningStarted = true;
+            }
+            controller.enqueue({
+              type: "reasoning-delta",
+              id: reasoningId,
+              delta: choice.delta.reasoning_content
+            });
+          }
+          for (const toolCall of choice?.delta?.tool_calls ?? []) {
+            const index = toolCall.index ?? 0;
+            const current = toolCalls.get(index) ?? {
+              id: toolCall.id ?? `tool-call-${Date.now()}-${index}`,
+              name: "",
+              arguments: ""
+            };
+            current.id = toolCall.id ?? current.id;
+            current.name = toolCall.function?.name ?? current.name;
+            current.arguments += toolCall.function?.arguments ?? "";
+            toolCalls.set(index, current);
+          }
+          if (choice?.finish_reason) {
+            finishReason = {
+              unified: FINISH_REASON_MAP2[choice.finish_reason] ?? "other",
+              raw: choice.finish_reason
+            };
+          }
+          if (parsed.usage) {
+            promptTokens = parsed.usage.prompt_tokens ?? promptTokens;
+            completionTokens = parsed.usage.completion_tokens ?? completionTokens;
+          }
+        }
+      });
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            break;
+          }
+          parser.feed(decoder.decode(value, { stream: true }));
+        }
+        for (const toolCall of toolCalls.values()) {
+          controller.enqueue({
+            type: "tool-call",
+            toolCallId: toolCall.id,
+            toolName: toolCall.name,
+            input: toolCall.arguments || "{}"
+          });
+        }
+        if (textStarted) {
+          controller.enqueue({ type: "text-end", id: textId });
+        }
+        if (reasoningStarted) {
+          controller.enqueue({ type: "reasoning-end", id: reasoningId });
+        }
+        controller.enqueue({
+          type: "finish",
+          finishReason,
+          usage: {
+            inputTokens: { total: promptTokens, noCache: void 0, cacheRead: void 0, cacheWrite: void 0 },
+            outputTokens: {
+              total: completionTokens,
+              text: completionTokens,
+              reasoning: void 0
+            }
+          },
+          providerMetadata: {
+            oci: {
+              requestId,
+              transport: "openai-compatible"
+            }
+          }
+        });
+      } catch (error) {
+        controller.enqueue({
+          type: "error",
+          error: error instanceof Error ? error : new Error(String(error))
+        });
+      } finally {
+        controller.close();
+      }
+    }
+  });
+}
+
 // src/language-models/OCILanguageModel.ts
+var COHERE_REQUEST_DEBUG_ENV = "OCI_GENAI_DEBUG_COHERE_REQUESTS";
+function serializeChatDetails(chatDetails) {
+  const serializer = models$1?.ChatDetails;
+  if (serializer?.getJsonObj) {
+    return JSON.stringify(serializer.getJsonObj(chatDetails));
+  }
+  return JSON.stringify(chatDetails);
+}
+function shouldLogCohereToolRequest(apiFormat, toolCount) {
+  return apiFormat === "COHERE" && toolCount > 0 && typeof process !== "undefined" && process.env[COHERE_REQUEST_DEBUG_ENV] === "1";
+}
 var OCILanguageModel = class {
   constructor(modelId, config) {
     this.modelId = modelId;
@@ -5009,6 +5537,9 @@ var OCILanguageModel = class {
   getApiFormat(hasImages = false) {
     const metadata = getModelMetadata(this.modelId);
     if (metadata?.family === "cohere") {
+      if (this.modelId === "cohere.command-a-reasoning-08-2025" || this.modelId === "cohere.command-a-vision-07-2025" || this.modelId === "cohere.command-a-reasoning" || this.modelId === "cohere.command-a-vision") {
+        return "COHEREV2";
+      }
       if (hasImages && metadata.capabilities.vision) {
         return "COHEREV2";
       }
@@ -5113,11 +5644,6 @@ var OCILanguageModel = class {
   async doStream(options) {
     const messages = convertToOCIMessages(options.prompt);
     const ociOptions = getOCIProviderOptions(options.providerOptions);
-    const client = await this.getClient(ociOptions?.endpoint);
-    const compartmentId = resolveCompartmentId(
-      getCompartmentId(this.config),
-      ociOptions?.compartmentId
-    );
     const hasImages = messages.some((m) => m.content.some((c) => c.type === "IMAGE"));
     const apiFormat = this.getApiFormat(hasImages);
     const warnings = [];
@@ -5168,6 +5694,32 @@ var OCILanguageModel = class {
         details: `Cohere V1 API format does not support images. Images in your prompt will be ignored. Use a vision-capable model like cohere.command-a-vision which uses the Cohere V2 format.`
       });
     }
+    const guardrailsWarning = getEffectiveGuardrailsWarning(this.config, ociOptions?.guardrails);
+    if (guardrailsWarning) {
+      warnings.push({
+        type: "unsupported",
+        feature: "guardrails",
+        details: guardrailsWarning
+      });
+    }
+    if (isAPIKeyAuth(this.config)) {
+      return doOpenAICompatibleStream(this.modelId, this.config, options, ociOptions, warnings);
+    }
+    const client = await this.getClient(ociOptions?.endpoint);
+    const compartmentId = resolveCompartmentId(
+      getCompartmentId(this.config),
+      ociOptions?.compartmentId
+    );
+    const guardrailsMetadata = ociOptions?.guardrails?.input && !guardrailsWarning ? await applyInputGuardrails(
+      client,
+      compartmentId,
+      getInputGuardrailText(
+        messages.flatMap(
+          (message) => message.content.filter((content) => content.type === "TEXT").map((content) => content.text)
+        )
+      ),
+      ociOptions.guardrails
+    ) : void 0;
     try {
       const commonParams = {
         maxTokens: options.maxOutputTokens ? Math.min(options.maxOutputTokens, 4e3) : void 0,
@@ -5204,6 +5756,7 @@ var OCILanguageModel = class {
         };
       } else if (apiFormat === "COHERE") {
         const cohereFormat = convertToCohereFormat(messages);
+        const hasToolResults = (cohereFormat.toolResults?.length ?? 0) > 0;
         chatRequest = {
           apiFormat,
           ...cohereFormat,
@@ -5211,7 +5764,7 @@ var OCILanguageModel = class {
           ...toolParams,
           // Cohere requires isForceSingleStep=true when tool results are present
           // This ensures multi-step tool use works correctly
-          ...cohereFormat.hasToolResults ? { isForceSingleStep: true } : {}
+          ...hasToolResults ? { isForceSingleStep: true } : {}
         };
       } else {
         chatRequest = {
@@ -5236,17 +5789,24 @@ var OCILanguageModel = class {
         cohereReq.thinking = createThinkingConfig(true, ociOptions.tokenBudget);
       }
       if (options.seed !== void 0) chatRequest.seed = options.seed;
+      const chatDetails = {
+        compartmentId,
+        servingMode: resolveServingMode(
+          this.modelId,
+          this.config.servingMode,
+          ociOptions?.servingMode
+        ),
+        chatRequest
+      };
+      const serializedRequestBody = serializeChatDetails(chatDetails);
+      if (shouldLogCohereToolRequest(apiFormat, functionTools.length)) {
+        console.error(
+          `[oci-genai-provider] Cohere tool request payload (${COHERE_REQUEST_DEBUG_ENV}=1): ${serializedRequestBody}`
+        );
+      }
       const response = await this.executeWithResilience(
         () => client.chat({
-          chatDetails: {
-            compartmentId,
-            servingMode: resolveServingMode(
-              this.modelId,
-              this.config.servingMode,
-              ociOptions?.servingMode
-            ),
-            chatRequest
-          }
+          chatDetails
         }),
         "OCI chat stream",
         ociOptions?.requestOptions
@@ -5324,7 +5884,10 @@ var OCILanguageModel = class {
                         }
                       },
                       providerMetadata: {
-                        oci: { requestId: headers?.["opc-request-id"] }
+                        oci: {
+                          requestId: headers?.["opc-request-id"],
+                          ...guardrailsMetadata ? { guardrails: toJSONGuardrailsMetadata(guardrailsMetadata) } : {}
+                        }
                       }
                     });
                     break;
@@ -5341,7 +5904,7 @@ var OCILanguageModel = class {
             }
           }
         }),
-        request: { body: JSON.stringify(messages) },
+        request: { body: serializedRequestBody },
         response: {
           headers
         }
@@ -5355,12 +5918,24 @@ var OCILanguageModel = class {
 // src/embedding-models/registry.ts
 var EMBEDDING_MODELS = [
   {
+    id: "cohere.embed-v4.0",
+    name: "Cohere Embed 4",
+    family: "cohere",
+    dimensions: 1536,
+    maxTextsPerBatch: 96,
+    maxTokensPerText: 512,
+    maxTokensPerCall: 128e3,
+    supportsImageInput: true,
+    supportedDimensions: [256, 512, 1024, 1536]
+  },
+  {
     id: "cohere.embed-multilingual-v3.0",
     name: "Cohere Embed Multilingual v3.0",
     family: "cohere",
     dimensions: 1024,
     maxTextsPerBatch: 96,
-    maxTokensPerText: 512
+    maxTokensPerText: 512,
+    maxTokensPerCall: 128e3
   },
   {
     id: "cohere.embed-english-v3.0",
@@ -5368,7 +5943,8 @@ var EMBEDDING_MODELS = [
     family: "cohere",
     dimensions: 1024,
     maxTextsPerBatch: 96,
-    maxTokensPerText: 512
+    maxTokensPerText: 512,
+    maxTokensPerCall: 128e3
   },
   {
     id: "cohere.embed-english-light-v3.0",
@@ -5376,7 +5952,37 @@ var EMBEDDING_MODELS = [
     family: "cohere",
     dimensions: 384,
     maxTextsPerBatch: 96,
-    maxTokensPerText: 512
+    maxTokensPerText: 512,
+    maxTokensPerCall: 128e3
+  },
+  {
+    id: "cohere.embed-english-image-v3.0",
+    name: "Cohere Embed English Image 3",
+    family: "cohere",
+    dimensions: 1024,
+    maxTextsPerBatch: 1,
+    maxTokensPerCall: 128e3,
+    supportsImageInput: true,
+    dedicatedOnly: true
+  },
+  {
+    id: "cohere.embed-multilingual-image-v3.0",
+    name: "Cohere Embed Multilingual Image 3",
+    family: "cohere",
+    dimensions: 1024,
+    maxTextsPerBatch: 1,
+    maxTokensPerCall: 128e3,
+    supportsImageInput: true
+  },
+  {
+    id: "cohere.embed-multilingual-light-image-v3.0",
+    name: "Cohere Embed Multilingual Light Image 3",
+    family: "cohere",
+    dimensions: 384,
+    maxTextsPerBatch: 1,
+    maxTokensPerCall: 128e3,
+    supportsImageInput: true,
+    dedicatedOnly: true
   }
 ];
 function isValidEmbeddingModelId(modelId) {
@@ -5396,7 +6002,6 @@ var OCIEmbeddingModel = class {
     this.config = config;
     this.specificationVersion = "v3";
     this.provider = "oci-genai";
-    this.maxEmbeddingsPerCall = 96;
     this.supportsParallelCalls = true;
     if (!isValidEmbeddingModelId(modelId)) {
       throw new NoSuchModelError({
@@ -5404,6 +6009,7 @@ var OCIEmbeddingModel = class {
         modelType: "embeddingModel"
       });
     }
+    this.maxEmbeddingsPerCall = getEmbeddingModelMetadata(modelId)?.maxTextsPerBatch ?? 96;
   }
   async getClient(endpointOverride) {
     const resolvedEndpoint = resolveEndpoint(this.config.endpoint, endpointOverride);
@@ -5456,7 +6062,22 @@ var OCIEmbeddingModel = class {
       getCompartmentId(this.config),
       ociOptions?.compartmentId
     );
+    const warnings = [];
+    const guardrailsWarning = getEffectiveGuardrailsWarning(this.config, ociOptions?.guardrails);
+    if (guardrailsWarning) {
+      warnings.push({
+        type: "unsupported",
+        feature: "guardrails",
+        details: guardrailsWarning
+      });
+    }
     try {
+      const guardrailsMetadata = ociOptions?.guardrails?.input && !guardrailsWarning ? await applyInputGuardrails(
+        client,
+        compartmentId,
+        getInputGuardrailText(values),
+        ociOptions.guardrails
+      ) : void 0;
       const response = await this.executeWithResilience(
         () => client.embedText({
           embedTextDetails: {
@@ -5467,6 +6088,8 @@ var OCIEmbeddingModel = class {
             ),
             compartmentId,
             inputs: values,
+            embeddingTypes: this.config.embeddingTypes,
+            outputDimensions: this.config.dimensions,
             truncate: this.config.truncate ?? "END",
             inputType: this.config.inputType ?? "SEARCH_DOCUMENT"
           }
@@ -5485,14 +6108,15 @@ var OCIEmbeddingModel = class {
         providerMetadata: {
           oci: {
             requestId: response.opcRequestId,
-            modelId: response.embedTextResult.modelId ?? this.modelId
+            modelId: response.embedTextResult.modelId ?? this.modelId,
+            ...guardrailsMetadata ? { guardrails: toJSONGuardrailsMetadata(guardrailsMetadata) } : {}
           }
         },
         response: {
           headers: response.opcRequestId ? { "opc-request-id": response.opcRequestId } : void 0,
           body: response
         },
-        warnings: []
+        warnings
       };
     } catch (error) {
       throw handleOCIError(error);

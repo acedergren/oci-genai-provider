@@ -11,7 +11,10 @@ import { oci } from '@acedergren/oci-genai-provider';
 import { embedMany } from 'ai';
 
 const { embeddings } = await embedMany({
-  model: oci.embeddingModel('cohere.embed-multilingual-v3.0'),
+  model: oci.embeddingModel('cohere.embed-v4.0', {
+    inputType: 'SEARCH_DOCUMENT',
+    dimensions: 1536,
+  }),
   values: ['text 1', 'text 2', 'text 3'],
 });
 ```
@@ -24,14 +27,16 @@ const { embeddings } = await embedMany({
 import { oci } from '@acedergren/oci-genai-provider';
 
 // Default configuration
-const model = oci.embeddingModel('cohere.embed-multilingual-v3.0');
+const model = oci.embeddingModel('cohere.embed-v4.0');
 
 // Custom configuration
-const customModel = oci.embeddingModel('cohere.embed-english-v3.0', {
+const customModel = oci.embeddingModel('cohere.embed-v4.0', {
   region: 'us-ashburn-1',
   compartmentId: 'ocid1.compartment.oc1..test',
   truncate: 'END',
-  inputType: 'DOCUMENT',
+  inputType: 'SEARCH_DOCUMENT',
+  dimensions: 1536,
+  embeddingTypes: ['float'],
 });
 ```
 
@@ -42,19 +47,40 @@ interface OCIEmbeddingSettings {
   // OCI Configuration
   region?: string; // Default: 'eu-frankfurt-1'
   profile?: string; // Default: 'DEFAULT'
-  auth?: 'config_file' | 'instance_principal' | 'resource_principal';
+  auth?: 'config_file' | 'api_key' | 'instance_principal' | 'resource_principal';
   configPath?: string; // Default: '~/.oci/config'
+  apiKey?: string; // Required when auth === 'api_key'
   compartmentId?: string; // Required or via environment
   endpoint?: string; // Custom endpoint for testing
 
   // Embedding-specific options
   truncate?: 'START' | 'END' | 'NONE'; // Default: 'END'
-  inputType?: 'QUERY' | 'DOCUMENT'; // Default: 'DOCUMENT'
-  dimensions?: 384 | 1024; // Model dependent
+  inputType?: 'SEARCH_QUERY' | 'SEARCH_DOCUMENT' | 'CLASSIFICATION' | 'CLUSTERING' | 'IMAGE';
+  dimensions?: 256 | 384 | 512 | 1024 | 1536; // Model dependent
+  embeddingTypes?: ('float' | 'int8' | 'uint8' | 'binary' | 'ubinary' | 'base64')[];
 }
 ```
 
 ## Available Models
+
+### Cohere Embed 4
+
+```typescript
+const model = oci.embeddingModel('cohere.embed-v4.0', {
+  dimensions: 1536,
+});
+```
+
+**Best for:** Latest OCI on-demand embeddings, multimodal text-or-image inputs, and configurable output dimensions
+
+| Property             | Value                     |
+| -------------------- | ------------------------- |
+| Default Dimensions   | 1536                      |
+| Supported Dimensions | 256 / 512 / 1024 / 1536   |
+| Context Length       | 128,000 tokens per call   |
+| Max Batch            | 96 texts                  |
+| Image Input          | Yes (API only, one image) |
+| Speed                | Medium                    |
 
 ### Cohere Embed Multilingual v3.0
 
@@ -144,13 +170,13 @@ console.log(`Total tokens used: ${usage.tokens}`);
 
 The `inputType` parameter helps the model optimize embeddings for your use case:
 
-### DOCUMENT (Default)
+### SEARCH_DOCUMENT (Default)
 
 Use when embedding longer, context-rich text:
 
 ```typescript
-const model = oci.embeddingModel('cohere.embed-english-v3.0', {
-  inputType: 'DOCUMENT',
+const model = oci.embeddingModel('cohere.embed-v4.0', {
+  inputType: 'SEARCH_DOCUMENT',
 });
 
 const { embeddings } = await embedMany({
@@ -162,13 +188,13 @@ const { embeddings } = await embedMany({
 });
 ```
 
-### QUERY
+### SEARCH_QUERY
 
 Use when embedding short search queries:
 
 ```typescript
-const model = oci.embeddingModel('cohere.embed-english-v3.0', {
-  inputType: 'QUERY',
+const model = oci.embeddingModel('cohere.embed-v4.0', {
+  inputType: 'SEARCH_QUERY',
 });
 
 const { embedding } = await embed({
@@ -177,7 +203,7 @@ const { embedding } = await embed({
 });
 ```
 
-**Best practice:** Use DOCUMENT for your knowledge base and QUERY when embedding search queries, even if using the same model.
+**Best practice:** Use `SEARCH_DOCUMENT` for your knowledge base and `SEARCH_QUERY` for search queries, even if using the same model.
 
 ## Truncation Strategy
 
@@ -236,17 +262,17 @@ try {
 
 ## Dimension Selection
 
-Some models support variable dimensions:
+`cohere.embed-v4.0` supports variable dimensions:
 
 ```typescript
-// 384 dimensions - smaller, faster, less accurate
-const lightModel = oci.embeddingModel('cohere.embed-english-light-v3.0', {
-  dimensions: 384,
+// 512 dimensions - smaller and faster
+const lightModel = oci.embeddingModel('cohere.embed-v4.0', {
+  dimensions: 512,
 });
 
-// 1024 dimensions - larger, slower, more accurate
-const standardModel = oci.embeddingModel('cohere.embed-english-v3.0', {
-  dimensions: 1024,
+// 1536 dimensions - highest fidelity
+const standardModel = oci.embeddingModel('cohere.embed-v4.0', {
+  dimensions: 1536,
 });
 ```
 
@@ -433,8 +459,8 @@ try {
    - More efficient than individual requests
 
 3. **Optimize input type**
-   - Use DOCUMENT for indexing long texts
-   - Use QUERY for search queries
+   - Use `SEARCH_DOCUMENT` for indexing long texts
+   - Use `SEARCH_QUERY` for search queries
 
 4. **Handle long texts**
    - Be aware of 512 token limit

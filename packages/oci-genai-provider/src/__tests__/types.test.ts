@@ -24,11 +24,13 @@ describe('OCIConfig', () => {
 
     const configWithAuth: OCIConfig = {
       region: 'eu-frankfurt-1',
-      auth: 'instance_principal',
+      auth: 'api_key',
+      apiKey: 'sk-test',
     };
 
     expect(configWithProfile.profile).toBe('FRANKFURT');
-    expect(configWithAuth.auth).toBe('instance_principal');
+    expect(configWithAuth.auth).toBe('api_key');
+    expect(configWithAuth.apiKey).toBe('sk-test');
   });
 });
 
@@ -58,14 +60,16 @@ describe('OCIEmbeddingSettings', () => {
   it('should have embedding-specific options', () => {
     const settings: OCIEmbeddingSettings = {
       region: 'eu-frankfurt-1',
-      dimensions: 1024,
+      dimensions: 1536,
       truncate: 'END',
       inputType: 'SEARCH_DOCUMENT',
+      embeddingTypes: ['float', 'base64'],
     };
 
-    expect(settings.dimensions).toBe(1024);
+    expect(settings.dimensions).toBe(1536);
     expect(settings.truncate).toBe('END');
     expect(settings.inputType).toBe('SEARCH_DOCUMENT');
+    expect(settings.embeddingTypes).toEqual(['float', 'base64']);
   });
 
   it('should accept 384 dimensions for light models', () => {

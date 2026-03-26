@@ -30,6 +30,7 @@ jest.mock('../../auth/index.js', () => ({
   getRegion: (config: OCIConfig): ReturnType<typeof mockGetRegion> => mockGetRegion(config),
   getCompartmentId: (config: OCIConfig): ReturnType<typeof mockGetCompartmentId> =>
     mockGetCompartmentId(config),
+  isAPIKeyAuth: () => false,
 }));
 
 // Mock OCI SDK
@@ -230,16 +231,10 @@ describe('OCILanguageModel', () => {
       expect(result.request).toBeDefined();
       expect(typeof result.request?.body).toBe('string');
 
-      // Verify it contains the converted messages
-
       const parsedBody = JSON.parse(result.request?.body as string);
-      expect(Array.isArray(parsedBody)).toBe(true);
-
-      expect(parsedBody[0]).toHaveProperty('role', 'USER');
-
-      expect(parsedBody[0]).toHaveProperty('content');
-
-      expect(parsedBody[0].content[0]).toHaveProperty('text', 'Test prompt');
+      expect(parsedBody).toHaveProperty('chatRequest');
+      expect(parsedBody.chatRequest.apiFormat).toBe('COHERE');
+      expect(parsedBody.chatRequest.message).toBe('Test prompt');
     });
   });
 

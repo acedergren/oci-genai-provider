@@ -114,13 +114,13 @@ import { generateText, streamText } from 'ai';
 
 // Generate complete responses
 const result = await generateText({
-  model: oci('xai.grok-4'),
+  model: oci.languageModel('openai.gpt-oss-120b'),
   prompt: 'Write a haiku about TypeScript',
 });
 
 // Stream responses token by token
 const stream = streamText({
-  model: oci('meta.llama-3.3-70b-instruct'),
+  model: oci.languageModel('xai.grok-4.20-0309-reasoning'),
   prompt: 'Explain React hooks',
 });
 
@@ -131,12 +131,15 @@ for await (const chunk of stream.textStream) {
 
 ## Available Models
 
-| Family            | Model ID                      | Context | Tools | Vision |
-| ----------------- | ----------------------------- | ------- | ----- | ------ |
-| **xAI Grok**      | `xai.grok-4`                  | 131K    | Yes   | No     |
-| **Meta Llama**    | `meta.llama-3.3-70b-instruct` | 128K    | Yes   | No     |
-| **Cohere**        | `cohere.command-r-plus`       | 131K    | Yes   | No     |
-| **Google Gemini** | `google.gemini-2.5-flash`     | 1M      | Yes   | Yes    |
+| Family             | Model ID                                                          | Context | Tools | Vision   |
+| ------------------ | ----------------------------------------------------------------- | ------- | ----- | -------- |
+| **xAI Grok**       | `xai.grok-4.20-0309-reasoning` / `xai.grok-4.20-multi-agent-0309` | 2M      | Yes   | Yes/No\* |
+| **Meta Llama**     | `meta.llama-3.3-70b-instruct`                                     | 128K    | Yes   | No       |
+| **Cohere**         | `cohere.command-a-reasoning-08-2025`                              | 256K    | Yes   | No       |
+| **Google Gemini**  | `google.gemini-2.5-flash`                                         | 1M      | Yes   | Yes      |
+| **OpenAI GPT-OSS** | `openai.gpt-oss-120b`                                             | 128K    | Yes   | No       |
+
+`*` Oracle’s `xai.grok-4.20-multi-agent-0309` release note documents the multi-agent workflow SKU, but not a full vision matrix; this package treats it conservatively as non-vision until Oracle publishes a model card with more detail.
 
 [See all 16+ models](./packages/oci-genai-provider/README.md#available-models)
 

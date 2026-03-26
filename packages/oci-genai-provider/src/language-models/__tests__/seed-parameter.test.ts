@@ -28,6 +28,7 @@ jest.mock('../../auth/index.js', () => ({
   getRegion: (config: OCIConfig): ReturnType<typeof mockGetRegion> => mockGetRegion(config),
   getCompartmentId: (config: OCIConfig): ReturnType<typeof mockGetCompartmentId> =>
     mockGetCompartmentId(config),
+  isAPIKeyAuth: () => false,
 }));
 
 // Mock OCI SDK

@@ -21,9 +21,13 @@ describe('supportsToolCalling', () => {
       'cohere.command-r-plus',
       'cohere.command-r',
       'cohere.command-r-08-2024',
+      'cohere.command-a-03-2025',
+      'cohere.command-a-reasoning-08-2025',
       // Grok
       'xai.grok-3',
-      'xai.grok-4-maverick',
+      'xai.grok-4',
+      'xai.grok-4.20-0309-reasoning',
+      'xai.grok-4.20-multi-agent-0309',
       // Gemini
       'google.gemini-1.5-pro',
       'google.gemini-2.0-flash',

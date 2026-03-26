@@ -29,6 +29,32 @@ const ServingModeSchema = z
   .discriminatedUnion('type', [OnDemandServingModeSchema, DedicatedServingModeSchema])
   .describe('Model serving mode configuration');
 
+const GuardrailsSchema = z
+  .object({
+    input: z
+      .object({
+        languageCode: z.string().min(2).optional(),
+        promptInjection: z.boolean().optional(),
+        promptInjectionThreshold: z.number().min(0).max(1).optional(),
+        failOnDetection: z.boolean().optional(),
+        contentModeration: z
+          .object({
+            categories: z.array(z.string().min(1)).min(1).optional(),
+          })
+          .strict()
+          .optional(),
+        pii: z
+          .object({
+            types: z.array(z.string().min(1)).min(1).optional(),
+          })
+          .strict()
+          .optional(),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict();
+
 /**
  * Zod schema for OCI provider options.
  *
@@ -113,6 +139,11 @@ export const OCIProviderOptionsSchema = z
       .strict()
       .optional()
       .describe('Per-request timeout and retry configuration'),
+
+    /**
+     * OCI AI Guardrails input evaluation before inference.
+     */
+    guardrails: GuardrailsSchema.optional().describe('OCI AI Guardrails preflight options'),
   })
   .strict()
   .refine((data) => !data.tokenBudget || data.thinking === true, {

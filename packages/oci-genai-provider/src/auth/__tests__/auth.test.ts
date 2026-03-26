@@ -1,5 +1,12 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
-import { createAuthProvider, getCompartmentId, getRegion } from '../index';
+import {
+  createAuthProvider,
+  getAPIKey,
+  getCompartmentId,
+  getOpenAICompatibleEndpoint,
+  getRegion,
+  isAPIKeyAuth,
+} from '../index';
 import type { OCIConfig } from '../../types';
 
 // Mock OCI SDK
@@ -74,6 +81,15 @@ describe('createAuthProvider', () => {
     const provider = await createAuthProvider(config);
 
     expect(provider).toBeDefined();
+  });
+
+  it('should reject api_key for native OCI SDK auth provider creation', async () => {
+    await expect(
+      createAuthProvider({
+        auth: 'api_key',
+        apiKey: 'sk-test',
+      })
+    ).rejects.toThrow('OpenAI-compatible Bearer-token transport');
   });
 
   it('should use custom config path when provided', async () => {
@@ -171,5 +187,40 @@ describe('getRegion', () => {
     };
 
     expect(getRegion(config)).toBe('us-ashburn-1');
+  });
+});
+
+describe('api_key helpers', () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
+  it('should detect api_key auth', () => {
+    expect(isAPIKeyAuth({ auth: 'api_key' })).toBe(true);
+    expect(isAPIKeyAuth({ auth: 'config_file' })).toBe(false);
+  });
+
+  it('should read API key from config first', () => {
+    process.env.OCI_GENAI_API_KEY = 'env-key';
+    expect(getAPIKey({ apiKey: 'config-key' })).toBe('config-key');
+  });
+
+  it('should fall back to environment variables for API key', () => {
+    process.env.OCI_GENAI_API_KEY = 'env-key';
+    expect(getAPIKey({ auth: 'api_key' })).toBe('env-key');
+  });
+
+  it('should build the OpenAI-compatible endpoint', () => {
+    expect(
+      getOpenAICompatibleEndpoint({
+        region: 'us-chicago-1',
+      })
+    ).toBe('https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/20231130/actions/v1');
   });
 });

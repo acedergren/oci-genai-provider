@@ -24,6 +24,7 @@ jest.mock('../../auth/index.js', () => ({
   createAuthProvider: (config: OCIConfig) => mockCreateAuthProvider(config),
   getRegion: (config: OCIConfig) => mockGetRegion(config),
   getCompartmentId: (config: OCIConfig) => mockGetCompartmentId(config),
+  isAPIKeyAuth: () => false,
 }));
 
 // Mock oci-common Region
@@ -233,6 +234,20 @@ describe('OCILanguageModel - Advanced V3 Features', () => {
   });
 
   describe('Reasoning', () => {
+    it('should use Cohere V2 API for Command A reasoning even without images', async () => {
+      const model = new OCILanguageModel('cohere.command-a-reasoning-08-2025', mockConfig);
+
+      mockChat.mockImplementation(async () => createMockResponse({ text: 'Final answer' }));
+
+      await model.doGenerate({
+        prompt: [{ role: 'user', content: [{ type: 'text', text: 'Solve this carefully' }] }],
+      });
+
+      const chatRequest = (mockChat.mock.calls[0][0] as any).chatDetails.chatRequest;
+      expect(chatRequest.apiFormat).toBe('COHEREV2');
+      expect(chatRequest.messages).toBeDefined();
+    });
+
     it('should support reasoning settings for Generic models', async () => {
       const model = new OCILanguageModel('google.gemini-2.5-pro', mockConfig);
 

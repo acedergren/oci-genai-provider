@@ -44,6 +44,7 @@ import type {
 import { OCILanguageModel } from '../../language-models/OCILanguageModel';
 import type { AuthenticationDetailsProvider } from 'oci-common';
 import type { OCIConfig } from '../../types';
+import { createReadableStream } from '../utils/test-helpers';
 
 // ============================================================================
 // Mock Setup
@@ -63,10 +64,11 @@ const mockGetCompartmentId = jest.fn<(config: OCIConfig) => string>(
   (config) => config.compartmentId ?? 'ocid1.compartment.oc1..test'
 );
 
-jest.mock('../auth/index.js', () => ({
+jest.mock('../../auth/index.js', () => ({
   createAuthProvider: (config: OCIConfig) => mockCreateAuthProvider(config),
   getRegion: (config: OCIConfig) => mockGetRegion(config),
   getCompartmentId: (config: OCIConfig) => mockGetCompartmentId(config),
+  isAPIKeyAuth: () => false,
 }));
 
 jest.mock('oci-common', () => ({
@@ -75,10 +77,88 @@ jest.mock('oci-common', () => ({
   },
 }));
 
-const mockChat = jest.fn<() => Promise<unknown>>();
+const mockChat = jest.fn<(request?: unknown) => Promise<unknown>>();
+
+function normalizeChatResponse(response: any): any {
+  if (response?.body || response instanceof Response) {
+    return response;
+  }
+
+  const choices = response?.chatResult?.chatResponse?.choices ?? [];
+  const usage = response?.chatResult?.chatResponse?.usage;
+  const textChunks: string[] = [];
+
+  for (const choice of choices) {
+    const content = choice?.message?.content ?? [];
+    const toolCalls = choice?.message?.toolCalls;
+
+    if (toolCalls?.length) {
+      textChunks.push(
+        `data: ${JSON.stringify({
+          message: {
+            role: 'ASSISTANT',
+            toolCalls,
+          },
+        })}\n\n`
+      );
+    }
+
+    for (const part of content) {
+      if (part.type === 'TEXT' && part.text) {
+        textChunks.push(
+          `data: ${JSON.stringify({
+            message: {
+              content: [{ type: 'TEXT', text: part.text }],
+            },
+          })}\n\n`
+        );
+      }
+
+      if (part.type === 'THINKING' && part.thinking) {
+        textChunks.push(
+          `data: ${JSON.stringify({
+            message: {
+              content: [{ type: 'THINKING', thinking: part.thinking }],
+            },
+          })}\n\n`
+        );
+      }
+    }
+
+    textChunks.push(
+      `data: ${JSON.stringify({
+        finishReason: choice?.finishReason ?? 'STOP',
+        usage,
+      })}\n\n`
+    );
+  }
+
+  return {
+    body: createReadableStream(
+      textChunks.length > 0
+        ? textChunks
+        : [
+            `data: ${JSON.stringify({
+              message: { content: [{ type: 'TEXT', text: 'Response' }] },
+            })}\n\n`,
+            `data: ${JSON.stringify({
+              finishReason: 'STOP',
+              usage: usage ?? { promptTokens: 10, completionTokens: 5 },
+            })}\n\n`,
+          ]
+    ),
+    headers: {
+      entries: () =>
+        new Map<string, string>(
+          response?.opcRequestId ? [['opc-request-id', response.opcRequestId]] : []
+        ).entries(),
+    },
+  };
+}
+
 jest.mock('oci-generativeaiinference', () => ({
   GenerativeAiInferenceClient: jest.fn().mockImplementation(() => ({
-    chat: mockChat,
+    chat: (arg: any) => mockChat(arg).then((value) => normalizeChatResponse(value)),
     region: undefined,
   })),
 }));
@@ -444,13 +524,7 @@ describe('V3 Specification Alignment', () => {
       });
 
       it('should warn when tools used with unsupported model', async () => {
-        // Use an older model that doesn't support tools
-        jest.doMock('../language-models/registry', () => ({
-          isValidModelId: () => true,
-          getModelMetadata: () => ({ family: 'other' }),
-        }));
-
-        const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
+        const model = new OCILanguageModel('xai.grok-3-mini', defaultConfig);
         const options: LanguageModelV3CallOptions = {
           prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
           tools: [
@@ -463,7 +537,6 @@ describe('V3 Specification Alignment', () => {
         };
 
         const result = await model.doGenerate(options);
-        // The model may or may not support tools - just verify no crash
         expect(result).toBeDefined();
       });
     });
@@ -698,22 +771,22 @@ describe('V3 Specification Alignment', () => {
         expect(result.request?.body).toBeDefined();
       });
 
-      it('should include response.id (opcRequestId)', async () => {
+      it('should include response headers with opcRequestId', async () => {
         const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const result = await model.doGenerate({
           prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
         });
 
-        expect(result.response?.id).toBe('req-123');
+        expect(result.response?.headers?.['opc-request-id']).toBe('req-123');
       });
 
-      it('should include response.modelId', async () => {
+      it('should include providerMetadata requestId instead of response.modelId', async () => {
         const model = new OCILanguageModel('cohere.command-r-plus', defaultConfig);
         const result = await model.doGenerate({
           prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
         });
 
-        expect(result.response?.modelId).toBe('cohere.command-r-plus');
+        expect(result.providerMetadata?.oci?.requestId).toBe('req-123');
       });
 
       it('should include providerMetadata', async () => {
